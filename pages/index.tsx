@@ -84,12 +84,12 @@ const Index: NextPage = () => {
               </Flex>
             </Box>
           </Flex>
-          <Flex mt='20%' sx={{position: 'relative', minWidth: '35rem', flexDirection: 'column', alignSelf: 'center', maxWidth: '50rem'}}>
-            <Parallax speed={-10} style={{width: '100%'}}>
+          <Flex mt='10%' sx={{position: 'relative', minWidth: '35rem', flexDirection: 'column', alignSelf: 'center', maxWidth: '50rem'}}>
+            <Parallax speed={-10} style={{marginTop: '0rem', width: '100%'}}>
                 <Box sx={{position: 'absolute', transform: 'translateX(-50%)', borderRadius: '15rem', padding: '15rem', background: 'gradient'}} />
-                <Box sx={{position: 'absolute', transform: 'translateX(-60%) rotateZ(315deg)', borderRadius: '12rem', top: '170vh', padding: '12rem', background: 'gradient'}} />
-                <Box sx={{position: 'absolute', transform: 'translateX(50%)', right: 0, top: '100vh', borderRadius: '15rem', padding: '10rem', background: 'gradient2'}} />
-                <Box sx={{position: 'absolute', transform: 'translateX(50%)', left: '60%', top: '270vh', borderRadius: '6rem', padding: '6rem', background: 'gradient2'}} />
+                <Box sx={{position: 'absolute', transform: 'translateX(-60%) rotateZ(315deg)', filter: 'opacity(0.8) blur(4px)', borderRadius: '12rem', top: '50rem', padding: '12rem', background: 'gradient2'}} />
+                <Box sx={{position: 'absolute', transform: 'translateX(50%) rotateZ(35deg)', right: 0, top: '30rem', filter: 'opacity(0.6) blur(2px)', borderRadius: '15rem', padding: '10rem', background: 'gradient2'}} />
+                <Box sx={{position: 'absolute', transform: 'translateX(50%) rotateZ(215deg)', filter: 'opacity(0.8) blur(8px)', left: '60%', top: '80rem', borderRadius: '6rem', padding: '6rem', background: 'gradient'}} />
             </Parallax>
             <Flex sx={{flexDirection: 'column', alignItems: 'center', gap: '7rem'}}>
               <Pulse>

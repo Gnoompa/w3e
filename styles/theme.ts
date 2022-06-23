@@ -62,6 +62,52 @@ const Theme: ThemeType = {
             fontWeight: 800,
             fontSize: '1.25rem',
             cursor: 'pointer'
+        },
+        nav: {
+            background: 'gradient',
+            border: '3px solid #fff',
+            position: 'fixed',
+            padding: '1rem 3rem',
+            borderRadius: '1.25rem',
+            boxShadow: '0px 2px 2px rgb(0 0 0 / 12%), inset 0px 2px 2px rgb(0 0 0 / 12%)'
+        },
+        hr: {
+            nav: {
+                background: '#ffffffb3',
+                width: '1px',
+                padding: '1.25rem 0',
+                marginTop: '-1.25rem',
+                lineHeight: 0,
+                marginBottom: '-1.25rem'
+            }
+        },
+        navLabel: {
+            background: '#fff',
+            position: 'absolute',
+            top: '-2.75rem',
+            padding: '0.25rem 1rem 0.4rem',
+            lineHeight: '1rem',
+            fontSize: '1rem',
+            borderRadius: '11px 11px 0px 0px',
+            fontWeight: 700,
+            left: '50%',
+            transform: 'translateX(-50%)'
+        }
+    },
+    links: {
+        nav: {
+            textDecoration: 'none',
+            fontSize: '1.25rem',
+            fontWeight: 800,
+            color: 'text'
+        },
+        navDisabled: {
+            textDecoration: 'none',
+            fontSize: '1.25rem',
+            fontWeight: 800,
+            color: 'text',
+            opacity: .5,
+            pointerEvents: 'none'
         }
     },
     text: {
