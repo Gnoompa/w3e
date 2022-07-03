@@ -1,31 +1,39 @@
 import React, { ElementType } from 'react'
-import { Flex, WrappedFlexProps } from '@components/index'
-import { Label, Input, FieldProps, InputProps } from "theme-ui"
+import { Flex, Box, Label, Input, InputProps, Divider, Text} from "theme-ui"
+import { ImageProps } from 'next/image';
+import NextImage from 'next/image'
 
-export const Field = function Field<
-    Z extends React.ComponentPropsWithRef<ElementType> & WrappedFlexProps = InputProps & WrappedFlexProps,
-    T extends React.ElementType = React.ComponentType<Z>
->({
-    as: Control = Input as any as T,
-    id,
-    label,
-    ...rest
-}: FieldProps<T>) {
-    const omitMargin = (props: Object) => ((newProps: any) => (
-        ['ml', 'mr', 'mt', 'mb', 'mx', 'my'].map(key => delete newProps[key]),
-        newProps
-    ))({...props})
+export interface FieldProps extends InputProps {
+    isInvalid?: boolean;
+    postfix?: string;
+    subtitle?: string;
+    icon?: ImageProps['src'];
+}
 
-
-    const controlProps = omitMargin({
-        ...rest,
-        sx: undefined
-    } as React.ComponentPropsWithRef<T>)
-
+export const Field: React.FC<FieldProps> = props => {
     return (
-        <Flex column {...rest}>
-            <Label htmlFor={id} mb='.5rem' variant={rest.variant}>{label}</Label>
-            <Control {...controlProps} />
+        <Flex sx={{position: 'relative'}}>
+            <Flex sx={{flexDirection: 'column', flex: 1, position: 'relative'}}>
+                <Input variant={props.variant || 'forms.input.field'} {...props} sx={{...props.sx, ...(props.icon && {paddingRight: '2.5rem'})}} />
+                {!props.variant?.includes('forms.input.dialog') &&
+                    <Divider variant={props.isInvalid ? 'styles.hr.invalidField' : 'styles.hr.field'}  />
+                }
+                {props.icon &&
+                    <Flex variant='layout.container.field.icon'>
+                        <NextImage src={props.icon} alt='input icon' />
+                    </Flex>
+                }
+            </Flex>
+            {props.postfix &&
+                <Text variant='secondary' mt='.25rem' sx={{fontSize: '1.25rem', fontWeight: 700}}>
+                    {props.postfix}
+                </Text>
+            }
+            {props.subtitle &&
+                <Text variant='hint' sx={{position: 'absolute', right: '1rem', top: 'calc(100% + .75rem)', fontSize: '.75rem'}}>
+                    {props.subtitle}
+                </Text>
+            }
         </Flex>
     )
 }

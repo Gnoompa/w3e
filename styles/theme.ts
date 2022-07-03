@@ -1,4 +1,5 @@
-import type { ColorMode, Theme as ThemeType } from "theme-ui";
+import type { ColorMode, Theme as ThemeType } from "theme-ui"
+import { keyframes } from '@emotion/react'
 
 class DarkThemeFactory {
     primary = '#F1E7C6'
@@ -9,18 +10,54 @@ class DarkThemeFactory {
 
 const darkTheme: ColorMode = {...(new DarkThemeFactory())}
 
+const boxShadow = '4px 4px 4px rgba(167, 127, 169, 0.18)'
+const borderRadius = '1em'
+const fieldBackground = 'rgba(255, 255, 255, 0.5)'
+const transitionDuration = '.2s'
+const fadeIn = keyframes({ from: { opacity: 0 }, to: { opacity: 1 } })
+
 const ButtonStyles = {
     cursor: 'pointer',
     whiteSpace: 'nowrap'
 }
 
-const labelStyles = {
-    fontSize: '1.25rem',
-    fontWeight: 500
+const dialogFieldStyles = {
+    background: 'fieldBackground',
+    border: 'none',
+    color: 'light',
+    outline: 'none',
+    fontWeight: 600,
+    borderRadius: '.5rem',
+    padding: '0.75rem 1rem',
+    '&:focus': {
+        background: '#fff'
+    },
+    '&::-webkit-calendar-picker-indicator': {
+        color: 'light',
+        opacity: .7,
+        marginRight: '-.5rem'
+    },
+    '&::-webkit-time-picker-indicator': {
+        color: 'light'
+    },
+    '::placeholder': {
+        color: 'light'
+    },
+    boxShadow
 }
 
-const boxShadow = '4px 4px 4px rgba(167, 127, 169, 0.18)'
-const borderRadius = '1.75rem'
+const containerPopupStyles = {
+    zIndex: 2,
+    position: 'absolute',
+    top: 'calc(100% + .5rem)',
+    width: 'auto',
+    borderRadius,
+    animation: `${fadeIn} .2s backwards`,
+    background: 'gradient',
+    padding: '1em 1.5em',
+    boxShadow,
+    minWidth: '10rem'
+}
 
 const Theme: ThemeType = {
     breakpoints: ['40em', '52em', '64em'],
@@ -34,16 +71,42 @@ const Theme: ThemeType = {
     },
     colors: {
         text: '#220923',
+        secondaryText: '#624E63',
+        light: '#A77FA9',
         background: '#ECDEEC',
+        fieldBackground: '#f5edf4',
+        dialogFieldBackground: 'linear-gradient(95deg, #F342F3 -28.36%, #ECB5FF 29.02%, #BDD7FF 79.22%, #ECF4FF 115.08%)',
         bg: '#ECDEEC',
         primary: '#1F2421',
         gradient: 'linear-gradient(95deg, #F342F3 -28.36%, #ECB5FF 29.02%, #BDD7FF 79.22%, #ECF4FF 115.08%)',
         gradient2: 'linear-gradient(94.24deg, #FF8DFF -28.89%, rgba(243, 66, 243, 0.66) 6.46%, rgba(228, 0, 10, 0.38) 27.51%, rgba(165, 226, 226, 0.19) 87.69%, rgba(217, 217, 217, 0) 115.49%, #E46ED9 115.51%)',
+        invalid: 'linear-gradient(90deg, #FF0000 0.41%, #FF8DFF 100.41%), linear-gradient(0deg, #FFFFFF, #FFFFFF)',
+        dialog: 'radial-gradient(117.47% 137.15% at 20.35% 117.81%, #EE99FD 0%, #ECDEEC 100%)',
+        dialogHover: 'radial-gradient(117.47% 137.15% at 20.35% 117.81%, #EE99FD 0%, #f3cef3 100%)',
         modes: {
             dark: darkTheme
         }
     },
     buttons: {
+        primary: {
+            boxShadow: '0px 2px 2px rgb(0 0 0 / 12%), inset 0px 2px 2px rgb(0 0 0 / 12%)',
+            whiteSpace: 'nowrap',
+            background: '#ecaffe',
+            border: '3px solid #fff',
+            color: 'text',
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '.5em',
+            borderRadius: '1em',
+            padding: '.5em 1em',
+            cursor: 'pointer',
+            transition: transitionDuration,
+            ':hover': {
+                color: 'text'
+            }
+        },
         accent: {
             ...ButtonStyles,
             border: '3px solid #fff',
@@ -54,6 +117,37 @@ const Theme: ThemeType = {
             fontWeight: 600,
             padding: '.75em 2em',
             fontSize: '1.25rem'
+        },
+        link: {
+            background: 'none',
+            textDecoration: 'underline',
+            fontSize: '1.25rem',
+            fontWeight: 800,
+            color: 'text'
+        },
+        toggle: {
+            background: 'none',
+            color: 'text',
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            padding: '1em 2em',
+            whiteSpace: 'nowrap',
+        },
+        fieldDialog: {
+            boxShadow,
+            whiteSpace: 'nowrap',
+            background: 'dialog',
+            border: 'none',
+            color: 'text',
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            borderRadius: '.5em',
+            padding: '.75em 1.25em',
+            cursor: 'pointer',
+            transition: transitionDuration,
+            ':hover': {
+                background: 'dialogHover'
+            }
         }
     },
     styles: {
@@ -61,7 +155,7 @@ const Theme: ThemeType = {
             textDecoration: 'underline',
             fontWeight: 800,
             fontSize: '1.25rem',
-            cursor: 'pointer'
+            cursor: 'pointer',
         },
         nav: {
             background: 'gradient',
@@ -76,9 +170,43 @@ const Theme: ThemeType = {
                 background: '#ffffffb3',
                 width: '1px',
                 padding: '1.25rem 0',
-                marginTop: '-1.25rem',
-                lineHeight: 0,
-                marginBottom: '-1.25rem'
+                marginTop: '-1.5rem',
+                marginBottom: '-1.5rem',
+                lineHeight: 0
+            },
+            dialog: {
+                color: '#ffffffb3',
+                background: '#ffffffb3',
+                opacity: '.5',
+                height: '1px',
+                marginTop: '-.75em',
+                marginBottom: '-.75em',
+                lineHeight: 0
+            },
+            vertical: {
+                color: '#ffffffb3',
+                background: '#ffffffb3',
+                width: '1px'
+            },
+            field: {
+                width: '100%',
+                background: 'dialog',
+                height: '6px',
+                border: '1px solid #fff',
+                borderRadius: '6px',
+                boxShadow,
+                marginTop: '-.25rem',
+                marginBottom: '-.25rem',
+            },
+            invalidField: {
+                width: '100%',
+                background: 'invalid',
+                height: '6px',
+                border: '1px solid #fff',
+                borderRadius: '6px',
+                boxShadow,
+                marginTop: '-.25rem',
+                marginBottom: '-.25rem',
             }
         },
         navLabel: {
@@ -92,6 +220,12 @@ const Theme: ThemeType = {
             fontWeight: 700,
             left: '50%',
             transform: 'translateX(-50%)'
+        },
+        dialog: {
+            background: 'dialog',
+            gap: '1.5em',
+            borderRadius: '1.25em',
+            padding: '1em 1.5em'
         }
     },
     links: {
@@ -99,7 +233,14 @@ const Theme: ThemeType = {
             textDecoration: 'none',
             fontSize: '1.25rem',
             fontWeight: 800,
+            letterSpacing: '.1em',
             color: 'text'
+        },
+        formNav: {
+            textDecoration: 'none',
+            fontSize: '1rem',
+            fontWeight: 400,
+            color: 'secondaryText'
         },
         navDisabled: {
             textDecoration: 'none',
@@ -108,15 +249,37 @@ const Theme: ThemeType = {
             color: 'text',
             opacity: .5,
             pointerEvents: 'none'
+        },
+        dialog: {
+            textDecoration: 'none',
+            fontWeight: 800,
+            color: 'text',
+            letterSpacing: '.1em'
         }
     },
     text: {
         paragraph: {
+            fontWeight: 500,
             fontSize: '1rem'
         },
         hint: {
-            color: '#CAAECA',
-            letterSpacing: '2px'
+            color: '#977f97'
+        },
+        dialogSecondary: {
+            color: 'light',
+            textDecoration: 'uppercase',
+            fontWeight: 800
+        },
+        dialog: {
+            fontSize: '1.25rem',
+            letterSpacing: '1px',
+            color: 'secondaryText'
+        },
+        secondary: {
+            color: 'text',
+            opacity: .5,
+            letterSpacing: '1px',
+            fontSize: '1rem'
         },
         infoHeader: {
             fontSize: '2rem',
@@ -127,13 +290,52 @@ const Theme: ThemeType = {
             letterSpacing: '.1em',
             lineHeight: '1.25em',
             fontWeight: 500
+        },
+        navigation: {
+            fontWeight: 500
         }
     },
     forms: {
-        label: labelStyles,
-        contrast: {
-            ...labelStyles,
-            color: 'bg'
+        label: {
+            width: 'initial',
+            switch: {
+                color: 'secondaryText',
+                fontWeight: 500,
+                width: 'initial'
+            }
+        },
+        switch: {
+            color: 'text',
+            fontSize: '1.25rem',
+            background: 'secondaryText',
+            width: '40px'
+        },
+        input: {
+            field: {
+                border: 'none',
+                outline: 'none',
+                fontWeight: 500
+            },
+            dialogContrast: {
+                background: 'dialogFieldBackground',
+                border: 'none',
+                outline: 'none',
+                fontWeight: 500,
+            },
+            dialog: dialogFieldStyles,
+            dialogTransparent: {
+                ...dialogFieldStyles,
+                background: fieldBackground
+            } 
+        },
+        textarea: {
+            background: fieldBackground,
+            border: 'none',
+            borderRadius: '.5rem',
+            boxShadow,
+            maxWidth: '100%',
+            padding: '.75rem 1.5rem',
+            fontWeight: 500
         }
     },
     cards: {
@@ -147,9 +349,49 @@ const Theme: ThemeType = {
     },
     layout: {
         container: {
-            bg: 'primary',
-            p: '3rem 2rem',
-            outline: '3px dashed var(--theme-ui-colors-primary)'
+            popup: containerPopupStyles,
+            popupTransparent: {
+                ...containerPopupStyles,
+                background: 'none',
+                boxShadow: 'none',
+                padding: 0
+            },
+            tooltip: {
+                cursor: 'help',
+                width: '2rem',
+                height: '2rem',
+                textAlign: 'center',
+                paddingTop: '0.12rem',
+                border: '3px solid #fff',
+                borderRadius: '1rem',
+                fontWeight: '800',
+                background: 'background',
+                position: 'relative'
+            },
+            modalBackground: {
+                position: 'fixed',
+                widht: '100%',
+                height: '100%',
+                background: 'fieldBackground',
+                top: 0,
+                left: 0,
+                animation: `${fadeIn} .2s backwards`,
+                backdropFilter: 'blur(5px)'
+            },
+            field: {
+                icon: {
+                    justifyContent: 'center',
+                    background: 'fieldBackground',
+                    width: '2.25rem',
+                    position: 'absolute',
+                    height: '100%',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    right: '0',
+                    pointerEvents: 'none',
+                    borderRadius: '0 6px 6px 0'
+                }
+            }
         }
     }
 }
