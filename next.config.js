@@ -4,7 +4,10 @@ const nextConfig = {
     emotion: true
   },
   reactStrictMode: true,
-  styledComponents: true
+  styledComponents: true,
+  typescript: {
+    ignoreBuildErrors: true
+  }
 }
 
 module.exports = nextConfig

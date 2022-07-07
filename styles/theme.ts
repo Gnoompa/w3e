@@ -11,9 +11,11 @@ class DarkThemeFactory {
 const darkTheme: ColorMode = {...(new DarkThemeFactory())}
 
 const boxShadow = '4px 4px 4px rgba(167, 127, 169, 0.18)'
+const intenseBoxShadow = '0px 3px 3px rgb(0 0 0 / 30%)'
 const borderRadius = '1em'
 const fieldBackground = 'rgba(255, 255, 255, 0.5)'
 const transitionDuration = '.2s'
+const transition = 'background ' + transitionDuration
 const fadeIn = keyframes({ from: { opacity: 0 }, to: { opacity: 1 } })
 
 const ButtonStyles = {
@@ -24,24 +26,37 @@ const ButtonStyles = {
 const dialogFieldStyles = {
     background: 'fieldBackground',
     border: 'none',
-    color: 'light',
+    color: 'secondaryText',
     outline: 'none',
     fontWeight: 600,
     borderRadius: '.5rem',
     padding: '0.75rem 1rem',
+    transition,
     '&:focus': {
         background: '#fff'
     },
-    '&::-webkit-calendar-picker-indicator': {
+    '&:read-only': {
+        cursor: 'pointer'
+    },
+    '&:disabled': {
+        cursor: 'not-allowed',
         color: 'light',
+        boxShadow: 'none'
+    },
+    '&:disabled::placeholder': {
+        cursor: 'not-allowed',
+        color: 'light'
+    },
+    '&::-webkit-calendar-picker-indicator': {
+        color: 'secondaryText',
         opacity: .7,
         marginRight: '-.5rem'
     },
     '&::-webkit-time-picker-indicator': {
-        color: 'light'
+        color: 'secondaryText'
     },
     '::placeholder': {
-        color: 'light'
+        color: 'secondaryText'
     },
     boxShadow
 }
@@ -50,13 +65,30 @@ const containerPopupStyles = {
     zIndex: 2,
     position: 'absolute',
     top: 'calc(100% + .5rem)',
-    width: 'auto',
     borderRadius,
     animation: `${fadeIn} .2s backwards`,
     background: 'gradient',
     padding: '1em 1.5em',
+    width: 'max-content',
     boxShadow,
     minWidth: '10rem'
+}
+
+const buttonWeekdaySelectorStyles = {
+    background: fieldBackground,
+    color: 'secondaryText',
+    fontWeight: 600,
+    padding: '1rem 0',
+    borderRadius: 0,
+    width: '2.75rem',
+    borderRight: '1px solid white',
+    fontSize: '.75rem',
+    cursor: 'pointer',
+    outline: 'none',
+    transition,
+    '&:last-child': {
+        borderRight: 'none'
+    }
 }
 
 const Theme: ThemeType = {
@@ -74,8 +106,9 @@ const Theme: ThemeType = {
         secondaryText: '#624E63',
         light: '#A77FA9',
         background: '#ECDEEC',
-        fieldBackground: '#f5edf4',
+        fieldBackground: '#f5f2f4',
         dialogFieldBackground: 'linear-gradient(95deg, #F342F3 -28.36%, #ECB5FF 29.02%, #BDD7FF 79.22%, #ECF4FF 115.08%)',
+        foreground: '#f5edf47d',
         bg: '#ECDEEC',
         primary: '#1F2421',
         gradient: 'linear-gradient(95deg, #F342F3 -28.36%, #ECB5FF 29.02%, #BDD7FF 79.22%, #ECF4FF 115.08%)',
@@ -109,7 +142,6 @@ const Theme: ThemeType = {
         },
         accent: {
             ...ButtonStyles,
-            border: '3px solid #fff',
             boxShadow,
             background: 'gradient',
             borderRadius: '2em',
@@ -117,6 +149,11 @@ const Theme: ThemeType = {
             fontWeight: 600,
             padding: '.75em 2em',
             fontSize: '1.25rem'
+        },
+        weekdaySelector: buttonWeekdaySelectorStyles,
+        weekdaySelectorActive: {
+            ...buttonWeekdaySelectorStyles,
+            background: '#fff'
         },
         link: {
             background: 'none',
@@ -293,6 +330,29 @@ const Theme: ThemeType = {
         },
         navigation: {
             fontWeight: 500
+        },
+        fieldIcon: {
+            position: 'absolute',
+            fontSize: '1.5rem',
+            top: '50%',
+            left: '1rem',
+            pointerEvents: 'none',
+            transform: 'translateY(-50%)'
+        },
+        fieldPostfix: {
+            position: 'absolute',
+            right: '0.5rem',
+            top: '50%',
+            marginTop: 0,
+            transform: 'translateY(-50%)',
+            color: 'light',
+            fontSize: '1.25rem',
+            fontWeight: 700
+        },
+        fieldSubtitle: {
+            fontSize: '.75rem',
+            color: 'secondaryText',
+            fontWeight: 600
         }
     },
     forms: {
@@ -308,7 +368,10 @@ const Theme: ThemeType = {
             color: 'text',
             fontSize: '1.25rem',
             background: 'secondaryText',
-            width: '40px'
+            width: '40px',
+            'input:focus ~ &': {
+                boxShadow: intenseBoxShadow
+            }
         },
         input: {
             field: {
@@ -326,16 +389,25 @@ const Theme: ThemeType = {
             dialogTransparent: {
                 ...dialogFieldStyles,
                 background: fieldBackground
-            } 
+            }
         },
         textarea: {
             background: fieldBackground,
             border: 'none',
             borderRadius: '.5rem',
+            color: 'secondaryText',
+            outline: 'none',
+            fontWeight: 600,
+            padding: '0.75rem 1rem',
             boxShadow,
+            transition,
             maxWidth: '100%',
-            padding: '.75rem 1.5rem',
-            fontWeight: 500
+            '::placeholder': {
+                color: 'secondaryText'
+            },
+            '&:focus': {
+                background: '#fff'
+            },
         }
     },
     cards: {
@@ -356,6 +428,17 @@ const Theme: ThemeType = {
                 boxShadow: 'none',
                 padding: 0
             },
+            weekdaySelector: {
+                boxShadow,
+                borderRadius: '.5rem',
+                overflow: 'hidden'
+            },
+            video: {
+                'video': {
+                    borderRadius: '1.5rem',
+                    boxShadow
+                }
+            },
             tooltip: {
                 cursor: 'help',
                 width: '2rem',
@@ -368,11 +451,22 @@ const Theme: ThemeType = {
                 background: 'background',
                 position: 'relative'
             },
+            fileUploader: {
+                alignItems: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                background: 'fieldBackground',
+                borderRadius: '0.75em',
+                width: '9rem',
+                height: '7rem',
+                cursor: 'pointer',
+                boxShadow
+            },
             modalBackground: {
                 position: 'fixed',
-                widht: '100%',
+                width: '100%',
                 height: '100%',
-                background: 'fieldBackground',
+                background: 'foreground',
                 top: 0,
                 left: 0,
                 animation: `${fadeIn} .2s backwards`,

@@ -36,7 +36,7 @@ export const LocationPicker = (props: PropsWithChildren<LocationPickerProps>) =>
                     </Container>
                 </Portal>
             }
-            <Field variant='forms.input.dialog' value={props.value?.label} onChange={onInputChange} placeholder={props.placeholder || 'location'} onBlur={() => setIsDialogOpen(false)} onFocus={() => setIsDialogOpen(true)} onClick={() => setIsDialogOpen(true)} icon={locationIcon} />
+            <Field variant='forms.input.dialog' value={props.value?.label} onChange={onInputChange} placeholder={props.placeholder || 'location'} onBlur={() => setIsDialogOpen(false)} onFocus={() => setIsDialogOpen(true)} onClick={() => setIsDialogOpen(true)} icon='📍' />
             {/* {isDialogOpen &&
                 <Container variant='layout.container.popup' sx={{width: '70%', right: 0}}>
                     <Flex sx={{flexDirection: 'column', alignItems: 'center', gap: '1rem'}}>

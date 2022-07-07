@@ -3,7 +3,7 @@ import { Link, Flex, Box, Button, Text, Label, Input, Container, Textarea, Divid
 import { useMoralis, MoralisProvider, useMoralisWeb3Api } from "react-moralis"
 import personIcon from '../styles/icons/person.svg'
 import Image from 'next/image'
-import { AppContext } from '../pages/context'
+import { AppContext } from './context'
 import OutsideClickHandler from 'react-outside-click-handler'
 
 const Menu = () => {
@@ -54,7 +54,7 @@ const Menu = () => {
                     useCapture={true}
                     display='contents'
                 >
-                    <Container variant='layout.container.popup'>
+                    <Container variant='layout.container.popup' sx={{right: 0}}>
                         <Flex sx={{flexDirection: 'column'}}>
                             <Text variant='secondary'>
                                 wallet address: {walletAddressLabel}

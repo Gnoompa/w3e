@@ -8,7 +8,7 @@ import { useRouter } from 'next/router'
 import tickeroLogo from '../public/logo/logo@0.5x.png'
 import Menu from '../components/menu'
 import Wallet from '../components/wallet'
-import { AppContextProvider, data as contextData } from './context'
+import { AppContextProvider, data as contextData } from '../components/context'
 import { MoralisProvider } from "react-moralis"
 
 const EventForm = dynamic(() => import('../components/eventForm'), {

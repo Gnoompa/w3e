@@ -14,6 +14,10 @@ export function useDebounce<T>(value: T, delay?: number): T {
   return debouncedValue
 }
 
-export function handleOnMouseDown(event: React.MouseEvent<HTMLButtonElement>, cb: CallableFunction) {
+export function handleOnMouseDown(event: React.MouseEvent<HTMLElement>, cb: CallableFunction): void {
   event.button == 0 && cb()
+}
+
+export function formatWalletAddress(address: string): string {
+  return address ? `${address.slice(0, 5)}...${address.slice(-3)}` : ''
 }

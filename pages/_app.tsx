@@ -5,12 +5,7 @@ import theme from '../styles/theme'
 import { useAmp } from 'next/amp'
 import { ThemeProvider } from 'theme-ui'
 import type { AppProps } from 'next/app'
-import { StyledEngineProvider } from '@mui/material/styles';
-import tickerPrinterImage from '../public/ticketPrinter.png'
-import { Flex, Box } from '@components/index'
-import Image from 'next/image'
-import NextLink from 'next/link'
-import { Button, Heading, useColorMode, useThemeUI, Text, Link } from 'theme-ui'
+import { StyledEngineProvider } from '@mui/material/styles'
 
 function MyApp({ Component, pageProps }: AppProps) {
   const isAmp = useAmp()

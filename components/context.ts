@@ -2,7 +2,7 @@ import { createContext } from "react"
 
 export const data = {
     walletAddress: '',
-    formattedWalletAddress: ''
+    formattedWalletAddress: ''    
 } as {
     walletAddress?: string;
     formattedWalletAddress?: string
