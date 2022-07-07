@@ -30,6 +30,7 @@ const dialogFieldStyles = {
     outline: 'none',
     fontWeight: 600,
     borderRadius: '.5rem',
+    height: '2.75rem',
     padding: '0.75rem 1rem',
     transition,
     '&:focus': {

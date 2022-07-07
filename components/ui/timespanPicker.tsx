@@ -17,46 +17,48 @@ export enum DateTimeType {
 }
 
 export type Timespan = {
-    fromDate?: number;
-    fromTime?: number;
-    toDate?: number;
-    toTime?: number;
-    isIndefinite?: boolean;
-    weekdays?: Array<number>, // from Mon
-    at?: number;
+    fromDate?: string;
+    fromTime?: string;
+    toDate?: string;
+    toTime?: string;
+    isPerpetual?: boolean;
+    weekdays?: Array<number>,
+    at?: string;
 }
 
 interface TimespanPickerProps extends Omit<InputProps, 'onChange' | 'value'> {
     value?: Timespan | undefined,
-    onChange?: (timespan: Timespan | undefined) => any,
-    showWeekdays?: boolean
+    onChange?: (timespan: Timespan | undefined) => any
 }
 
 export const TimespanPicker = (props: PropsWithChildren<TimespanPickerProps>) => {
-    const [timespan, setTimespan] = useState<Timespan>({})
+    const [timespan, setTimespan] = useState<Timespan|undefined>(props.value)
     const [fromDate, setFromDate] = useState<string>()
     const [fromTime, setFromTime] = useState<string>()
     const [toDate, setToDate] = useState<string>()
     const [toTime, setToTime] = useState<string>()
-    const [isIndefinite, setIsIndefinite] = useState<string>()
     const [at, setAt] = useState<string>()
-    const [isPerpetual, setIsPerpetual] = useState(0)
-    const [isWeeklyEvent, setIsWeeklyEvent] = useState(0)
+    const [isPerpetual, setIsPerpetual] = useState(false)
     const [isFromToday, setIsFromToday] = useState(false)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+
     const today = date.format(new Date(), 'YYYY-MM-DD')
 
     useEffect(() => {
-        props.onChange && props.onChange(timespan)
+        props.onChange && props.onChange({
+            ...timespan,
+            fromDate,
+            fromTime,
+            toDate,
+            toTime,
+            isPerpetual,
+            at
+        })
     }, [timespan])
 
     useEffect(() => {
         isFromToday && setFromDate(today)
     }, [today, isFromToday])
-
-    const onInputChange = (event: ChangeEvent<HTMLInputElement>, type: DateTimeType): void => {
-        setTimespan({...timespan, [type]: event.target.value})
-    }
 
     return (
         <Container sx={{position: 'relative'}}>
@@ -83,8 +85,8 @@ export const TimespanPicker = (props: PropsWithChildren<TimespanPickerProps>) =>
                                         </Flex>
                                     </Flex>
                                     <Flex sx={{gap: '1rem'}}>
-                                        <Field value={fromDate} onChange={event => onInputChange(event, DateTimeType.fromDate)} disabled={isFromToday} variant='forms.input.dialogTransparent' type='date' />
-                                        <Field value={fromTime} onChange={event => onInputChange(event, DateTimeType.fromTime)} variant='forms.input.dialogTransparent' type='time' />
+                                        <Field value={fromDate} onChange={event => setFromDate(event.target.value)} min={today} disabled={isFromToday} variant='forms.input.dialogTransparent' sx={{flex: 1}} type='date' />
+                                        <Field value={fromTime} onChange={event => setFromTime(event.target.value)} variant='forms.input.dialogTransparent' type='time' />
                                     </Flex>
                                 </Flex>
                                 <Flex sx={{flexDirection: 'column', gap: '1rem'}}>
@@ -93,29 +95,29 @@ export const TimespanPicker = (props: PropsWithChildren<TimespanPickerProps>) =>
                                             To
                                         </Text>
                                         <Flex ml='1rem'>
-                                            <Switch value={isPerpetual} checked={isPerpetual} id="isPerpetual" onChange={() => setIsPerpetual(+!isPerpetual)} />
+                                            <Switch value={+isPerpetual} checked={isPerpetual} id="isPerpetual" onChange={() => setIsPerpetual(!isPerpetual)} />
                                             <Label htmlFor="isPerpetual" variant='forms.label.switch' sx={{ whiteSpace: 'nowrap' }}>
                                                 indefinite
                                             </Label>
                                         </Flex>
                                     </Flex>
                                     <Flex sx={{gap: '1rem'}}>
-                                        <Field value={toDate} onChange={event => onInputChange(event, DateTimeType.toDate)} disabled={!!isPerpetual} variant='forms.input.dialogTransparent' type='date' />
-                                        <Field value={toTime} onChange={event => onInputChange(event, DateTimeType.toTime)} disabled={!!isPerpetual} variant='forms.input.dialogTransparent' type='time' />
+                                        <Field value={toDate} onChange={event => setToDate(event.target.value)} disabled={!!isPerpetual} min={today} variant='forms.input.dialogTransparent' sx={{flex: 1}} type='date' />
+                                        <Field value={toTime} onChange={event => setToTime(event.target.value)} disabled={!!isPerpetual} variant='forms.input.dialogTransparent' type='time' />
                                     </Flex>
                                 </Flex>
                                 <Flex sx={{flexDirection: 'column', gap: '1rem'}}>
                                     <Text as='h2'>
                                         Happens Every
                                     </Text>
-                                    <WeekdaySelector onChange={weekdays => setTimespan({...timespan, weekdays: weekdays})} />
+                                    <WeekdaySelector value={timespan?.weekdays} onChange={weekdays => setTimespan({...timespan, weekdays: weekdays})} />
                                 </Flex>
                                 <Flex sx={{gap: '1rem', alignItems: 'center'}}>
                                     <Text as='h2'>
                                         At
                                     </Text>
                                     <Flex sx={{gap: '1rem'}}>
-                                        <Field value={timespan.at} onChange={event => onInputChange(event, DateTimeType.at)} variant='forms.input.dialogTransparent' type='time' />
+                                        <Field value={at} onChange={event => setAt(event.target.value)} variant='forms.input.dialogTransparent' type='time' />
                                     </Flex>
                                 </Flex>
                             </Flex>

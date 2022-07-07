@@ -2,21 +2,22 @@ import { useEffect, useState } from "react"
 import { Container, Button } from "theme-ui"
 
 export type WeekdaySelectorProps = {
+    value?: Array<number>,
     onChange?: (selectedWeekdays: Array<number>) => any;
 }
 
 export const WeekdaySelector: React.FC<WeekdaySelectorProps> = props => {
     const weekdays = [
-        {label: 'Mon', title: 'Monday'},
-        {label: 'Tue', title: 'Tuesday'},
-        {label: 'Wed', title: 'Wednsday'},
-        {label: 'Thr', title: 'Thursday'},
-        {label: 'Fri', title: 'Friday'},
-        {label: 'Sat', title: 'Saturday'},
-        {label: 'Sun', title: 'Sunday'}
+        {label: 'M', title: 'Monday'},
+        {label: 'T', title: 'Tuesday'},
+        {label: 'W', title: 'Wednsday'},
+        {label: 'T', title: 'Thursday'},
+        {label: 'F', title: 'Friday'},
+        {label: 'S', title: 'Saturday'},
+        {label: 'S', title: 'Sunday'}
     ]
 
-    const [activeWeekdays, setActiveWeekdays] = useState<Array<number>>([])
+    const [activeWeekdays, setActiveWeekdays] = useState<Array<number>>(props.value || [])
 
     useEffect(() => {
         props.onChange && props.onChange(activeWeekdays)

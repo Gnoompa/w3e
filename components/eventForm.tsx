@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, SyntheticEvent, BaseSyntheticEvent, MouseEventHandler, useContext, ReactElement } from 'react'
-import { Flex, Box, Button, Label, Input, Text, Container, Textarea, Switch, Spinner, SxProp, ThemeUIStyleObject } from "theme-ui"
+import { Flex, Box, Button, Label, Input, Text, Container, Textarea, Switch, Spinner, SxProp, ThemeUIStyleObject, Link } from "theme-ui"
 import { useMoralis, useMoralisFile, useMoralisWeb3Api, useMoralisWeb3ApiCall } from "react-moralis"
 import { NavigateBack, Tooltip, Field, LocationPicker, TimespanPicker, FileUploader } from '@components/index'
 import { useDebounce, handleOnMouseDown, formatWalletAddress } from 'helpers/hooks'
@@ -101,22 +101,28 @@ const EventForm = () => {
             <Text mt='.75em' as='h1'>
                 New Event
             </Text>
-            {/* <Flex mt='3rem' sx={{alignItems: 'center'}}>
-                <Toggle options={{live: {label: 'live', secondaryLabel: 'polygon mainnet', tooltip: 'Only "Live" event has real value (could be traded on Opensea, etc.). Use "Free test" mode to get familiar with Tickero!'}, test: {label: 'free test', secondaryLabel: 'polygon testnet'}}} />
-            </Flex> */}
-            <Flex mt='3rem' sx={{alignItems: 'center', justifyContent: 'space-between'}}>
-                <Flex>
-                    <Switch value={isTestMode} id="isTestMode" onChange={() => setIsTestMode(+!isTestMode)} />
-                    <Label htmlFor="isTestMode" variant='forms.label.switch' sx={{ whiteSpace: 'nowrap' }}>
-                        test for free
-                    </Label>
-                    <Text ml='1rem' variant='hint'>
-                        ({targetBlockchainLabel})
-                    </Text>
+            <Flex mt='3rem' sx={{flexDirection: 'column'}}>
+                <Flex sx={{alignItems: 'center', justifyContent: 'space-between'}}>
+                    <Flex>
+                        <Switch value={isTestMode} checked={!!isTestMode} id="isTestMode" onChange={() => setIsTestMode(+!isTestMode)} />
+                        <Label htmlFor="isTestMode" variant='forms.label.switch' sx={{ whiteSpace: 'nowrap' }}>
+                            test for free
+                        </Label>
+                        <Text ml='1rem' variant='hint'>
+                            ({targetBlockchainLabel})
+                        </Text>
+                    </Flex>
+                    <Box>
+                        <Tooltip />
+                    </Box>
                 </Flex>
-                <Box>
-                    <Tooltip />
-                </Box>
+                {!!isTestMode &&
+                    <Flex mt='1rem' sx={{justifyContent: 'center'}}>
+                        <Link href='https://faucet.polygon.technology/' target='_blank'>
+                            <Button variant='accent'>get free tokens</Button>
+                        </Link>
+                    </Flex>
+                }
             </Flex>
             <Flex mt='2rem' sx={{gap: '2rem'}}>
                 <Box sx={{position: 'relative'}}>

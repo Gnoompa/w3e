@@ -12,7 +12,7 @@ export interface FieldProps extends InputProps {
 
 export const Field: React.FC<FieldProps> = props => {
     return (
-        <Flex sx={{position: 'relative', flexDirection: 'column'}}>
+        <Flex sx={{position: 'relative', flexDirection: 'column', ...props.sx}}>
             <Flex sx={{flexDirection: 'column', flex: 1, position: 'relative'}}>
                 <Box>
                     {props.icon && (typeof(props.icon) == 'string'
