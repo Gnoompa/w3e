@@ -11,10 +11,13 @@ import { Location } from './ui/locationPicker'
 import { Timespan } from './ui/timespanPicker'
 import { Portal } from 'react-portal'
 import walletIcon from '../styles/icons/wallet.svg'
-import cameraIcon from '../styles/icons/camera.svg'
+import cameraIcon from '../styles/icons/picture.svg'
 import crossIcon from '../styles/icons/cross.svg'
 import AppContext from '@components/context'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/router'
+import upgradableEventRewardImage from '../styles/images/upgradableEventReward.png'
+import simpleEventRewardImage from '../styles/images/simpleEventReward.png'
 
 const QrScanner = dynamic(() => import('./ui/qrScanner'), {
     ssr: false
@@ -29,9 +32,17 @@ const EventForm = () => {
         beneficiary
     }
 
+    enum Stage {
+        eventConfig,
+        rewardConfig
+    }
+
+    const router = useRouter()
     const context = useContext(AppContext)
     const { Moralis, user } = useMoralis()
     const { native: MoralisNativeAPI } = useMoralisWeb3Api()
+    const [routerPath, setRouterPath] = useState('')
+    const [stage, setStage] = useState<Stage>(Stage.eventConfig)
     const [isTestMode, setIsTestMode] = useState(0)
     const [fieldInFocus, setFieldInFocus] = useState<FieldIds>()
     const [eventTitle, setEventTitle] = useState<string>()
@@ -50,7 +61,13 @@ const EventForm = () => {
     const [beneficiary, setBeneficiary] = useState<string>()
     const [isScanningBeneficiaryQr, setIsScanningBeneficiaryQr] = useState(false)
     const [scannedBeneficiaryAddress, setScannedBeneficiaryAddress] = useState('')
+    const [eventPoster, setEventPoster] = useState<Blob>()
+    const [isUpgradableEventReward, setIsUpgradableEventReward] = useState(false)
     const targetBlockchainLabel = isTestMode ? 'polygon testnet' : 'polygon mainnet'
+
+    useEffect(() => {
+        setRouterPath(router.asPath)
+    }, [router.asPath])
 
     useEffect(() => {
         isFreeTicketPrice && setPriceFieldSubtitle('FREE')
@@ -95,172 +112,220 @@ const EventForm = () => {
 
     return (
         <Flex sx={{flexDirection: 'column', width: '23rem', margin: '20rem auto', transform: 'translateY(-50%)'}}>
-            <NavigateBack href='/app'>
-                to ticketing
-            </NavigateBack>
-            <Text mt='.75em' as='h1'>
-                New Event
-            </Text>
-            <Flex mt='3rem' sx={{flexDirection: 'column'}}>
-                <Flex sx={{alignItems: 'center', justifyContent: 'space-between'}}>
-                    <Flex>
-                        <Switch value={isTestMode} checked={!!isTestMode} id="isTestMode" onChange={() => setIsTestMode(+!isTestMode)} />
-                        <Label htmlFor="isTestMode" variant='forms.label.switch' sx={{ whiteSpace: 'nowrap' }}>
-                            test for free
-                        </Label>
-                        <Text ml='1rem' variant='hint'>
-                            ({targetBlockchainLabel})
-                        </Text>
+            {({
+                ['/app#createEvent']: <>
+                    <NavigateBack href='/app'>
+                        to ticketing
+                    </NavigateBack>
+                    <Text mt='.75em' as='h1'>
+                        New Event
+                    </Text>
+                    <Flex mt='3rem' sx={{flexDirection: 'column'}}>
+                        <Flex sx={{alignItems: 'center', justifyContent: 'space-between'}}>
+                            <Flex>
+                                <Switch value={isTestMode} checked={!!isTestMode} id="isTestMode" onChange={() => setIsTestMode(+!isTestMode)} />
+                                <Label htmlFor="isTestMode" variant='forms.label.switch' sx={{ whiteSpace: 'nowrap' }}>
+                                    test for free
+                                </Label>
+                                <Text ml='1rem' variant='hint'>
+                                    ({targetBlockchainLabel})
+                                </Text>
+                            </Flex>
+                            <Box>
+                                <Tooltip />
+                            </Box>
+                        </Flex>
+                        {!!isTestMode &&
+                            <Flex mt='1rem' sx={{justifyContent: 'center'}}>
+                                <Link href='https://faucet.polygon.technology/' target='_blank'>
+                                    <Button variant='accentSmall'>get free tokens</Button>
+                                </Link>
+                            </Flex>
+                        }
                     </Flex>
-                    <Box>
-                        <Tooltip />
-                    </Box>
-                </Flex>
-                {!!isTestMode &&
-                    <Flex mt='1rem' sx={{justifyContent: 'center'}}>
-                        <Link href='https://faucet.polygon.technology/' target='_blank'>
-                            <Button variant='accent'>get free tokens</Button>
-                        </Link>
-                    </Flex>
-                }
-            </Flex>
-            <Flex mt='2rem' sx={{gap: '2rem'}}>
-                <Box sx={{position: 'relative'}}>
-                    <Field variant='forms.input.dialog' placeholder='description' onMouseDown={event => handleOnMouseDown(event, () => toggleActiveDialog(FieldIds.description))} icon='✏️' readOnly />
-                    {fieldInFocus == FieldIds.description &&
-                        <ContainerPopup onOutsideClick={() => setFieldInFocus(undefined)}>
-                            <Field autoFocus variant='forms.input.dialogTransparent' placeholder='title' onChange={event => setEventTitle(event.target.value)} sx={{textAlign: 'center'}} />
-                            <Textarea mt='1rem' placeholder='description' onChange={event => setEventDescription(event.target.value)} />
-                        </ContainerPopup>
-                    }
-                </Box>
-                <Box sx={{position: 'relative'}}>
-                    <Field variant='forms.input.dialog' placeholder='ticketing' onMouseDown={event => handleOnMouseDown(event, () => toggleActiveDialog(FieldIds.ticketing))} icon='🎟' readOnly />
-                    {fieldInFocus == FieldIds.ticketing &&
-                        <ContainerPopup onOutsideClick={() => setFieldInFocus(undefined)} sx={{right: 0}}>
-                            <Flex sx={{flexDirection: 'column'}}>
-                                <Flex mb='1rem' sx={{alignItems: 'center'}}>
-                                    <Text as='h2'>
-                                        Tickets
-                                    </Text>
-                                    <Flex ml='1rem'>
-                                        <Switch value={isInSubscriptionMode} checked={!!isInSubscriptionMode} id="isInSubscriptionMode" onChange={() => setIsInSubscriptionMode(+!isInSubscriptionMode)} />
-                                        <Label htmlFor="isInSubscriptionMode" variant='forms.label.switch' sx={{ whiteSpace: 'nowrap' }}>
-                                            as subscription
-                                        </Label>
-                                    </Flex>
-                                </Flex>
-                                {!!isInSubscriptionMode &&
-                                    <Flex mb='1rem' sx={{flexDirection: 'column'}}>
-                                        <Flex sx={{alignItems: 'center', gap: '1rem'}}>
-                                            <Field variant='forms.input.dialogTransparent' placeholder='duration' disabled={!!isIndefiniteSubscription} autoFocus sx={{width: '7rem'}}/>
-                                            <Flex>
-                                                <Switch value={isIndefiniteSubscription} checked={!!isIndefiniteSubscription} id="isIndefiniteSubscription" onChange={() => setIsIndefiniteSubscription(+!isIndefiniteSubscription)} />
-                                                <Label htmlFor="isIndefiniteSubscription" variant='forms.label.switch'>
-                                                    indefinite
+                    <Flex mt='2rem' sx={{gap: '2rem'}}>
+                        <Box sx={{position: 'relative'}}>
+                            <Field variant='forms.input.dialog' placeholder='description' onMouseDown={event => handleOnMouseDown(event, () => toggleActiveDialog(FieldIds.description))} icon='✏️' readOnly />
+                            {fieldInFocus == FieldIds.description &&
+                                <ContainerPopup onOutsideClick={() => setFieldInFocus(undefined)}>
+                                    <Field autoFocus variant='forms.input.dialogTransparent' placeholder='title' onChange={event => setEventTitle(event.target.value)} sx={{textAlign: 'center'}} />
+                                    <Textarea mt='1rem' placeholder='description' onChange={event => setEventDescription(event.target.value)} />
+                                </ContainerPopup>
+                            }
+                        </Box>
+                        <Box sx={{position: 'relative'}}>
+                            <Field variant='forms.input.dialog' placeholder='ticketing' onMouseDown={event => handleOnMouseDown(event, () => toggleActiveDialog(FieldIds.ticketing))} icon='🎟' readOnly />
+                            {fieldInFocus == FieldIds.ticketing &&
+                                <ContainerPopup onOutsideClick={() => setFieldInFocus(undefined)} sx={{right: 0}}>
+                                    <Flex sx={{flexDirection: 'column'}}>
+                                        <Flex mb='1rem' sx={{alignItems: 'center'}}>
+                                            <Text as='h2'>
+                                                Tickets
+                                            </Text>
+                                            <Flex ml='1rem'>
+                                                <Switch value={isInSubscriptionMode} checked={!!isInSubscriptionMode} id="isInSubscriptionMode" onChange={() => setIsInSubscriptionMode(+!isInSubscriptionMode)} />
+                                                <Label htmlFor="isInSubscriptionMode" variant='forms.label.switch' sx={{ whiteSpace: 'nowrap' }}>
+                                                    as subscription
                                                 </Label>
                                             </Flex>
                                         </Flex>
-                                        <Flex mt='.25rem' pr='.25rem' sx={{alignContent: 'flex-end', width: '7rem', justifyContent: 'flex-end'}}>
-                                            <Text variant='fieldSubtitle'>
-                                                in days
-                                            </Text>
-                                        </Flex>
-                                    </Flex>
-                                }
-                                <Flex sx={{alignItems: 'center', gap: '1rem'}}>
-                                    <Field variant='forms.input.dialogTransparent' placeholder='supply' disabled={!!isUnlimitedTicketSupply} autoFocus sx={{width: '7rem'}}/>
-                                    <Flex sx={{alignItems: 'center'}}>
-                                        <Switch value={isUnlimitedTicketSupply} checked={!!isUnlimitedTicketSupply} id="isUnlimitedTicketSupply" onChange={() => setIsUnlimitedTicketSupply(+!isUnlimitedTicketSupply)} />
-                                        <Label htmlFor="isUnlimitedTicketSupply" variant='forms.label.switch'>
-                                            unlimited
-                                        </Label>
-                                    </Flex>
-                                </Flex>
-                                <Flex mt='1rem' sx={{alignItems: 'center'}}>
-                                    <Flex sx={{flexDirection: 'column'}}>
+                                        {!!isInSubscriptionMode &&
+                                            <Flex mb='1rem' sx={{flexDirection: 'column'}}>
+                                                <Flex sx={{alignItems: 'center', gap: '1rem'}}>
+                                                    <Field variant='forms.input.dialogTransparent' placeholder='duration' disabled={!!isIndefiniteSubscription} autoFocus sx={{width: '7rem'}}/>
+                                                    <Flex>
+                                                        <Switch value={isIndefiniteSubscription} checked={!!isIndefiniteSubscription} id="isIndefiniteSubscription" onChange={() => setIsIndefiniteSubscription(+!isIndefiniteSubscription)} />
+                                                        <Label htmlFor="isIndefiniteSubscription" variant='forms.label.switch'>
+                                                            indefinite
+                                                        </Label>
+                                                    </Flex>
+                                                </Flex>
+                                                <Flex mt='.25rem' pr='.25rem' sx={{alignContent: 'flex-end', width: '7rem', justifyContent: 'flex-end'}}>
+                                                    <Text variant='fieldSubtitle'>
+                                                        in days
+                                                    </Text>
+                                                </Flex>
+                                            </Flex>
+                                        }
                                         <Flex sx={{alignItems: 'center', gap: '1rem'}}>
-                                            <Field variant='forms.input.dialogTransparent' placeholder='price' disabled={!!isFreeTicketPrice} onChange={event => setTicketPrice(+event.target.value)} postfix='$' sx={{width: '7rem'}}/>
-                                            <Flex>
-                                                <Switch value={isFreeTicketPrice} checked={!!isFreeTicketPrice} id="isFreeTicketPrice" onChange={() => setIsFreeTicketPrice(+!isFreeTicketPrice)} />
-                                                <Label htmlFor="isFreeTicketPrice" variant='forms.label.switch'>
-                                                    free
+                                            <Field variant='forms.input.dialogTransparent' placeholder='supply' disabled={!!isUnlimitedTicketSupply} autoFocus sx={{width: '7rem'}}/>
+                                            <Flex sx={{alignItems: 'center'}}>
+                                                <Switch value={isUnlimitedTicketSupply} checked={!!isUnlimitedTicketSupply} id="isUnlimitedTicketSupply" onChange={() => setIsUnlimitedTicketSupply(+!isUnlimitedTicketSupply)} />
+                                                <Label htmlFor="isUnlimitedTicketSupply" variant='forms.label.switch'>
+                                                    unlimited
                                                 </Label>
                                             </Flex>
                                         </Flex>
-                                        <Flex mt='.25rem' pr='.25rem' sx={{alignContent: 'flex-end', width: '7rem', justifyContent: 'flex-end'}}>
-                                            <Text variant='fieldSubtitle'>
-                                                {priceFieldSubtitle}
-                                            </Text>
+                                        <Flex mt='1rem' sx={{alignItems: 'center'}}>
+                                            <Flex sx={{flexDirection: 'column'}}>
+                                                <Flex sx={{alignItems: 'center', gap: '1rem'}}>
+                                                    <Field variant='forms.input.dialogTransparent' placeholder='price' disabled={!!isFreeTicketPrice} onChange={event => setTicketPrice(+event.target.value)} postfix='$' sx={{width: '7rem'}}/>
+                                                    <Flex>
+                                                        <Switch value={isFreeTicketPrice} checked={!!isFreeTicketPrice} id="isFreeTicketPrice" onChange={() => setIsFreeTicketPrice(+!isFreeTicketPrice)} />
+                                                        <Label htmlFor="isFreeTicketPrice" variant='forms.label.switch'>
+                                                            free
+                                                        </Label>
+                                                    </Flex>
+                                                </Flex>
+                                                <Flex mt='.25rem' pr='.25rem' sx={{alignContent: 'flex-end', width: '7rem', justifyContent: 'flex-end'}}>
+                                                    <Text variant='fieldSubtitle'>
+                                                        {priceFieldSubtitle}
+                                                    </Text>
+                                                </Flex>
+                                            </Flex>
                                         </Flex>
                                     </Flex>
-                                </Flex>
-                            </Flex>
-                        </ContainerPopup>
-                    }
-                </Box>
-            </Flex>
-            <Flex mt='2rem' sx={{gap: '2rem'}}>
-                <LocationPicker value={eventLocation} onChange={location => setEventLocation(location)} />
-                <TimespanPicker value={eventTimespan} onChange={setEventTimespan} />
-            </Flex>
-            <Flex mt='2rem' sx={{alignItems: 'center'}}>
-                <Box sx={{flex: 1, position: 'relative'}}>
-                    <Field variant='forms.input.dialog' value={beneficiary} placeholder='beneficiary' onChange={event => setBeneficiary(event.target.value)} onBlur={() => onFieldBlur()} onFocus={() => setFieldInFocus(FieldIds.beneficiary)} icon='👛' />
-                    {fieldInFocus == FieldIds.beneficiary &&
-                        <ContainerPopup variant='layout.container.popupTransparent' onOutsideClick={() => setFieldInFocus(undefined)} sx={{left: 0}}>
-                            <Flex sx={{gap: '1rem'}}>
-                                <Button variant='fieldDialog' onMouseDown={event => handleOnMouseDown(event, () => setBeneficiary(user?.get('ethAddress')))}>
-                                    <Flex sx={{flexDirection: 'column', alignItems: 'flex-start'}}>
-                                        <Text>
-                                            me
-                                        </Text>
-                                        <Text variant='secondary' mt='.25rem' sx={{fontSize: '.75rem'}}>
-                                            {context?.formattedWalletAddress}
-                                        </Text>
-                                    </Flex>
-                                </Button>
-                                <Button variant='fieldDialog' onMouseDown={event => handleOnMouseDown(event, () => setIsScanningBeneficiaryQr(true))}>
-                                    <Flex sx={{flexDirection: 'column'}}>
-                                        <NextImage src={cameraIcon} alt='camera icon' />
-                                        <Text variant='secondary' mt='.25rem' sx={{fontSize: '.75rem'}}>
-                                            scan QR
-                                        </Text>
-                                    </Flex>
-                                </Button>
-                            </Flex>
-                        </ContainerPopup>
-                    }
-                    {isScanningBeneficiaryQr &&
-                        <Portal>
-                            <Container variant='layout.container.modalBackground'>
-                                <Flex sx={{flexDirection: 'column', alignItems: 'center', margin: 'max(50vh, 10rem) auto', transform: 'translateY(-50%)', maxWidth: '23rem'}}>
-                                    <Flex sx={{alignItems: 'center', justifyContent: 'space-between', width: '100%'}}>
-                                        <Text as='h2'>
-                                            Beneficiary
-                                        </Text>
-                                        <NextImage src={crossIcon} alt='back' onClick={() => setIsScanningBeneficiaryQr(false)}/>
-                                    </Flex>
-                                    <Box mt='2rem' sx={{maxWidth: '100%'}}>
-                                        <QrScanner onResult={onQrScanResult}/>
-                                    </Box>
-                                    {scannedBeneficiaryAddress &&
-                                        <Button variant='accent' mt='2rem' onClick={() => (setBeneficiary(scannedBeneficiaryAddress), setIsScanningBeneficiaryQr(false))}>
-                                            set the beneficiary
+                                </ContainerPopup>
+                            }
+                        </Box>
+                    </Flex>
+                    <Flex mt='2rem' sx={{gap: '2rem'}}>
+                        <LocationPicker value={eventLocation} onChange={location => setEventLocation(location)} />
+                        <TimespanPicker value={eventTimespan} onChange={setEventTimespan} />
+                    </Flex>
+                    <Flex mt='2rem' sx={{alignItems: 'center'}}>
+                        <Box sx={{flex: 1, position: 'relative'}}>
+                            <Field variant='forms.input.dialog' value={beneficiary} placeholder='beneficiary' onChange={event => setBeneficiary(event.target.value)} onBlur={() => onFieldBlur()} onFocus={() => setFieldInFocus(FieldIds.beneficiary)} icon='👛' />
+                            {fieldInFocus == FieldIds.beneficiary &&
+                                <ContainerPopup variant='layout.container.popupTransparent' onOutsideClick={() => setFieldInFocus(undefined)} sx={{left: 0}}>
+                                    <Flex sx={{gap: '1rem'}}>
+                                        <Button variant='fieldDialog' onMouseDown={event => handleOnMouseDown(event, () => setBeneficiary(user?.get('ethAddress')))}>
+                                            <Flex sx={{flexDirection: 'column', alignItems: 'flex-start'}}>
+                                                <Text>
+                                                    me
+                                                </Text>
+                                                <Text variant='secondary' mt='.25rem' sx={{fontSize: '.75rem'}}>
+                                                    {context?.formattedWalletAddress}
+                                                </Text>
+                                            </Flex>
                                         </Button>
-                                    }
-                                </Flex>
+                                        <Button variant='fieldDialog' onMouseDown={event => handleOnMouseDown(event, () => setIsScanningBeneficiaryQr(true))}>
+                                            <Flex sx={{flexDirection: 'column'}}>
+                                                <NextImage src={cameraIcon} alt='camera icon' />
+                                                <Text variant='secondary' mt='.25rem' sx={{fontSize: '.75rem'}}>
+                                                    scan QR
+                                                </Text>
+                                            </Flex>
+                                        </Button>
+                                    </Flex>
+                                </ContainerPopup>
+                            }
+                            {isScanningBeneficiaryQr &&
+                                <Portal>
+                                    <Container variant='layout.container.modalBackground'>
+                                        <Flex sx={{flexDirection: 'column', alignItems: 'center', margin: 'max(50vh, 10rem) auto', transform: 'translateY(-50%)', maxWidth: '23rem'}}>
+                                            <Flex sx={{alignItems: 'center', justifyContent: 'space-between', width: '100%'}}>
+                                                <Text as='h2'>
+                                                    Beneficiary
+                                                </Text>
+                                                <NextImage src={crossIcon} alt='back' onClick={() => setIsScanningBeneficiaryQr(false)}/>
+                                            </Flex>
+                                            <Box mt='2rem' sx={{maxWidth: '100%'}}>
+                                                <QrScanner onResult={onQrScanResult}/>
+                                            </Box>
+                                            {scannedBeneficiaryAddress &&
+                                                <Button variant='accent' mt='2rem' onClick={() => (setBeneficiary(scannedBeneficiaryAddress), setIsScanningBeneficiaryQr(false))}>
+                                                    set the beneficiary
+                                                </Button>
+                                            }
+                                        </Flex>
+                                    </Container>
+                                </Portal>
+                            }
+                        </Box>
+                        <Box ml='2rem'>
+                            <Tooltip />
+                        </Box>
+                    </Flex>
+                    <Box mt='2rem'>
+                        <FileUploader subtitle='add poster' onChange={files => setEventPoster(files[0])} config={{
+                            maxFiles: 1,
+                            accept: {'image/*': [], 'video/*': []}
+                        }} />
+                    </Box>
+                    <Button onClick={() => router.push('/app#eventRewards')} mt='4rem' variant='accent' sx={{alignSelf: 'center'}}>
+                        next
+                    </Button>
+                </>,
+                ['/app#eventRewards']: <>
+                    <NavigateBack href='#createEvent' >
+                        to event
+                    </NavigateBack>
+                    <Flex mt='2.5rem' sx={{alignItems: 'center', justifyContent: 'space-between'}}>
+                        <Text as='h2'>
+                            Participation Rewards
+                        </Text>
+                        <Button variant='accentSmall'>
+                            skip
+                        </Button>
+                    </Flex>
+                    <Flex sx={{flexDirection: 'column'}}>
+                        <Flex mt='3rem'>
+                            <Flex sx={{alignItems: 'center', flex: 1}}>
+                                <Switch value={+isUpgradableEventReward} checked={isUpgradableEventReward} id="isUpgradableEventReward" onChange={() => setIsUpgradableEventReward(!isUpgradableEventReward)} />
+                                <Label htmlFor="isUpgradableEventReward" variant='forms.label.switch'>
+                                    upgradable NFTs
+                                </Label>
+                            </Flex>
+                            <Tooltip />
+                        </Flex>
+                        <Flex sx={{flexDirection: 'column', alignItems: 'center'}}>
+                            <Box mt='2rem'>
+                                <FileUploader subtitle='add NFT files' />
+                            </Box>
+                            <Text mt='2rem' variant='hint'>
+                                file structure primer
+                            </Text>
+                            <Container mt='.5rem' variant='layout.container.image' sx={{width: '15rem'}}>
+                                <NextImage src={isUpgradableEventReward ? upgradableEventRewardImage : simpleEventRewardImage} objectFit='cover' />
                             </Container>
-                        </Portal>
-                    }
-                </Box>
-                <Box ml='2rem'>
-                    <Tooltip />
-                </Box>
-            </Flex>
-            <Box mt='2rem'>
-                <FileUploader subtitle='add poster' />
-            </Box>
+                            <Button onClick={() => router.push('/app#eventRewards')} mt='4rem' variant='accent' sx={{alignSelf: 'center'}}>
+                                complete
+                            </Button>
+                        </Flex>
+                    </Flex>
+                </>
+            })[routerPath]}
         </Flex>
     )
 }

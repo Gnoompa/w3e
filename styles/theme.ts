@@ -144,12 +144,31 @@ const Theme: ThemeType = {
         accent: {
             ...ButtonStyles,
             boxShadow,
-            background: 'gradient',
+            background: fieldBackground,
             borderRadius: '2em',
             color: 'text',
             fontWeight: 600,
             padding: '.75em 2em',
             fontSize: '1.25rem'
+        },
+        accentSmall: {
+            ...ButtonStyles,
+            boxShadow,
+            background: fieldBackground,
+            borderRadius: '.75em',
+            color: 'text',
+            fontWeight: 600,
+            padding: '.75em 1em',
+            fontSize: '1rem'
+        },
+        formNav: {
+            textDecoration: 'none',
+            fontSize: '1rem',
+            fontWeight: 400,
+            color: 'secondaryText',
+            background: 'none',
+            padding: 0,
+            cursor: 'pointer'
         },
         weekdaySelector: buttonWeekdaySelectorStyles,
         weekdaySelectorActive: {
@@ -440,6 +459,11 @@ const Theme: ThemeType = {
                     boxShadow
                 }
             },
+            image: {
+                'img': {
+                    borderRadius: '1rem'                    
+                }
+            },
             tooltip: {
                 cursor: 'help',
                 width: '2rem',
@@ -461,6 +485,8 @@ const Theme: ThemeType = {
                 width: '9rem',
                 height: '7rem',
                 cursor: 'pointer',
+                position: 'relative',
+                overflow: 'hidden',
                 boxShadow
             },
             modalBackground: {

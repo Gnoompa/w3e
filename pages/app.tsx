@@ -2,7 +2,7 @@ import type { NextPage } from 'next'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { default as NextLink } from 'next/link'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Flex, Box, Button, Heading, useColorMode, useThemeUI, Card, Text, Link, Label, Divider, Spinner } from 'theme-ui'
 import { useRouter } from 'next/router'
 import tickeroLogo from '../public/logo/logo@0.5x.png'
@@ -16,11 +16,20 @@ const EventForm = dynamic(() => import('../components/eventForm'), {
 })
 
 const Main: NextPage = () => {
+    enum Routes {
+        Menu,
+        EventForm
+    }
+
     const router = useRouter()
-    const [routerPath, setRouterPath] = useState('')
+    const [routerPath, setRouterPath] = useState<Routes>()
 
     useEffect(() => {
-        setRouterPath(router.asPath)
+        setRouterPath(({
+            '/app': Routes.Menu,
+            '/app#createEvent': Routes.EventForm,
+            '/app#eventRewards': Routes.EventForm
+        })[router.asPath])
     }, [router.asPath])
 
     return (
@@ -31,9 +40,9 @@ const Main: NextPage = () => {
                         <Image src={tickeroLogo} alt="logo" objectFit='contain'></Image>
                     </Box>
                     <Wallet />
-                    {({
-                        '/app': <Menu />,
-                        '/app#createEvent': <EventForm />
+                    {routerPath && ({
+                        [Routes.Menu]: <Menu />,
+                        [Routes.EventForm]: <EventForm />
                     })[routerPath]}
                     <Flex as='nav' variant='styles.nav' sx={{alignItems: 'center', gap: '3rem', position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: '2rem'}}>
                         <Box>
