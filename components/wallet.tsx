@@ -3,29 +3,21 @@ import { Link, Flex, Box, Button, Text, Label, Input, Container, Textarea, Divid
 import { useMoralis, MoralisProvider, useMoralisWeb3Api } from "react-moralis"
 import personIcon from '../styles/icons/person.svg'
 import Image from 'next/image'
-import { AppContext } from './context'
+import { AppContext } from '../helpers/context'
 import OutsideClickHandler from 'react-outside-click-handler'
 
 const Menu = () => {
-    const context = useContext(AppContext)
-    const { Moralis, authenticate, isAuthenticated, user } = useMoralis()
-    const Web3Api = useMoralisWeb3Api()
-    const walletButtonRef = useRef()
+    const {web3APIProvider} = useContext(AppContext)
     const [isWalletDialogToggled, setIsWalletDialogToggled] = useState(false)
-    const walletLabel = isAuthenticated ? 'my account' : 'sign in'
-    const walletAddress = user?.get('ethAddress')
-    const walletAddressLabel = walletAddress ? `${walletAddress.slice(0, 5)}...${walletAddress.slice(-3)}` : ''
-
-    useEffect(() => {
-        context.formattedWalletAddress = walletAddressLabel
-    }, [walletAddressLabel])
+    const walletLabel = web3APIProvider.isAuthenticated() ? 'my account' : 'sign in'
+    const walletAddressLabel = web3APIProvider.getEthAddress({short: true})
 
     const connectWallet = (): Promise<any> =>
-        authenticate({ provider: 'walletconnect' })
+        web3APIProvider.auth()
             .catch(console.error)
 
     const onWalletButtonClick = (): void => {
-        isAuthenticated
+        web3APIProvider.isAuthenticated()
             ? toggleWalletDialog()
             : connectWallet()
     }
@@ -40,7 +32,7 @@ const Menu = () => {
 
     return (
         <Flex sx={{position: 'absolute', top: '4rem', right: '2rem'}}>
-            <Button variant='primary' ref={walletButtonRef} onClick={onWalletButtonClick} sx={{zIndex: 1}}>
+            <Button variant='primary' onClick={onWalletButtonClick} sx={{zIndex: 1}}>
                 <Box sx={{width: '1em', height: '1em', lineHeight: '0em'}}>
                     <Image src={personIcon} alt='person icon' objectFit='contain' />
                 </Box>

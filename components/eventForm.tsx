@@ -1,25 +1,28 @@
-import React, { useState, useMemo, useEffect, SyntheticEvent, BaseSyntheticEvent, MouseEventHandler, useContext, ReactElement } from 'react'
+import React, { useRef, useState, useMemo, useEffect, SyntheticEvent, BaseSyntheticEvent, MouseEventHandler, useContext, ReactElement } from 'react'
 import { Flex, Box, Button, Label, Input, Text, Container, Textarea, Switch, Spinner, SxProp, ThemeUIStyleObject, Link } from "theme-ui"
-import { useMoralis, useMoralisFile, useMoralisWeb3Api, useMoralisWeb3ApiCall } from "react-moralis"
 import { NavigateBack, Tooltip, Field, LocationPicker, TimespanPicker, FileUploader } from '@components/index'
 import { useDebounce, handleOnMouseDown, formatWalletAddress } from 'helpers/hooks'
 import OutsideClickHandler from 'react-outside-click-handler'
 import { BigNumber, ethers } from 'ethers'
-import { runContractFunction } from 'helpers/contract'
 import NextImage from 'next/image'
 import { Location } from './ui/locationPicker'
 import { Timespan } from './ui/timespanPicker'
 import { Portal } from 'react-portal'
 import walletIcon from '../styles/icons/wallet.svg'
-import cameraIcon from '../styles/icons/picture.svg'
+import arrowBackSvg from '../styles/icons/arrowBack.svg'
+import pictureIcon from '../styles/icons/picture.svg'
+import cameraIcon from '../styles/icons/camera.svg'
 import crossIcon from '../styles/icons/cross.svg'
-import AppContext from '@components/context'
 import dynamic from 'next/dynamic'
+import { Stage, Layer, Text as KonvaText, Image } from "react-konva";
 import { useRouter } from 'next/router'
-import upgradableEventRewardImage from '../styles/images/upgradableEventReward.png'
-import simpleEventRewardImage from '../styles/images/simpleEventReward.png'
+import { AppContext } from '../helpers/context'
 
 const QrScanner = dynamic(() => import('./ui/qrScanner'), {
+    ssr: false
+})
+
+const EventTicketImage = dynamic(() => import("./eventTicket"), {
     ssr: false
 })
 
@@ -34,39 +37,49 @@ const EventForm = () => {
 
     enum Stage {
         eventConfig,
-        rewardConfig
+        rewardConfig,
+        creatingEvent
     }
 
     const router = useRouter()
     const context = useContext(AppContext)
-    const { Moralis, user } = useMoralis()
-    const { native: MoralisNativeAPI } = useMoralisWeb3Api()
-    const [routerPath, setRouterPath] = useState('')
-    const [stage, setStage] = useState<Stage>(Stage.eventConfig)
-    const [isTestMode, setIsTestMode] = useState(0)
+    const canvasRef = useRef()
+    const {web3APIProvider} = useContext(AppContext)
+    const [currentStage, setCurrentStage] = useState<Stage>(Stage.eventConfig)
+    const [isTestMode, setIsTestMode] = useState(false)
     const [fieldInFocus, setFieldInFocus] = useState<FieldIds>()
     const [eventTitle, setEventTitle] = useState<string>()
     const [eventDescription, setEventDescription] = useState<string>()
     const [eventLocation, setEventLocation] = useState<Location>()
     const [eventTimespan, setEventTimespan] = useState<Timespan>()
-    const [isInSubscriptionMode, setIsInSubscriptionMode] = useState(0)
-    const [isIndefiniteSubscription, setIsIndefiniteSubscription] = useState(0)
-    const [isUnlimitedTicketSupply, setIsUnlimitedTicketSupply] = useState(0)
-    const [isFreeTicketPrice, setIsFreeTicketPrice] = useState(0)
+    const [isInSubscriptionMode, setIsInSubscriptionMode] = useState(false)
+    const [isIndefiniteSubscription, setIsIndefiniteSubscription] = useState(false)
+    const [subscriptionDuration, setSubscriptionDuration] = useState<number>()
+    const [isUnlimitedTicketSupply, setIsUnlimitedTicketSupply] = useState(false)
+    const [isFreeTicketPrice, setIsFreeTicketPrice] = useState(false)
     const [relativeTicketPrice, setRelativeTicketPrice] = useState<string>()
     const [ticketSupply, setTicketSupply] = useState<number>()
     const [ticketPrice, setTicketPrice] = useState<number>()
     const debouncedTicketPrice = useDebounce(ticketPrice, 4000)
+    const [ticketEventTitle, setTicketEventTitle] = useState<string>()
+    const [ticketEventImageResult, setTicketEventImageResult] = useState<{eventTitle: string, image: string}>()
     const [priceFieldSubtitle, setPriceFieldSubtitle] = useState<string | ReactElement>()
     const [beneficiary, setBeneficiary] = useState<string>()
     const [isScanningBeneficiaryQr, setIsScanningBeneficiaryQr] = useState(false)
     const [scannedBeneficiaryAddress, setScannedBeneficiaryAddress] = useState('')
-    const [eventPoster, setEventPoster] = useState<Blob>()
+    const [eventPoster, setEventPoster] = useState<File>()
     const [isUpgradableEventReward, setIsUpgradableEventReward] = useState(false)
     const targetBlockchainLabel = isTestMode ? 'polygon testnet' : 'polygon mainnet'
 
     useEffect(() => {
-        setRouterPath(router.asPath)
+        !web3APIProvider.isAuthenticated() && web3APIProvider.auth()
+    }, [])
+
+    useEffect(() => {
+        setCurrentStage(({
+            '/app#createEvent': Stage.eventConfig,
+            '/app#eventRewards': Stage.rewardConfig
+        })[router.asPath]!)
     }, [router.asPath])
 
     useEffect(() => {
@@ -86,17 +99,16 @@ const EventForm = () => {
 
     useEffect(() => {
         !isFreeTicketPrice && debouncedTicketPrice && (
-            runContractFunction(
-                MoralisNativeAPI,
-                {
-                    service: 'chainlink',
-                    chain: 'polygon',
-                    action: 'MATIC/USD'
-                }
-            )
-                .then(price => setRelativeTicketPrice(Moralis.Units.FromWei(BigNumber.from(price).toString(), 8)))
+            web3APIProvider.getMaticToUsdPrice()
+                .then(price => setRelativeTicketPrice(ethers.utils.formatUnits(price, 8).toString()))
         )
-    }, [MoralisNativeAPI, isFreeTicketPrice, debouncedTicketPrice])
+    }, [isFreeTicketPrice, debouncedTicketPrice])
+
+    useEffect(() => {
+        currentStage == Stage.creatingEvent &&
+            eventTitle ==ticketEventImageResult?.eventTitle &&
+            createEvent()
+    }, [currentStage, eventTitle, ticketEventImageResult])
 
     const onFieldBlur = (): void => {
         setFieldInFocus(undefined)
@@ -110,10 +122,115 @@ const EventForm = () => {
         setTimeout(() => setFieldInFocus(fieldInFocus === fieldId ? undefined : fieldId))
     }
 
+    // const prepareNFTFilesForMoralis = (files: Array<File>): Array<{path: string, content: string}> =>
+    //     files.map((file, fileIndex) => ({
+    //         path: `tickero/${eventNonce}/${file.name}`,
+    //         content: file.text
+    //     }))
+
+    const uploadNFTFiles = (files: Array<File>): Promise<any> =>
+        web3APIProvider.uploadEventNFTFolder(files)
+
+    const onNFTFilesUpload = (files: Array<File>): void => {
+        files.length && validateNFTFiles(files) && uploadNFTFiles
+    }
+
+    const validateNFTFiles = (files: Array<File>): true|string =>
+        true
+
+    const validateEventForm = (): true|string =>
+        (!beneficiary && 'Add event description') ||
+        (!eventTitle && !eventDescription && 'Add event description') ||
+        (!ticketPrice && !isFreeTicketPrice && 'Add ticket or subscription price') ||
+        true
+
+    const goToEventRewardsStage = (): void => {
+        let errorMessage = validateEventForm()
+
+        errorMessage === true
+            ? router.push('/app#eventRewards')
+            : alert(errorMessage)
+    }
+
+    const mbUploadEventPoster = async (eventPoster: File|undefined) =>
+        await eventPoster && web3APIProvider.uploadEventFiles({files: [eventPoster]})
+
+    const uploadTicketImage = async (ticketImage: string) =>
+        await web3APIProvider.uploadEventFiles({files: [{base64: ticketImage}]})
+
+    const getEventMetadata = (): object => ({
+        name: eventTitle,
+        description: eventDescription,
+        attributes: [
+            (eventTimespan?.fromDate || eventTimespan?.fromTime) && {
+                trait_type: "Event Start Date/Time",
+                value: `
+                    ${eventTimespan.fromDate
+                        ? eventTimespan.fromDate + ' '
+                        : ''}
+                    ${eventTimespan.fromTime
+                        ? eventTimespan.fromTime
+                        : ''}
+                    `
+            },
+            eventTimespan?.weekdays?.length && {
+                trait_type: "Happens On Every",
+                value: eventTimespan.weekdays.map(weekday => weekday.title).join(', ')
+            },
+            eventTimespan?.at && {
+                trait_type: "Happens At",
+                value: eventTimespan.at
+            },
+            eventLocation && {
+                trait_type: "Location",
+                value: eventLocation
+            }
+        ].filter(Boolean)
+    })
+
+    const uploadEventMetadata = (data: object): Promise<string> =>
+        web3APIProvider.uploadEventFiles({files: [{base64: Buffer.from(JSON.stringify(data)).toString('base64')}]})
+
+    const beforeEventCreation = () => {
+        setCurrentStage(Stage.creatingEvent)
+        setTicketEventTitle(eventTitle)
+    }
+
+    const createEvent = async (): void => {
+        const eventPosterUrl = await mbUploadEventPoster(eventPoster)
+        const eventMetadata = getEventMetadata()
+
+        const eventMetadataUrl = await uploadEventMetadata({
+            ...eventMetadata,
+            image: eventPosterUrl
+        })
+
+        const ticketImageUrl = await uploadTicketImage(ticketEventImageResult!.image)
+
+        const ticketMetadataUrl = await uploadEventMetadata({
+            image: ticketImageUrl
+        })
+
+        const eventTokenId = await web3APIProvider.createEvent({
+            calldata: {
+                ticketSupply: ticketSupply || 0,
+                ticketPrice: ticketPrice || 0,
+                beneficiary: beneficiary,
+                eventMetadataUri: eventMetadataUrl,
+                ticketsMetadataUri: ticketMetadataUrl
+            }
+        })
+
+        const response = await eventTokenId.wait()
+
+        console.log(parseInt(response.events.filter(({event}) => event == 'EventCreated')[0].args[0]))    
+    }
+
     return (
-        <Flex sx={{flexDirection: 'column', width: '23rem', margin: '20rem auto', transform: 'translateY(-50%)'}}>
+        <Flex sx={{flexDirection: 'column', width: '22rem', margin: '31rem auto', transform: 'translateY(-50%)'}}>
+            <EventTicketImage eventTitle={ticketEventTitle} onImageGenerated={setTicketEventImageResult}/>
             {({
-                ['/app#createEvent']: <>
+                [Stage.eventConfig]: <>
                     <NavigateBack href='/app'>
                         to ticketing
                     </NavigateBack>
@@ -123,7 +240,7 @@ const EventForm = () => {
                     <Flex mt='3rem' sx={{flexDirection: 'column'}}>
                         <Flex sx={{alignItems: 'center', justifyContent: 'space-between'}}>
                             <Flex>
-                                <Switch value={isTestMode} checked={!!isTestMode} id="isTestMode" onChange={() => setIsTestMode(+!isTestMode)} />
+                                <Switch value={+isTestMode} checked={isTestMode} id="isTestMode" onChange={() => setIsTestMode(!isTestMode)} />
                                 <Label htmlFor="isTestMode" variant='forms.label.switch' sx={{ whiteSpace: 'nowrap' }}>
                                     test for free
                                 </Label>
@@ -148,8 +265,8 @@ const EventForm = () => {
                             <Field variant='forms.input.dialog' placeholder='description' onMouseDown={event => handleOnMouseDown(event, () => toggleActiveDialog(FieldIds.description))} icon='✏️' readOnly />
                             {fieldInFocus == FieldIds.description &&
                                 <ContainerPopup onOutsideClick={() => setFieldInFocus(undefined)}>
-                                    <Field autoFocus variant='forms.input.dialogTransparent' placeholder='title' onChange={event => setEventTitle(event.target.value)} sx={{textAlign: 'center'}} />
-                                    <Textarea mt='1rem' placeholder='description' onChange={event => setEventDescription(event.target.value)} />
+                                    <Field value={eventTitle} autoFocus variant='forms.input.dialogTransparent' placeholder='title' onChange={event => setEventTitle(event.target.value)} sx={{textAlign: 'center'}} />
+                                    <Textarea value={eventDescription} mt='1rem' placeholder='description' onChange={event => setEventDescription(event.target.value)} />
                                 </ContainerPopup>
                             }
                         </Box>
@@ -163,7 +280,7 @@ const EventForm = () => {
                                                 Tickets
                                             </Text>
                                             <Flex ml='1rem'>
-                                                <Switch value={isInSubscriptionMode} checked={!!isInSubscriptionMode} id="isInSubscriptionMode" onChange={() => setIsInSubscriptionMode(+!isInSubscriptionMode)} />
+                                                <Switch value={+isInSubscriptionMode} checked={isInSubscriptionMode} id="isInSubscriptionMode" onChange={() => setIsInSubscriptionMode(!isInSubscriptionMode)} />
                                                 <Label htmlFor="isInSubscriptionMode" variant='forms.label.switch' sx={{ whiteSpace: 'nowrap' }}>
                                                     as subscription
                                                 </Label>
@@ -172,9 +289,9 @@ const EventForm = () => {
                                         {!!isInSubscriptionMode &&
                                             <Flex mb='1rem' sx={{flexDirection: 'column'}}>
                                                 <Flex sx={{alignItems: 'center', gap: '1rem'}}>
-                                                    <Field variant='forms.input.dialogTransparent' placeholder='duration' disabled={!!isIndefiniteSubscription} autoFocus sx={{width: '7rem'}}/>
+                                                    <Field value={subscriptionDuration} onChange={event => setSubscriptionDuration(+event.target.value)} type='number' variant='forms.input.dialogTransparent' placeholder='duration' disabled={!!isIndefiniteSubscription} autoFocus sx={{width: '7rem'}}/>
                                                     <Flex>
-                                                        <Switch value={isIndefiniteSubscription} checked={!!isIndefiniteSubscription} id="isIndefiniteSubscription" onChange={() => setIsIndefiniteSubscription(+!isIndefiniteSubscription)} />
+                                                        <Switch value={+isIndefiniteSubscription} checked={isIndefiniteSubscription} id="isIndefiniteSubscription" onChange={() => setIsIndefiniteSubscription(!isIndefiniteSubscription)} />
                                                         <Label htmlFor="isIndefiniteSubscription" variant='forms.label.switch'>
                                                             indefinite
                                                         </Label>
@@ -188,9 +305,9 @@ const EventForm = () => {
                                             </Flex>
                                         }
                                         <Flex sx={{alignItems: 'center', gap: '1rem'}}>
-                                            <Field variant='forms.input.dialogTransparent' placeholder='supply' disabled={!!isUnlimitedTicketSupply} autoFocus sx={{width: '7rem'}}/>
+                                            <Field value={ticketSupply} onChange={event => setTicketSupply(+event.target.value)} variant='forms.input.dialogTransparent' placeholder='supply' disabled={!!isUnlimitedTicketSupply} autoFocus sx={{width: '7rem'}}/>
                                             <Flex sx={{alignItems: 'center'}}>
-                                                <Switch value={isUnlimitedTicketSupply} checked={!!isUnlimitedTicketSupply} id="isUnlimitedTicketSupply" onChange={() => setIsUnlimitedTicketSupply(+!isUnlimitedTicketSupply)} />
+                                                <Switch value={+isUnlimitedTicketSupply} checked={isUnlimitedTicketSupply} id="isUnlimitedTicketSupply" onChange={() => setIsUnlimitedTicketSupply(!isUnlimitedTicketSupply)} />
                                                 <Label htmlFor="isUnlimitedTicketSupply" variant='forms.label.switch'>
                                                     unlimited
                                                 </Label>
@@ -199,9 +316,9 @@ const EventForm = () => {
                                         <Flex mt='1rem' sx={{alignItems: 'center'}}>
                                             <Flex sx={{flexDirection: 'column'}}>
                                                 <Flex sx={{alignItems: 'center', gap: '1rem'}}>
-                                                    <Field variant='forms.input.dialogTransparent' placeholder='price' disabled={!!isFreeTicketPrice} onChange={event => setTicketPrice(+event.target.value)} postfix='$' sx={{width: '7rem'}}/>
+                                                    <Field value={ticketPrice} type='number' variant='forms.input.dialogTransparent' placeholder='price' disabled={!!isFreeTicketPrice} onChange={event => setTicketPrice(+event.target.value)} postfix='$' sx={{width: '7rem'}}/>
                                                     <Flex>
-                                                        <Switch value={isFreeTicketPrice} checked={!!isFreeTicketPrice} id="isFreeTicketPrice" onChange={() => setIsFreeTicketPrice(+!isFreeTicketPrice)} />
+                                                        <Switch value={+isFreeTicketPrice} checked={isFreeTicketPrice} id="isFreeTicketPrice" onChange={() => setIsFreeTicketPrice(!isFreeTicketPrice)} />
                                                         <Label htmlFor="isFreeTicketPrice" variant='forms.label.switch'>
                                                             free
                                                         </Label>
@@ -229,13 +346,10 @@ const EventForm = () => {
                             {fieldInFocus == FieldIds.beneficiary &&
                                 <ContainerPopup variant='layout.container.popupTransparent' onOutsideClick={() => setFieldInFocus(undefined)} sx={{left: 0}}>
                                     <Flex sx={{gap: '1rem'}}>
-                                        <Button variant='fieldDialog' onMouseDown={event => handleOnMouseDown(event, () => setBeneficiary(user?.get('ethAddress')))}>
+                                        <Button variant='fieldDialog' onMouseDown={event => handleOnMouseDown(event, () => setBeneficiary(web3APIProvider.getEthAddress()))}>
                                             <Flex sx={{flexDirection: 'column', alignItems: 'flex-start'}}>
                                                 <Text>
                                                     me
-                                                </Text>
-                                                <Text variant='secondary' mt='.25rem' sx={{fontSize: '.75rem'}}>
-                                                    {context?.formattedWalletAddress}
                                                 </Text>
                                             </Flex>
                                         </Button>
@@ -283,24 +397,29 @@ const EventForm = () => {
                             accept: {'image/*': [], 'video/*': []}
                         }} />
                     </Box>
-                    <Button onClick={() => router.push('/app#eventRewards')} mt='4rem' variant='accent' sx={{alignSelf: 'center'}}>
-                        next
+                    <Button onClick={goToEventRewardsStage} mt='4rem' variant='accent' sx={{alignSelf: 'center'}}>
+                        <Flex sx={{alignItems: 'center'}}>
+                            next
+                            <Box ml='1rem' sx={{transform: 'rotate(180deg)'}}>
+                                <NextImage src={arrowBackSvg} />
+                            </Box>
+                        </Flex>
                     </Button>
                 </>,
-                ['/app#eventRewards']: <>
+                [Stage.rewardConfig]: <>
                     <NavigateBack href='#createEvent' >
                         to event
                     </NavigateBack>
-                    <Flex mt='2.5rem' sx={{alignItems: 'center', justifyContent: 'space-between'}}>
+                    <Flex mt='2rem' sx={{alignItems: 'center', justifyContent: 'space-between'}}>
                         <Text as='h2'>
                             Participation Rewards
                         </Text>
-                        <Button variant='accentSmall'>
+                        <Button variant='accentSmall' onClick={createEvent}>
                             skip
                         </Button>
                     </Flex>
-                    <Flex sx={{flexDirection: 'column'}}>
-                        <Flex mt='3rem'>
+                    <Flex mt='3rem' sx={{flexDirection: 'column'}}>
+                        {/* <Flex mt='3rem'>
                             <Flex sx={{alignItems: 'center', flex: 1}}>
                                 <Switch value={+isUpgradableEventReward} checked={isUpgradableEventReward} id="isUpgradableEventReward" onChange={() => setIsUpgradableEventReward(!isUpgradableEventReward)} />
                                 <Label htmlFor="isUpgradableEventReward" variant='forms.label.switch'>
@@ -308,24 +427,41 @@ const EventForm = () => {
                                 </Label>
                             </Flex>
                             <Tooltip />
-                        </Flex>
+                        </Flex> */}
                         <Flex sx={{flexDirection: 'column', alignItems: 'center'}}>
+                            <Flex>
+                                <Text mr='1rem'>
+                                    how to upload nft files
+                                </Text>
+                                <Tooltip />
+                            </Flex>
                             <Box mt='2rem'>
-                                <FileUploader subtitle='add NFT files' />
+                                <FileUploader onChange={onNFTFilesUpload} subtitle='add NFT files' />
                             </Box>
-                            <Text mt='2rem' variant='hint'>
+                            {/* <Text mt='2rem' variant='hint'>
                                 file structure primer
                             </Text>
                             <Container mt='.5rem' variant='layout.container.image' sx={{width: '15rem'}}>
                                 <NextImage src={isUpgradableEventReward ? upgradableEventRewardImage : simpleEventRewardImage} objectFit='cover' />
-                            </Container>
-                            <Button onClick={() => router.push('/app#eventRewards')} mt='4rem' variant='accent' sx={{alignSelf: 'center'}}>
+                            </Container> */}
+                            <Button onClick={beforeEventCreation} mt='4rem' variant='accent' sx={{alignSelf: 'center'}}>
                                 complete
                             </Button>
                         </Flex>
                     </Flex>
-                </>
-            })[routerPath]}
+                </>,
+                [Stage.creatingEvent]: <>
+                    <Flex sx={{flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
+                        <Spinner />
+                        <Text mt='2rem' as='h2'>
+                            creating the event
+                        </Text>
+                        <Text mt='1rem' variant='hint'>
+                            might take a minute
+                        </Text>
+                    </Flex>
+                </>                
+            })[currentStage]}
         </Flex>
     )
 }

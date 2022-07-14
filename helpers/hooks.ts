@@ -1,4 +1,6 @@
+import { NextRouter, Router } from 'next/router'
 import { MouseEventHandler, useEffect, useState } from 'react'
+import { UrlWithParsedQuery } from 'url'
 
 export function useDebounce<T>(value: T, delay?: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value)
@@ -12,6 +14,25 @@ export function useDebounce<T>(value: T, delay?: number): T {
   }, [value, delay])
 
   return debouncedValue
+}
+
+export function useRouterQuery<T = Record<string, any>>(router: NextRouter): T {
+  const getRouterQuery = (routePath: string): T =>
+    [
+        ...(new URL(`d:dummy?${routePath.split('?')[1]}`)
+        .searchParams
+        .entries())
+    ]
+      .map(entry => ({[entry[0]]: entry[1]}))
+      .reduce((a, b) => ({...a, ...b})) as T
+
+  const [query, setQuery] = useState<T>(getRouterQuery(router.asPath))
+
+  useEffect(() => {
+    setQuery(getRouterQuery(router.asPath))
+  }, [router.asPath])
+
+  return query
 }
 
 export function handleOnMouseDown(event: React.MouseEvent<HTMLElement>, cb: CallableFunction): void {

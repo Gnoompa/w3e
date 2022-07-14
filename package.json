@@ -21,8 +21,11 @@
     "@walletconnect/web3-provider": "^1.7.8",
     "@web3auth/web3auth": "^1.1.0",
     "date-and-time": "^2.4.0",
+    "dotenv": "^16.0.1",
+    "g": "^2.0.1",
     "google-map-react": "^2.1.10",
     "grommet": "^2.22.0",
+    "konva": "^8.3.10",
     "magic-sdk": "^8.1.1",
     "moralis": "^1.8.1",
     "next": "^12.1.6",
@@ -30,6 +33,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.2",
+    "react-konva": "^18.2.1",
     "react-moralis": "^1.4.0",
     "react-outside-click-handler": "^1.3.0",
     "react-parallax": "^3.5.1",
@@ -43,7 +47,9 @@
     "styled-components": "^5.3.5",
     "theme-ui": "^0.14.2",
     "use-click-outside": "^2.0.0",
-    "webrtc-adapter": "^8.1.1"
+    "use-image": "^1.0.12",
+    "webrtc-adapter": "^8.1.1",
+    "yarn": "^1.22.19"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",

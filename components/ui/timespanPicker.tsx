@@ -6,6 +6,7 @@ import { WeekdaySelector } from '@components/index'
 import OutsideClickHandler from 'react-outside-click-handler'
 import { useDebounce, handleOnMouseDown, formatWalletAddress } from 'helpers/hooks'
 import date from 'date-and-time'
+import { Weekday } from './weekdaySelector'
 
 export enum DateTimeType {
     fromDate = 'fromDate',
@@ -22,7 +23,7 @@ export type Timespan = {
     toDate?: string;
     toTime?: string;
     isPerpetual?: boolean;
-    weekdays?: Array<number>,
+    weekdays?: Array<Weekday>,
     at?: string;
 }
 

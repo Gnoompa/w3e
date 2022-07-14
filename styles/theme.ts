@@ -144,11 +144,11 @@ const Theme: ThemeType = {
         accent: {
             ...ButtonStyles,
             boxShadow,
-            background: fieldBackground,
-            borderRadius: '2em',
+            background: 'linear-gradient(180deg, #FFFFFF -4.48%, #E6E0E6 100%)',
+            borderRadius: '.75em',
             color: 'text',
             fontWeight: 600,
-            padding: '.75em 2em',
+            padding: '.75em 1em',
             fontSize: '1.25rem'
         },
         accentSmall: {
@@ -199,7 +199,7 @@ const Theme: ThemeType = {
             fontSize: '1.25rem',
             fontWeight: 600,
             borderRadius: '.5em',
-            padding: '.75em 1.25em',
+            padding: '.5em 1em',
             cursor: 'pointer',
             transition: transitionDuration,
             ':hover': {
@@ -461,7 +461,7 @@ const Theme: ThemeType = {
             },
             image: {
                 'img': {
-                    borderRadius: '1rem'                    
+                    borderRadius: '1rem'
                 }
             },
             tooltip: {

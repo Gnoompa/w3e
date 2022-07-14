@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react"
 import { Container, Button } from "theme-ui"
 
+export type Weekday = {
+    label: string; // short
+    title: string; // long
+}
+
 export type WeekdaySelectorProps = {
     value?: Array<number>,
-    onChange?: (selectedWeekdays: Array<number>) => any;
+    onChange?: (selectedWeekdays: Array<object>) => any;
 }
 
 export const WeekdaySelector: React.FC<WeekdaySelectorProps> = props => {
@@ -20,7 +25,8 @@ export const WeekdaySelector: React.FC<WeekdaySelectorProps> = props => {
     const [activeWeekdays, setActiveWeekdays] = useState<Array<number>>(props.value || [])
 
     useEffect(() => {
-        props.onChange && props.onChange(activeWeekdays)
+        console.log(activeWeekdays.map(activeWeekday => weekdays[activeWeekday]))
+        props.onChange && props.onChange(activeWeekdays.map(activeWeekday => weekdays[activeWeekday]))
     }, [activeWeekdays])
 
     const isWeekdayActive = (weekdayIndex: number): boolean =>

@@ -63,7 +63,7 @@ export const FileUploader = (props: FileUploaderProps) => {
                 }
             </Container>
             {!!files.length &&
-                <Button onClick={removeAll} mt='5rem' variant='accentSmall' sx={{alignSelf: 'center', zIndex: 1}}>
+                <Button onClick={removeAll} mt='.5rem' variant='accentSmall' sx={{alignSelf: 'center', zIndex: 1}}>
                     clear
                 </Button>
             }

@@ -1,11 +1,14 @@
 import { createContext } from "react"
+import { useWeb3APIProvider } from "./contract"
 
 export const data = {
     walletAddress: '',
-    formattedWalletAddress: ''    
+    formattedWalletAddress: '',
+    web3APIProvider: {}
 } as {
     walletAddress?: string;
-    formattedWalletAddress?: string
+    formattedWalletAddress?: string;
+    web3APIProvider: ReturnType<typeof useWeb3APIProvider>
 }
 
 export const AppContext = createContext(data)
