@@ -41,9 +41,11 @@ const Main: NextPage = () => {
     }
 
     useEffect(() => {
+        console.log(Moralis.isInitialized, Moralis.isWeb3Enabled, Moralis.isAuthenticated, Moralis.isAuthenticating)
         Moralis.isInitialized && (
-            (!Moralis.isWeb3Enabled && Moralis.enableWeb3({ provider: "walletconnect" })),
-            (!Moralis.isAuthenticated && !Moralis.isAuthenticating && enableAPI())
+            (!Moralis.isWeb3Enabled && Moralis.enableWeb3({ provider: "walletconnect" }).then(() => {
+                !Moralis.isAuthenticated && !Moralis.isAuthenticating && enableAPI()
+            }))
         )
 
     }, [Moralis.isInitialized])

@@ -6,7 +6,9 @@ const withOptimizedImages = require('next-optimized-images');
 const nextConfig = withOptimizedImages({
   handleImages: ['png', 'svg'],
   images: {
-    disableStaticImages: true
+    disableStaticImages: true,    
+    loader: 'akamai',
+    path: ''
 } ,
   compiler: {
     emotion: true
