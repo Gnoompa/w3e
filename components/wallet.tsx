@@ -44,7 +44,7 @@ const Menu = () => {
             <Button variant='accent' onClick={onWalletButtonClick} sx={{zIndex: 1}}>
                 <Flex>
                     <Box mr='1rem' sx={{width: '1em', height: '1em', lineHeight: '0em'}}>
-                        <Image src={personIcon} alt='person icon' objectFit='contain' />
+                        <Image src={personIcon} alt='person icon' width='30px' height='30px' objectFit='contain' />
                     </Box>
                     {walletLabel}
                 </Flex>

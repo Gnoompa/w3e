@@ -26,7 +26,7 @@ const Main: NextPage = () => {
         Menu,
         EventForm,
         EventPage,
-        Collectives
+        // Collectives
     }
 
     const router = useRouter()
@@ -54,7 +54,7 @@ const Main: NextPage = () => {
             '/app#createEvent': Routes.EventForm,
             '/app#event': Routes.EventPage,
             '/app#eventRewards': Routes.EventForm,
-            '/app#collectives': Routes.Collectives
+            // '/app#collectives': Routes.Collectives
         })[router.asPath.split('?')[0] || '/app'])
     }, [router.asPath])
 
@@ -72,14 +72,14 @@ const Main: NextPage = () => {
         <AppContextProvider value={contextData}>
             <Flex bg='gradient' sx={{flexDirection: 'column'}}>
                 <Box sx={{width: ['3.5rem', '3rem', '5rem'], top: '4rem', left: '2rem', position: 'absolute'}}>
-                    <Image src={tickeroLogo} alt="logo" objectFit='contain'></Image>
+                    <Image src={tickeroLogo} alt="logo" layout='fill' objectFit='contain'></Image>
                 </Box>
                 <Wallet />
                 {Moralis.isAuthenticated && (routerPath !== undefined) && ({
                     [Routes.Menu]: <Menu />,
                     [Routes.EventForm]: <EventForm />,
                     [Routes.EventPage]: <EventPage />,
-                    [Routes.Collectives]: <EventPage />
+                    // [Routes.Collectives]: <EventPage />
                 })[routerPath]}
                 <Flex as='nav' variant='styles.nav' sx={{alignItems: 'center', gap: '3rem', position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: '2rem'}}>
                     <Box>

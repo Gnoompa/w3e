@@ -5,6 +5,7 @@ import theme from '../styles/theme'
 import { useAmp } from 'next/amp'
 import { ThemeProvider } from 'theme-ui'
 import type { AppProps } from 'next/app'
+import Head from 'next/head'
 import { StyledEngineProvider } from '@mui/material/styles'
 import { MoralisProvider } from "react-moralis"
 
@@ -13,13 +14,17 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <>
-      {!isAmp &&
-        <style>{`
-          ${resetCss}
-          ${normalizeCss}
-          ${globalCss}
-      `}</style>
-      }
+      <Head>
+        <title>Tickero</title>
+        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+        {!isAmp &&
+          <style>{`
+            ${resetCss}
+            ${normalizeCss}
+            ${globalCss}
+        `}</style>
+        }
+      </Head>
       <StyledEngineProvider injectFirst>
         <ThemeProvider theme={theme}>
           <MoralisProvider appId={process.env.MORALIS_APP_ID} serverUrl={process.env.MORALIS_SERVER_URL}>

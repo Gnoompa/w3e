@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 
-const nextConfig = {
+const withOptimizedImages = require('next-optimized-images');
+
+
+const nextConfig = withOptimizedImages({
+  handleImages: ['jpeg', 'png', 'svg'],
+  images: {
+    disableStaticImages: true
+} ,
   compiler: {
     emotion: true
   },
@@ -16,6 +23,6 @@ const nextConfig = {
     TESTNET: "mumbai",
     TICKERO_CONTRACT: "0xC657e5FC36b8A11075d59968FDe28fC1f46c6CBD"
   }
-}
+})
 
 module.exports = nextConfig

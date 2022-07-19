@@ -55,7 +55,7 @@ const Index: NextPage = () => {
                 </NextLink>
               </Box>
               <Box sx={{width: ['3.5rem', '3rem', '10rem'], top: '5%', left: '2rem', position: 'absolute'}}>
-                <Image src={tickeroLogo} alt="logo" objectFit='contain'></Image>
+                <Image src={tickeroLogo} alt="logo" layout='fill' objectFit='contain'></Image>
               </Box>
               <Flex sx={{flexDirection: 'column', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1}}>
                 <Flex sx={{alignItems: 'end'}}>
@@ -107,7 +107,7 @@ const Index: NextPage = () => {
                         each event is a unique NFT
                       </Text>
                       <Box mt='2rem' mb='-6rem' sx={{alignSelf: 'center'}}>
-                        <Image src={notepadPicture} width='300px' height={'200px'} objectFit='contain' alt='notepad picture' />
+                        <Image src={notepadPicture} width='300px' height={'200px'} objectFit='contain' layout='fill' alt='notepad picture' />
                       </Box>
                     </Flex>
                   </Card>

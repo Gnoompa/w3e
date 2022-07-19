@@ -26,8 +26,8 @@ const EventTicketImage = (props: useEventTicketImageProps) => {
         })
     }, [props.eventTitle, image])
 
-    const init = async () => {
-        const response = await fetch(ticketTemplateImage.src)
+    const init = async () => {        
+        const response = await fetch(ticketTemplateImage)
         const blob = await response.blob()
 
         setImage(await createImageBitmap(blob))

@@ -7,7 +7,7 @@ import NextImage from 'next/image'
 import shareIcon from '../styles/icons/share.svg'
 import { Portal } from 'react-portal'
 import { useRouter } from 'next/router'
-import buyTicketImage from '../public/coins/coins3@0.1x.png'
+import buyTicketImage from '../public/coins/coins301x.png'
 import verifyImage from '../public/verify/verify@0.25x.png'
 import crossIcon from '../styles/icons/cross.svg'
 import { AppContext } from '../helpers/context'
@@ -168,7 +168,7 @@ const EventPage = () => {
                 </NavigateBack>
                 <Button variant='accentSmall' onClick={() => navigator.share({title: eventMetadata?.name, url: location.href})}>
                     <Flex sx={{alignItems: 'center'}}>
-                        <NextImage src={shareIcon} alt='share'/>
+                        <NextImage src={shareIcon} width='30px' height='30px' alt='share'/>
                         <Box ml='.5rem'>
                             share
                         </Box>
@@ -205,7 +205,7 @@ const EventPage = () => {
                                     <Button variant='accent' onClick={buyTicket} disabled={isBuyingATicket}>
                                         <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
                                             <Box sx={{width: '3rem', height: '2rem', position: 'relative'}}>
-                                                <NextImage src={buyTicketImage} alt="buy a ticket" layout='fill' objectFit='contain' />
+                                                <NextImage src={buyTicketImage} alt="buy a ticket" width='30px' height='30px' objectFit='contain' />
                                             </Box>
                                             {event?.isSubscription ? 'subscribe' : 'buy a ticket'}
                                         </Flex>
@@ -223,7 +223,7 @@ const EventPage = () => {
                             <Button variant='accent' onClick={startVerification}>
                                 <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
                                     <Box sx={{width: '3rem', height: '2rem'}}>
-                                        <NextImage src={verifyImage} alt="verify participant" />
+                                        <NextImage src={verifyImage} width='30px' height='30px' alt="verify participant" />
                                     </Box>
                                     verify a participant
                                 </Flex>
@@ -232,7 +232,7 @@ const EventPage = () => {
                                 <Button variant='accent' onClick={() => setIsSoulbounding(true)}>
                                     <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
                                         <Box sx={{width: '3rem', height: '2rem', position: 'relative'}}>
-                                            <NextImage src={buyTicketImage} alt="buy a ticket" layout='fill' objectFit='contain' />
+                                            <NextImage src={buyTicketImage} alt="buy a ticket" width='30px' height='30px' objectFit='contain' />
                                         </Box>
                                         <Text>grant POA</Text>
 
@@ -249,7 +249,7 @@ const EventPage = () => {
                                         <Text as='h2'>
                                             Grant POAs
                                         </Text>
-                                        <NextImage src={crossIcon} alt='back' onClick={() => setIsSoulbounding(false)}/>
+                                        <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsSoulbounding(false)}/>
                                     </Flex>
                                     <Box mt='2rem' sx={{maxWidth: '100%'}}>
                                         <QrScanner showResult={false} onResult={onSoulboundingWalletQrScanResult} />
@@ -290,7 +290,7 @@ const EventPage = () => {
                                         <Text as='h2'>
                                             Verify Participants
                                         </Text>
-                                        <NextImage src={crossIcon} alt='back' onClick={() => setIsVerifyingEventParticipants(false)}/>
+                                        <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsVerifyingEventParticipants(false)}/>
                                     </Flex>
                                     <Box mt='2rem' sx={{maxWidth: '100%'}}>
                                         <QrScanner showResult={false} onResult={onParticipantVerificationWalletQrScanResult} />

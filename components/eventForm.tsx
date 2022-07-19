@@ -358,7 +358,7 @@ const EventForm = () => {
                                         </Button>
                                         <Button variant='fieldDialog' onMouseDown={event => handleOnMouseDown(event, () => setIsScanningBeneficiaryQr(true))}>
                                             <Flex sx={{flexDirection: 'column'}}>
-                                                <NextImage src={cameraIcon} alt='camera icon' />
+                                                <NextImage src={cameraIcon} width='30px' height='30px' alt='camera icon' />
                                                 <Text variant='secondary' mt='.25rem' sx={{fontSize: '.75rem'}}>
                                                     scan QR
                                                 </Text>
@@ -375,7 +375,7 @@ const EventForm = () => {
                                                 <Text as='h2'>
                                                     Beneficiary
                                                 </Text>
-                                                <NextImage src={crossIcon} alt='back' onClick={() => setIsScanningBeneficiaryQr(false)}/>
+                                                <NextImage src={crossIcon} width='30px' height='30px' alt='back' onClick={() => setIsScanningBeneficiaryQr(false)}/>
                                             </Flex>
                                             <Box mt='2rem' sx={{maxWidth: '100%'}}>
                                                 <QrScanner onResult={onQrScanResult}/>
@@ -404,7 +404,7 @@ const EventForm = () => {
                         <Flex sx={{alignItems: 'center'}}>
                             next
                             <Box ml='1rem' sx={{transform: 'rotate(180deg)'}}>
-                                <NextImage src={arrowBackSvg} />
+                                <NextImage width='30px' height='30px' src={arrowBackSvg} />
                             </Box>
                         </Flex>
                     </Button>
