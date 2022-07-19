@@ -4,7 +4,7 @@ const withOptimizedImages = require('next-optimized-images');
 
 
 const nextConfig = withOptimizedImages({
-  handleImages: ['jpeg', 'png', 'svg'],
+  handleImages: ['png', 'svg'],
   images: {
     disableStaticImages: true
 } ,
