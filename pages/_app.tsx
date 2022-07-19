@@ -1,4 +1,4 @@
-import normalizeCss from 'normalize.css'
+import normalizeCss from '../node_modules/normalize.css/normalize.css'
 import resetCss from '../styles/reset.css'
 import globalCss from '../styles/index.css'
 import theme from '../styles/theme'
