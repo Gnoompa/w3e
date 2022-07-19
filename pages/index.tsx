@@ -75,7 +75,7 @@ const Index: NextPage = () => {
                   </Heading>
                 </Box>
                 <Box mt='10rem' ml='50%' sx={{position: 'absolute', transform: 'translateX(-50%)'}}>
-                  <Link href='/app'>
+                  <Link href='/app/app'>
                     <Button variant='accent'>
                       enter app
                     </Button>
