@@ -25,7 +25,8 @@ const Main: NextPage = () => {
     enum Routes {
         Menu,
         EventForm,
-        EventPage
+        EventPage,
+        Collectives
     }
 
     const router = useRouter()
@@ -40,15 +41,32 @@ const Main: NextPage = () => {
     }
 
     useEffect(() => {
-        Moralis.enableWeb3()
+        Moralis.isInitialized && (
+            (!Moralis.isWeb3Enabled && Moralis.enableWeb3({ provider: "walletconnect" })),
+            (!Moralis.isAuthenticated && !Moralis.isAuthenticating && enableAPI())
+        )
 
+    }, [Moralis.isInitialized])
+
+    useEffect(() => {
         setRouterPath(({
             '/app': Routes.Menu,
             '/app#createEvent': Routes.EventForm,
             '/app#event': Routes.EventPage,
-            '/app#eventRewards': Routes.EventForm
+            '/app#eventRewards': Routes.EventForm,
+            '/app#collectives': Routes.Collectives
         })[router.asPath.split('?')[0] || '/app'])
     }, [router.asPath])
+
+    const enableAPI = async () => {
+        await Moralis.authenticate({ provider: "walletconnect" })
+            .then(function (user) {
+                console.log(user!.get("ethAddress"));
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
 
     return (
         <AppContextProvider value={contextData}>
@@ -57,10 +75,11 @@ const Main: NextPage = () => {
                     <Image src={tickeroLogo} alt="logo" objectFit='contain'></Image>
                 </Box>
                 <Wallet />
-                {routerPath !== undefined && ({
+                {Moralis.isAuthenticated && (routerPath !== undefined) && ({
                     [Routes.Menu]: <Menu />,
                     [Routes.EventForm]: <EventForm />,
-                    [Routes.EventPage]: <EventPage />
+                    [Routes.EventPage]: <EventPage />,
+                    [Routes.Collectives]: <EventPage />
                 })[routerPath]}
                 <Flex as='nav' variant='styles.nav' sx={{alignItems: 'center', gap: '3rem', position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: '2rem'}}>
                     <Box>
@@ -71,6 +90,14 @@ const Main: NextPage = () => {
                         </NextLink>
                     </Box>
                     <Divider variant='styles.hr.nav' />
+                    {/* <Box>
+                        <NextLink href='/app#collectives' passHref>
+                            <Link variant='nav'>
+                                collectives
+                            </Link>
+                        </NextLink>
+                    </Box>
+                    <Divider variant='styles.hr.nav' /> */}
                     <Box sx={{position: 'relative'}}>
                         <Box variant='styles.navLabel'>
                             <Text variant='hint'>soon</Text>

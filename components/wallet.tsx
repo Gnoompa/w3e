@@ -9,11 +9,20 @@ import OutsideClickHandler from 'react-outside-click-handler'
 const Menu = () => {
     const {web3APIProvider} = useContext(AppContext)
     const [isWalletDialogToggled, setIsWalletDialogToggled] = useState(false)
-    const walletLabel = web3APIProvider.isAuthenticated() ? 'my account' : 'sign in'
-    const walletAddressLabel = web3APIProvider.getEthAddress({short: true})
+    const isAuthenticated = web3APIProvider.isAuthenticated()
+    const walletLabel = isAuthenticated ? 'my account' : 'sign in'
+    const [walletAddressLabel, setWalletAddressLabel] = useState(web3APIProvider.getEthAddress({short: true}))
+
+    useEffect(() => {
+        setWalletAddressLabel(isAuthenticated ? web3APIProvider.getEthAddress({short: true}) : 'not connected')
+    }, [isAuthenticated])
 
     const connectWallet = (): Promise<any> =>
-        web3APIProvider.auth()
+        web3APIProvider.auth({ provider: "walletconnect" })
+            .catch(console.error)
+
+    const unauth = (): Promise<any> =>
+        web3APIProvider.unauth()
             .catch(console.error)
 
     const onWalletButtonClick = (): void => {
@@ -32,15 +41,15 @@ const Menu = () => {
 
     return (
         <Flex sx={{position: 'absolute', top: '4rem', right: '2rem'}}>
-            <Button variant='primary' onClick={onWalletButtonClick} sx={{zIndex: 1}}>
-                <Box sx={{width: '1em', height: '1em', lineHeight: '0em'}}>
-                    <Image src={personIcon} alt='person icon' objectFit='contain' />
-                </Box>
-                <Text>
+            <Button variant='accent' onClick={onWalletButtonClick} sx={{zIndex: 1}}>
+                <Flex>
+                    <Box mr='1rem' sx={{width: '1em', height: '1em', lineHeight: '0em'}}>
+                        <Image src={personIcon} alt='person icon' objectFit='contain' />
+                    </Box>
                     {walletLabel}
-                </Text>
+                </Flex>
             </Button>
-            {isWalletDialogToggled &&
+            {isAuthenticated && isWalletDialogToggled &&
                 <OutsideClickHandler
                     onOutsideClick={hideWalletDialog}
                     useCapture={true}
@@ -52,7 +61,7 @@ const Menu = () => {
                                 wallet address: {walletAddressLabel}
                             </Text>
                             <Box sx={{alignSelf: 'center'}}>
-                                <Button variant='primary' mt='1em'>sign out</Button>
+                                <Button onClick={unauth} variant='accent' mt='1em'>sign out</Button>
                             </Box>
                         </Flex>
                     </Container>

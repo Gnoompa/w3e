@@ -3,7 +3,7 @@ import { Flex, Box, Button, Label, Input, Text, Container, Textarea, Switch, Spi
 import { NavigateBack, Tooltip, Field, LocationPicker, TimespanPicker, FileUploader } from '@components/index'
 import { useDebounce, handleOnMouseDown, formatWalletAddress } from 'helpers/hooks'
 import OutsideClickHandler from 'react-outside-click-handler'
-import { BigNumber, ethers } from 'ethers'
+import { BigNumber, ethers, FixedNumber } from 'ethers'
 import NextImage from 'next/image'
 import { Location } from './ui/locationPicker'
 import { Timespan } from './ui/timespanPicker'
@@ -158,8 +158,8 @@ const EventForm = () => {
     const uploadTicketImage = async (ticketImage: string) =>
         await web3APIProvider.uploadEventFiles({files: [{base64: ticketImage}]})
 
-    const getEventMetadata = (): object => ({
-        name: eventTitle,
+    const getEventMetadata = (): TickeroEventMetadata => ({
+        name: eventTitle!,
         description: eventDescription,
         attributes: [
             (eventTimespan?.fromDate || eventTimespan?.fromTime) && {
@@ -185,7 +185,7 @@ const EventForm = () => {
                 trait_type: "Location",
                 value: eventLocation
             }
-        ].filter(Boolean)
+        ].filter(Boolean) as object[]
     })
 
     const uploadEventMetadata = (data: object): Promise<string> =>
@@ -213,9 +213,12 @@ const EventForm = () => {
 
         const eventTokenId = await web3APIProvider.createEvent({
             calldata: {
-                ticketSupply: ticketSupply || 0,
-                ticketPrice: ticketPrice || 0,
+                ticketSupply: Math.floor((+ticketSupply! || 0)),
+                ticketPrice: ethers.utils.parseEther(`${+ticketPrice! || 0}`),
                 beneficiary: beneficiary,
+                isInfiniteTicketSupply: isUnlimitedTicketSupply,
+                isSubscription: isInSubscriptionMode,
+                subscriptionDuration: subscriptionDuration || 0,
                 eventMetadataUri: eventMetadataUrl,
                 ticketsMetadataUri: ticketMetadataUrl
             }
@@ -223,7 +226,7 @@ const EventForm = () => {
 
         const response = await eventTokenId.wait()
 
-        console.log(parseInt(response.events.filter(({event}) => event == 'EventCreated')[0].args[0]))    
+        router.push('/app#event?id=' + parseInt(response.events.filter(({event}) => event == 'EventCreated')[0].args[0]))
     }
 
     return (
@@ -414,7 +417,7 @@ const EventForm = () => {
                         <Text as='h2'>
                             Participation Rewards
                         </Text>
-                        <Button variant='accentSmall' onClick={createEvent}>
+                        <Button variant='accentSmall' onClick={beforeEventCreation}>
                             skip
                         </Button>
                     </Flex>
@@ -460,7 +463,7 @@ const EventForm = () => {
                             might take a minute
                         </Text>
                     </Flex>
-                </>                
+                </>
             })[currentStage]}
         </Flex>
     )

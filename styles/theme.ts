@@ -20,7 +20,10 @@ const fadeIn = keyframes({ from: { opacity: 0 }, to: { opacity: 1 } })
 
 const ButtonStyles = {
     cursor: 'pointer',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
+    '&:disabled': {
+        opacity: '.6'
+    }
 }
 
 const dialogFieldStyles = {
@@ -144,6 +147,7 @@ const Theme: ThemeType = {
         accent: {
             ...ButtonStyles,
             boxShadow,
+            whiteSpace: 'nowrap',
             background: 'linear-gradient(180deg, #FFFFFF -4.48%, #E6E0E6 100%)',
             borderRadius: '.75em',
             color: 'text',

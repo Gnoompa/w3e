@@ -5,8 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Flex, Container, Text } from 'theme-ui';
 
 type QrScannerProps = {
-    showResult: boolean;
-    onResult: (result: string) => any;
+    showResult?: boolean;
+    onResult?: (result: string) => any;
     onError?: (error: any) => any
 }
 
