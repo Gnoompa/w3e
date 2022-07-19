@@ -6,18 +6,18 @@ import { useCallback, useContext, useEffect, useState } from 'react'
 import { Flex, Box, Button, Heading, useColorMode, useThemeUI, Card, Text, Link, Label, Divider, Spinner } from 'theme-ui'
 import { useMoralis, useMoralisFile, useMoralisWeb3Api, useMoralisWeb3ApiCall } from "react-moralis"
 import { useRouter } from 'next/router'
-import tickeroLogo from '../public/logo/logo@0.5x.png'
-import Menu from '../components/menu'
-import Wallet from '../components/wallet'
+import tickeroLogo from '../../public/logo/logo@0.5x.png'
+import Menu from '../../components/menu'
+import Wallet from '../../components/wallet'
 import { APITypes, useWeb3APIProvider } from 'helpers/contract'
-import { AppContextProvider } from '../helpers/context'
+import { AppContextProvider } from '../../helpers/context'
 import { MoralisProvider } from "react-moralis"
 
-const EventForm = dynamic(() => import('../components/eventForm'), {
+const EventForm = dynamic(() => import('../../components/eventForm'), {
     loading: () => <Spinner sx={{margin: '20rem auto', transform: 'translateY(-50%)'}} />
 })
 
-const EventPage = dynamic(() => import('../components/eventPage'), {
+const EventPage = dynamic(() => import('../../components/eventPage'), {
     loading: () => <Spinner sx={{margin: '20rem auto', transform: 'translateY(-50%)'}} />
 })
 
@@ -40,8 +40,7 @@ const Main: NextPage = () => {
         web3APIProvider
     }
 
-    useEffect(() => {
-        console.log(Moralis.isInitialized, Moralis.isWeb3Enabled, Moralis.isAuthenticated, Moralis.isAuthenticating)
+    useEffect(() => {        
         Moralis.isInitialized && (
             (!Moralis.isWeb3Enabled && Moralis.enableWeb3({ provider: "walletconnect" }).then(() => {
                 !Moralis.isAuthenticated && !Moralis.isAuthenticating && enableAPI()
