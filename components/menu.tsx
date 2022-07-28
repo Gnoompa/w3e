@@ -20,7 +20,7 @@ const Menu = () => {
                 </Flex>
             </Button>
             <Button variant='accent' sx={{position: 'relative'}}>
-                <Flex sx={{alignItems: 'center'}} onClick={() => router.push('/app#createEvent')}>
+                <Flex sx={{alignItems: 'center'}} onClick={() => router.push('/#createEvent')}>
                     <Box mr='1rem' sx={{maxWidth: '3.5em'}}>
                         <Image src={notepadPicture} alt='create an event icon' width='30px' height='30px' objectFit='contain' />
                     </Box>

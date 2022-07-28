@@ -77,8 +77,8 @@ const EventForm = () => {
 
     useEffect(() => {
         setCurrentStage(({
-            '/app#createEvent': Stage.eventConfig,
-            '/app#eventRewards': Stage.rewardConfig
+            '/#createEvent': Stage.eventConfig,
+            '/#eventRewards': Stage.rewardConfig
         })[router.asPath]!)
     }, [router.asPath])
 
@@ -148,7 +148,7 @@ const EventForm = () => {
         let errorMessage = validateEventForm()
 
         errorMessage === true
-            ? router.push('/app#eventRewards')
+            ? router.push('/#eventRewards')
             : alert(errorMessage)
     }
 
@@ -226,7 +226,7 @@ const EventForm = () => {
 
         const response = await eventTokenId.wait()
 
-        router.push('/app#event?id=' + parseInt(response.events.filter(({event}) => event == 'EventCreated')[0].args[0]))
+        router.push('/#event?id=' + parseInt(response.events.filter(({event}) => event == 'EventCreated')[0].args[0]))
     }
 
     return (
@@ -234,7 +234,7 @@ const EventForm = () => {
             <EventTicketImage eventTitle={ticketEventTitle} onImageGenerated={setTicketEventImageResult}/>
             {({
                 [Stage.eventConfig]: <>
-                    <NavigateBack href='/app'>
+                    <NavigateBack href='/'>
                         to ticketing
                     </NavigateBack>
                     <Text mt='.75em' as='h1'>
