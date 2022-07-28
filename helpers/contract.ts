@@ -152,7 +152,7 @@ export const callWeb3Provider = (
     msgValue: string|undefined = undefined
 ): any => ({
     [APITypes.Moralis]: {
-        [Web3ProviderActions.Auth]: () => API.Moralis.authenticate({ provider: "walletconnect" }),
+        [Web3ProviderActions.Auth]: () => console.log(12) || API.Moralis.authenticate(),
         [Web3ProviderActions.Unauth]: () => API.Moralis.logout(),
         [Web3ProviderActions.IsAuthenticated]: () => API.Moralis.isAuthenticated,
         [Web3ProviderActions.getEthAddress]: (params: {short: boolean}) => {

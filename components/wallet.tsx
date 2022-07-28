@@ -18,7 +18,7 @@ const Menu = () => {
     }, [isAuthenticated])
 
     const connectWallet = (): Promise<any> =>
-        web3APIProvider.auth({ provider: "walletconnect" })
+        web3APIProvider.auth()
             .catch(console.error)
 
     const unauth = (): Promise<any> =>
