@@ -4,12 +4,12 @@ const withOptimizedImages = require('next-optimized-images');
 
 
 const nextConfig = withOptimizedImages({
-  handleImages: ['png', 'svg'],
-  images: {
-    disableStaticImages: true,    
-    loader: 'akamai',
-    path: ''
-} ,
+  // handleImages: ['png', 'svg'],
+  // images: {
+  //   disableStaticImages: true,
+  //   loader: 'akamai',
+  //   path: ''
+  // },
   compiler: {
     emotion: true
   },
@@ -19,11 +19,7 @@ const nextConfig = withOptimizedImages({
     ignoreBuildErrors: true
   },
   env: {
-    MORALIS_APP_ID: "nqUifo7bhYwPUOb9YonrC6eJ1eLndO2lCHKXZqmz",
-    MORALIS_SERVER_URL: "https://lhy1mjmm823t.usemoralis.com:2053/server",
-    MAINNET: "polygon",
-    TESTNET: "mumbai",
-    TICKERO_CONTRACT: "0xC657e5FC36b8A11075d59968FDe28fC1f46c6CBD"
+    alchemyId: "SqVfu4nikI9zcQDsZxRzq7pjZ7wyTT4O"
   }
 })
 

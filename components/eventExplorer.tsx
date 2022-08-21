@@ -1,0 +1,39 @@
+import React, { useRef, useState, useMemo, useEffect, useContext, ReactElement } from 'react'
+import { Flex, Box, Image, Button, Label, Input, Text, Container, Textarea, Switch, Spinner, SxProp, ThemeUIStyleObject, Link } from "theme-ui"
+import { NavigateBack } from '@components/index'
+import { useRouterQuery } from 'helpers/hooks'
+import dynamic from 'next/dynamic'
+import NextImage from 'next/image'
+import { Portal } from 'react-portal'
+import { useRouter } from 'next/router'
+import { AppContext } from '../helpers/context'
+import { formatWalletAddress } from 'helpers/hooks'
+import { BigNumber, ethers } from 'ethers'
+
+const EventExplorer: React.FC = () => {
+    enum Stage {
+        LoadingEvent,
+        EventLoaded,
+        VerifyingParticipants
+    }
+
+    const router = useRouter()
+    const context = useContext(AppContext)
+    const {web3APIProvider} = useContext(AppContext)
+    const routerQuery = useRouterQuery(router)
+    const [events, setEvents] = useState([])
+
+    useEffect(() => {
+        // fetchEvents()
+    }, [])
+
+    const fetchEvents = async (eventTokenId: number) => {}
+
+    return (
+        <Flex sx={{flexDirection: 'column', width: '22rem', margin: '31rem auto', transform: 'translateY(-50%)'}}>
+            explorer
+        </Flex>
+    )
+}
+
+export default EventExplorer

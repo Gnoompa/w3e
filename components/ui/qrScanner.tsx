@@ -6,7 +6,7 @@ import { Flex, Container, Text } from 'theme-ui';
 
 type QrScannerProps = {
     showResult?: boolean;
-    onResult?: (result: string) => any;
+    onResult: (result: string) => any;
     onError?: (error: any) => any
 }
 
@@ -34,13 +34,14 @@ export const QrScanner = (props: QrScannerProps) => {
         address ? [...(address.match(/0x[a-fA-F0-9]{40}/) || [])][0] : undefined
 
     useEffect(() => {
-        let formattedAddress = formatAddress(result?.data)
+        // let formattedAddress = formatAddress(result?.data)
 
-        formattedAddress
-            && ethers.utils.isAddress(formattedAddress)
-            && props.onResult(formattedAddress)
+        // formattedAddress
+        //     && ethers.utils.isAddress(formattedAddress)
+        //     && props.onResult(formattedAddress)
+        props.onResult(result?.data)
 
-        props.showResult && formattedAddress && setResultLabel('scanned wallet address: ' + formatWalletAddress(formattedAddress))
+        // props.showResult && formattedAddress && setResultLabel('scanned wallet address: ' + formatWalletAddress(formattedAddress))
     }, [result])
 
     return (

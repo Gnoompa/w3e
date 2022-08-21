@@ -10,8 +10,7 @@
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "esModuleInterop": true,
+    "noEmit": true,    
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -23,7 +22,8 @@
       "@components/*": [
         "components/*"
       ]
-    }
+    },
+    "esModuleInterop": true
   },
   "include": [
     "next-env.d.ts",

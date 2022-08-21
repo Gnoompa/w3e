@@ -8,11 +8,6 @@ import NextImage from 'next/image'
 import { Location } from './ui/locationPicker'
 import { Timespan } from './ui/timespanPicker'
 import { Portal } from 'react-portal'
-import walletIcon from '../styles/icons/wallet.svg'
-import arrowBackSvg from '../styles/icons/arrowBack.svg'
-import pictureIcon from '../styles/icons/picture.svg'
-import cameraIcon from '../styles/icons/camera.svg'
-import crossIcon from '../styles/icons/cross.svg'
 import dynamic from 'next/dynamic'
 import { Stage, Layer, Text as KonvaText, Image } from "react-konva";
 import { useRouter } from 'next/router'
@@ -148,7 +143,7 @@ const EventForm = () => {
         let errorMessage = validateEventForm()
 
         errorMessage === true
-            ? router.push('/#eventRewards')
+            ? beforeEventCreation()
             : alert(errorMessage)
     }
 
@@ -213,20 +208,22 @@ const EventForm = () => {
 
         const eventTokenId = await web3APIProvider.createEvent({
             calldata: {
-                ticketSupply: Math.floor((+ticketSupply! || 0)),
-                ticketPrice: ethers.utils.parseEther(`${+ticketPrice! || 0}`),
-                beneficiary: beneficiary,
-                isInfiniteTicketSupply: isUnlimitedTicketSupply,
-                isSubscription: isInSubscriptionMode,
-                subscriptionDuration: subscriptionDuration || 0,
-                eventMetadataUri: eventMetadataUrl,
-                ticketsMetadataUri: ticketMetadataUrl
+                payload: {
+                    ticketSupply: [Math.floor((+ticketSupply! || 0))],
+                    ticketPrice: [ethers.utils.parseEther(`${+ticketPrice! || 0}`)],
+                    beneficiary: beneficiary,
+                    managers: [beneficiary],
+                    params: [0],
+                    subscriptionDuration: [subscriptionDuration || 0],
+                    eventMetadataUri: eventMetadataUrl,
+                    ticketMetadataUri: [ticketMetadataUrl]
+                }
             }
         })
 
         const response = await eventTokenId.wait()
 
-        router.push('/#event?id=' + parseInt(response.events.filter(({event}) => event == 'EventCreated')[0].args[0]))
+        router.push('/#event?id=' + response.events.filter(({event}) => event == 'EventCreated')[0].args[0])
     }
 
     return (
@@ -234,13 +231,10 @@ const EventForm = () => {
             <EventTicketImage eventTitle={ticketEventTitle} onImageGenerated={setTicketEventImageResult}/>
             {({
                 [Stage.eventConfig]: <>
-                    <NavigateBack href='/'>
-                        to ticketing
-                    </NavigateBack>
                     <Text mt='.75em' as='h1'>
                         New Event
                     </Text>
-                    <Flex mt='3rem' sx={{flexDirection: 'column'}}>
+                    {/* <Flex mt='3rem' sx={{flexDirection: 'column'}}>
                         <Flex sx={{alignItems: 'center', justifyContent: 'space-between'}}>
                             <Flex>
                                 <Switch value={+isTestMode} checked={isTestMode} id="isTestMode" onChange={() => setIsTestMode(!isTestMode)} />
@@ -262,7 +256,7 @@ const EventForm = () => {
                                 </Link>
                             </Flex>
                         }
-                    </Flex>
+                    </Flex> */}
                     <Flex mt='2rem' sx={{gap: '2rem'}}>
                         <Box sx={{position: 'relative'}}>
                             <Field variant='forms.input.dialog' placeholder='description' onMouseDown={event => handleOnMouseDown(event, () => toggleActiveDialog(FieldIds.description))} icon='✏️' readOnly />
@@ -358,7 +352,7 @@ const EventForm = () => {
                                         </Button>
                                         <Button variant='fieldDialog' onMouseDown={event => handleOnMouseDown(event, () => setIsScanningBeneficiaryQr(true))}>
                                             <Flex sx={{flexDirection: 'column'}}>
-                                                <NextImage src={cameraIcon} width='30px' height='30px' alt='camera icon' />
+                                                {/* <NextImage src={cameraIcon} width='30px' height='30px' alt='camera icon' /> */}
                                                 <Text variant='secondary' mt='.25rem' sx={{fontSize: '.75rem'}}>
                                                     scan QR
                                                 </Text>
@@ -375,7 +369,7 @@ const EventForm = () => {
                                                 <Text as='h2'>
                                                     Beneficiary
                                                 </Text>
-                                                <NextImage src={crossIcon} width='30px' height='30px' alt='back' onClick={() => setIsScanningBeneficiaryQr(false)}/>
+                                                {/* <NextImage src={crossIcon} width='30px' height='30px' alt='back' onClick={() => setIsScanningBeneficiaryQr(false)}/> */}
                                             </Flex>
                                             <Box mt='2rem' sx={{maxWidth: '100%'}}>
                                                 <QrScanner onResult={onQrScanResult}/>
@@ -400,11 +394,11 @@ const EventForm = () => {
                             accept: {'image/*': [], 'video/*': []}
                         }} />
                     </Box>
-                    <Button onClick={goToEventRewardsStage} mt='4rem' variant='accent' sx={{alignSelf: 'center'}}>
+                    <Button onClick={goToEventRewardsStage} mt='4rem' variant='accent' sx={{alignSelf: 'flex-end'}}>
                         <Flex sx={{alignItems: 'center'}}>
                             next
                             <Box ml='1rem' sx={{transform: 'rotate(180deg)'}}>
-                                <NextImage width='30px' height='30px' src={arrowBackSvg} />
+                                {/* <NextImage width='30px' height='30px' src={arrowBackSvg} /> */}
                             </Box>
                         </Flex>
                     </Button>

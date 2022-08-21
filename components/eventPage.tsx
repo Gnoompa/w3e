@@ -1,19 +1,18 @@
 import React, { useRef, useState, useMemo, useEffect, useContext, ReactElement } from 'react'
+import QRCode from 'qrcode.react'
 import { Flex, Box, Image, Button, Label, Input, Text, Container, Textarea, Switch, Spinner, SxProp, ThemeUIStyleObject, Link } from "theme-ui"
 import { NavigateBack } from '@components/index'
 import { useRouterQuery } from 'helpers/hooks'
 import dynamic from 'next/dynamic'
 import NextImage from 'next/image'
-import shareIcon from '../styles/icons/share.svg'
 import { Portal } from 'react-portal'
 import { useRouter } from 'next/router'
-import buyTicketImage from '../public/coins/coins301x.png'
-import verifyImage from '../public/verify/verify@0.25x.png'
-import crossIcon from '../styles/icons/cross.svg'
 import { AppContext } from '../helpers/context'
 import { formatWalletAddress } from 'helpers/hooks'
 import { BigNumber, ethers } from 'ethers'
 import Moralis from 'moralis/types'
+import { ThemeContext } from '@emotion/react'
+import { CHAIN, polygonMumbaiTickeroABI, TICKERO_CONTRACT_ADDRESS } from 'helpers/contract'
 
 const QrScanner = dynamic(() => import('./ui/qrScanner'), {
     ssr: false
@@ -31,70 +30,78 @@ const EventPage = () => {
     const {web3APIProvider} = useContext(AppContext)
     const routerQuery = useRouterQuery(router)
     const [currentStage, setCurrentStage] = useState<Stage>(Stage.LoadingEvent)
-    const [eventTokenId, setEventTokenId] = useState<number>()
+    const [eventTokenId, setEventTokenId] = useState<string>()
     const [event, setEvent] = useState<TickeroEvent>()
     const [eventMetadata, setEventMetadata] = useState<TickeroEventMetadata>()
+    const [eventManagers, setEventManagers] = useState<object[]>([])
     const [isVerifyingEventParticipants, setIsVerifyingEventParticipants] = useState(false)
     const [isVerifyingEventParticipant, setIsVerifyingEventParticipant] = useState(false)
-    const [participantVerificationWalletQrScanResult, setParticipantVerificationWalletQrScanResult] = useState<string>()
+    const [ticketQrScanResult, setTicketQrScanResult] = useState<string>()
     const [verificationResult, setVerificationResult] = useState('')
+    const [isShowingTicketQr, setIsShowingTicketQr] = useState(false)
+    const [ticketQr, setTicketQr] = useState('')
     const [isSoulbounding, setIsSoulbounding] = useState(false)
     const [isSoulboundingInProcess, setIsSoulboundingInProcess] = useState(false)
-    const [scannedWalletQRsToVerify, setScannedWalletQRsToVerify] = useState<Array<string>>([])
+    const [scannedTickets, setScannedTickets] = useState<Array<object>>([])
     const [scannedWalletQRsToSoulbound, setScannedWalletQRsToSoulbound] = useState<Array<string>>([])
-    const isEventOrganizer = event?.organizer?.toLowerCase() == web3APIProvider.getEthAddress().toLowerCase()
-    const canGrantSoulbound = isEventOrganizer
-    const [hasTicket, setHasTicket] = useState(false)
-    const canBuyTicket = !isEventOrganizer && !hasTicket
+    const [currentEventTickets, setCurrentEventTickets] = useState<Array<object>>()
+    const [currentEventSoldTickets, setCurrentEventSoldTickets] = useState<Array<object>>()
+    const [currentEventUsedTickets, setCurrentEventUsedTickets] = useState<Array<object>>()
     const [isBuyingATicket, setIsBuyingATicket] = useState(false)
+    const [isCommitingScannedTickets, setIsCommitingScannedTickets] = useState(false)
+    const [hasTicketsBeenSpentSuccessfully, setHasTicketsBeenSpentSuccessfully] = useState<Boolean>()
+    const connectedUserAddress = web3APIProvider.getEthAddress()
+    const currentUserTickets = currentEventSoldTickets?.
+        filter(ticket => ticket.buyer == connectedUserAddress)
+        .map(userTicket => currentEventTickets?.filter(ticket => userTicket.tokenId == ticket.tokenId))
+    const isEventOrganizer = event?.organizer?.toLowerCase() == web3APIProvider.getEthAddress().toLowerCase()
+    const isEventManager = eventManagers.includes(web3APIProvider.getEthAddress())
+    const canBuyTicket = !currentUserTickets?.length && !isEventManager && !isEventOrganizer
+    const canVerifyTickets = isEventManager || isEventOrganizer
+    const canShowTicketQr = !!currentUserTickets?.length
+    const ticketQrSigningMessage = "Prove that you own the ticket by signing. IT IS FREE."
 
     useEffect(() => {
         routerQuery.id
-            ? fetchEvent(routerQuery.id)
+            ? initEvent(routerQuery.id)
             : router.push('/app')
     }, [])
 
     useEffect(() => {
-        (event && eventMetadata && (currentStage == Stage.LoadingEvent))
-            && setCurrentStage(Stage.EventLoaded)
-    }, [event, eventMetadata])
+        ticketQrScanResult && verifyTicket(ticketQrScanResult)
+    }, [ticketQrScanResult])
 
     useEffect(() => {
-        participantVerificationWalletQrScanResult && !isVerifyingEventParticipant && verifyEventParticipant()
-            .then(result => setVerificationResult(+result ? '😊 verified 😊' : '🚷 not verified 🚷'))
-            .finally(() => setIsVerifyingEventParticipant(false))
-    }, [participantVerificationWalletQrScanResult, isVerifyingEventParticipant])
+        console.log(currentEventSoldTickets)
+    }, [currentEventSoldTickets])
 
-    const fetchEvent = async (eventTokenId: number) => {
+    const initEvent = async (eventTokenId: string) => {
         setEventTokenId(eventTokenId)
 
-        // setEventMetadata({
-        //     name: 'test long event name that is too long',
-        //     description: 'test description ',
-        //     image: 'https://lh3.googleusercontent.com/FwCIH6sP3NUDfhk5I_Qx6aWHH6QV71saS5Jzn8BOB5tTPq3_Thn1t9N0ZLRvGqhVU8q_BVz__nKHhtF_OIuWrbDx=w600',
-        // })
-
-        // setEvent({
-        //     beneficiary: web3APIProvider.getEthAddress() as string,
-        //     organizer: web3APIProvider.getEthAddress() as string,
-        //     isSubscription: true,
-        //     ticketPrice: "2",
-        //     ticketSupply: "0",
-        //     isInfiniteTicketSupply: true
-        // })
-
-        console.log(eventTokenId, web3APIProvider.getEthAddress())
-
         Promise.all([
-            web3APIProvider.getTokenIdMetadata(eventTokenId)
+            fetchMetadataWrapper(() => web3APIProvider.getTokenIdMetadata(eventTokenId))
                 .then(metadata => setEventMetadata(JSON.parse(metadata.metadata))),
             web3APIProvider.getEvent({eventTokenId})
                 .then(setEvent),
-            web3APIProvider.hasTicket({eventTokenId, address: web3APIProvider.getEthAddress()})
-                .then(result => console.log(result) || setHasTicket(!!+result))
+            web3APIProvider.getTicketsData({eventTokenId: routerQuery.id})
+                .then(setCurrentEventTickets),
+            web3APIProvider.getEventManagers({eventId: routerQuery.id})
+                .then(setEventManagers),
+            web3APIProvider.getBoughtTickets({eventId: routerQuery.id})
+                .then(setCurrentEventSoldTickets),
+            web3APIProvider.getUsedTickets({eventId: routerQuery.id})
+                .then(setCurrentEventUsedTickets)
         ])
             .then(() => setCurrentStage(Stage.EventLoaded))
     }
+
+    // metadata is not instantly indexed by the IPFS nodes hence trying to fetch it until success
+    const fetchMetadataWrapper = (request: Function): Promise<any> =>
+        new Promise(res =>
+            request()
+                .then(res)
+                .catch(() => setTimeout(() => fetchMetadataWrapper(request), 500))
+        )
 
     const buyTicket = async () => {
         setIsBuyingATicket(true)
@@ -102,12 +109,15 @@ const EventPage = () => {
         const maticToUsdPrice = await web3APIProvider.getMaticToUsdPrice()
 
         const response = await web3APIProvider.buyTicket({
-            _eventTokenId: +eventTokenId,
-            ticketsAmount: 1,
-        }, BigNumber.from(maticToUsdPrice).mul(+event!.ticketPrice / 10**8).toString())
+            // ticketId: ticketData., address _for
+            ticketId: currentEventTickets[0].tokenId,
+            _for: connectedUserAddress
+        }, BigNumber.from(maticToUsdPrice).mul(currentEventTickets[0].price / 10**8).toString())
+            .catch(console.log)
 
         response.wait()
             .catch(() => alert('Couldn\'t buy a ticket'))
+            .then(() => setCurrentUserTickets([currentEventTickets[0]]))
             .finally(() => setIsBuyingATicket(false))
 
         // console.log(maticToUsdPrice, ethers.BigNumber.from(maticToUsdPrice).mul(+event!.ticketPrice / 10**8).toString());
@@ -153,22 +163,90 @@ const EventPage = () => {
     const verifyEventParticipant = async () =>
         await web3APIProvider.verifyEventParticipant({
             eventTokenId: eventTokenId!,
-            participantAddress: participantVerificationWalletQrScanResult!
+            participantAddress: ticketQrScanResult!
     })
 
-    const onParticipantVerificationWalletQrScanResult = async (address: string) => {
-        setParticipantVerificationWalletQrScanResult(address)
+    const onTicketQrScanned = (scannedTicketData: string) => {
+        setTicketQrScanResult(scannedTicketData)
+    }
+
+    const showTicketQr = (ticketId: string): void => {
+        setIsShowingTicketQr(true)
+
+        // const domain = {
+        //     name: 'Tickero Ticketing Platform',
+        //     version: '1',
+        //     chainId: web3APIProvider.getAPIAdapter().Moralis.Moralis.internalWeb3Provider.chainId,
+        //     verifyingContract: TICKERO_CONTRACT_ADDRESS[CHAIN]
+        // };
+
+        // // The named list of all type definitions
+        // const types = {
+        //     Data: [
+        //         { name: 'name', type: 'string' },
+        //         { name: 'wallet', type: 'address' }
+        //     ],
+        //     Mail: [
+        //         { name: 'from', type: 'Person' },
+        //         { name: 'to', type: 'Person' },
+        //         { name: 'contents', type: 'string' }
+        //     ]
+        // };
+
+        // // The data to sign
+        // const value = {
+        //     name: 'Cow',
+        //     wallet: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
+        //     contents: 'Hello, Bob!'
+        // };
+
+        // web3APIProvider.getAPIAdapter().Moralis.Moralis.internalWeb3Provider.signer._signTypedData(domain, types, value).then(r => {
+        //     console.log('message: ' + r);
+        //     console.log(ethers.utils.verifyTypedData(domain, types, value, r))
+        // });
+        // => console.log(ethers.utils.verifyMessage(message, r))
+
+        // const message = ethers.utils.solidityKeccak256(['string'], ["Prove that you own the ticket by signing. IT IS FREE."])
+
+
+        // console.log(ethers.utils.verifyMessage(message, '0xe136e6faee59c8f8100f690fd6c428bfcf05ca21569e9a1c45f9adf8918e59374169b91513cb2187d2219ef03765e12c44c7439ca698c5422855ec768216dfa21c'))
+
+
+        web3APIProvider.getAPIAdapter().Moralis.Moralis.internalWeb3Provider.signer
+            .signMessage(ticketQrSigningMessage)
+            .then(message => setTicketQr(new Buffer(JSON.stringify({ticketId, message})).toString('base64')))
+    }
+
+    const verifyTicket = (ticketSignedVerificationMessage: string): void => {
+        const {ticketId, message} = JSON.parse(Buffer.from(ticketSignedVerificationMessage, 'base64').toString())
+        const address = message && ethers.utils.verifyMessage(ticketQrSigningMessage, message)
+
+        address && ticketId && message && currentEventSoldTickets?.filter(ticket => ticket.buyer == address).length
+            ? (
+                setScannedTickets([...scannedTickets, {ticketId, address}]),
+                setVerificationResult('😊 verified 😊')
+            )
+            : setVerificationResult('🚷 not verified 🚷')
+    }
+
+    const commitScannedTickets = () => {
+        setIsCommitingScannedTickets(true)
+
+        web3APIProvider.spendTickets(scannedTickets)
+            .then(() => (setScannedTickets([]), setHasTicketsBeenSpentSuccessfully(true)))
+            .catch(e => (alert('Smth went wrong'), console.error(e), setHasTicketsBeenSpentSuccessfully(false)))
+            .finally(() => (setIsCommitingScannedTickets(false), setTimeout(() => setHasTicketsBeenSpentSuccessfully(undefined), 3000)))
     }
 
     return (
         <Flex sx={{flexDirection: 'column', width: '22rem', margin: '31rem auto', transform: 'translateY(-50%)'}}>
-            <Flex sx={{alignItems: 'center', justifyContent: 'space-between'}}>
-                <NavigateBack href='/app'>
+            <Flex sx={{alignItems: 'center', justifyContent: 'flex-end'}}>
+                {/* <NavigateBack href='/app'>
                     to main menu
-                </NavigateBack>
+                </NavigateBack> */}
                 <Button variant='accentSmall' onClick={() => navigator.share({title: eventMetadata?.name, url: location.href})}>
                     <Flex sx={{alignItems: 'center'}}>
-                        <NextImage src={shareIcon} width='30px' height='30px' alt='share'/>
+                        {/* <NextImage src={shareIcon} width='30px' height='30px' alt='share'/> */}
                         <Box ml='.5rem'>
                             share
                         </Box>
@@ -196,7 +274,7 @@ const EventPage = () => {
                                     ? 'subscribe for '
                                     : 'ticket for '
                                 )
-                                    + ethers.utils.formatUnits(event?.ticketPrice, 'ether') + ' $'
+                                    + ethers.utils.formatUnits(currentEventTickets[0].price, 'ether') + ' $'
                             }
                         </Text>
                         <Flex mt='2rem' sx={{flexDirection: 'column', gap: '1.5rem', alignItems: 'center'}}>
@@ -205,7 +283,7 @@ const EventPage = () => {
                                     <Button variant='accent' onClick={buyTicket} disabled={isBuyingATicket}>
                                         <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
                                             <Box sx={{width: '3rem', height: '2rem', position: 'relative'}}>
-                                                <NextImage src={buyTicketImage} alt="buy a ticket" width='30px' height='30px' objectFit='contain' />
+                                                {/* <NextImage src={buyTicketImage} alt="buy a ticket" width='30px' height='30px' objectFit='contain' /> */}
                                             </Box>
                                             {event?.isSubscription ? 'subscribe' : 'buy a ticket'}
                                         </Flex>
@@ -215,20 +293,29 @@ const EventPage = () => {
                                     }
                                 </Flex>
                             }
-                            {hasTicket &&
+                            {!!currentUserTickets?.length &&
                                 <Text mt='1rem' mb='1rem' as='h3' variant='infoContent'>
-                                    🔥 {event?.isSubscription ? ' subscribed' : 'participating'} 🔥
+                                    🔥 participating 🔥
                                 </Text>
                             }
-                            <Button variant='accent' onClick={startVerification}>
-                                <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
-                                    <Box sx={{width: '3rem', height: '2rem'}}>
-                                        <NextImage src={verifyImage} width='30px' height='30px' alt="verify participant" />
-                                    </Box>
-                                    verify a participant
+                            {canShowTicketQr &&
+                                <Flex sx={{alignItems: 'center'}}>
+                                    <Button variant='accent' onClick={() => showTicketQr(currentEventTickets[0].tokenId)}>
+                                        Show ticket QR
+                                    </Button>
                                 </Flex>
-                            </Button>
-                            {canGrantSoulbound &&
+                            }
+                            {canVerifyTickets &&
+                                <Button variant='accent' onClick={startVerification}>
+                                    <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
+                                        <Box sx={{width: '3rem', height: '2rem'}}>
+                                            {/* <NextImage src={verifyImage} width='30px' height='30px' alt="verify participant" /> */}
+                                        </Box>
+                                        scan tickets
+                                    </Flex>
+                                </Button>
+                            }
+                            {/* {canGrantSoulbound &&
                                 <Button variant='accent' onClick={() => setIsSoulbounding(true)}>
                                     <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
                                         <Box sx={{width: '3rem', height: '2rem', position: 'relative'}}>
@@ -238,7 +325,7 @@ const EventPage = () => {
 
                                     </Flex>
                                 </Button>
-                            }
+                            } */}
                         </Flex>
                     </Flex>
                     {isSoulbounding &&
@@ -249,7 +336,7 @@ const EventPage = () => {
                                         <Text as='h2'>
                                             Grant POAs
                                         </Text>
-                                        <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsSoulbounding(false)}/>
+                                        {/* <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsSoulbounding(false)}/> */}
                                     </Flex>
                                     <Box mt='2rem' sx={{maxWidth: '100%'}}>
                                         <QrScanner showResult={false} onResult={onSoulboundingWalletQrScanResult} />
@@ -282,6 +369,23 @@ const EventPage = () => {
                             </Container>
                         </Portal>
                     }
+                    {isShowingTicketQr &&
+                        <Portal>
+                            <Container variant='layout.container.modalBackground'>
+                                <Flex p='2rem 1rem' sx={{maxHeight: '100%', flexDirection: 'column', alignItems: 'center', margin: 'max(50vh, 10rem) auto', transform: 'translateY(-50%)', overflow: 'scroll', maxWidth: '25rem'}}>
+                                    <Flex sx={{alignItems: 'center', justifyContent: 'space-between', width: '100%'}}>
+                                        <Text as='h2'>
+                                            Ticket QR
+                                        </Text>
+                                        {/* <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsShowingTicketQr(false)}/> */}
+                                    </Flex>
+                                    <Flex mt='2rem' sx={{justifyContent: 'center', width: '100%'}}>
+                                        {ticketQr && <QRCode renderAs="canvas" size={300} value={ticketQr} />}
+                                    </Flex>
+                                </Flex>
+                            </Container>
+                        </Portal>
+                    }
                     {isVerifyingEventParticipants &&
                         <Portal>
                             <Container variant='layout.container.modalBackground'>
@@ -290,24 +394,38 @@ const EventPage = () => {
                                         <Text as='h2'>
                                             Verify Participants
                                         </Text>
-                                        <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsVerifyingEventParticipants(false)}/>
+                                        {/* <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsVerifyingEventParticipants(false)}/> */}
                                     </Flex>
                                     <Box mt='2rem' sx={{maxWidth: '100%'}}>
-                                        <QrScanner showResult={false} onResult={onParticipantVerificationWalletQrScanResult} />
+                                        <QrScanner showResult={false} onResult={onTicketQrScanned} />
                                     </Box>
                                     <Flex mt='2rem' sx={{flexDirection: 'column', alignItems: 'center', flex: 1, width: '100%', justifyContent: 'center'}}>
-                                        {isVerifyingEventParticipant
-                                            ? <Flex sx={{alignItems: 'center', gap: '1rem'}}>
-                                                <Text variant='dialog'>
-                                                    verifying
-                                                </Text>
-                                                <Spinner />
-                                            </Flex>
-                                            : <Text variant='dialog'>
-                                                {isVerifyingEventParticipant || !verificationResult ? 'scan wallet QR to verify' : verificationResult}
-                                            </Text>
+                                        <Text variant='dialog'>
+                                            scan wallet QR to verify
+                                        </Text>
+                                    </Flex>
+                                    <Flex mt='2rem' sx={{flexDirection: 'column', alignItems: 'center', flex: 1, width: '100%', justifyContent: 'center'}}>
+                                        <Text variant='accent'>
+                                            scanned {scannedTickets.length} of {currentEventTickets!.length - currentEventUsedTickets!.length} unused tickets
+                                        </Text>
+                                    </Flex>
+                                    <Flex mt='2rem' sx={{alignItems: 'center'}}>
+                                        <Button variant='accent' onClick={commitScannedTickets} disabled={!scannedTickets.length}>
+                                            verify scanned tickets
+                                        </Button>
+                                        {isCommitingScannedTickets &&
+                                            <Spinner size={30} sx={{position: 'absolute', right: '2rem'}} />
                                         }
                                     </Flex>
+                                    {hasTicketsBeenSpentSuccessfully !== undefined &&
+                                        <Text>
+                                            {hasTicketsBeenSpentSuccessfully
+                                                ? 'Tickets has been verified'
+                                                : 'Error while verifying tickets'
+                                            }
+                                        </Text>
+                                    }
+
                                 </Flex>
                             </Container>
                         </Portal>

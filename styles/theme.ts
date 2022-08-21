@@ -222,7 +222,7 @@ const Theme: ThemeType = {
             background: 'gradient',
             border: '3px solid #fff',
             position: 'fixed',
-            padding: '1rem 3rem',
+            padding: '1rem 2rem',
             borderRadius: '1.25rem',
             boxShadow: '0px 2px 2px rgb(0 0 0 / 12%), inset 0px 2px 2px rgb(0 0 0 / 12%)'
         },
@@ -292,7 +292,7 @@ const Theme: ThemeType = {
     links: {
         nav: {
             textDecoration: 'none',
-            fontSize: '1.25rem',
+            fontSize: '1rem',
             fontWeight: 800,
             letterSpacing: '.1em',
             color: 'text'
