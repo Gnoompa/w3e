@@ -1,7 +1,7 @@
 import React, { useRef, useState, useMemo, useEffect, SyntheticEvent, BaseSyntheticEvent, MouseEventHandler, useContext, ReactElement } from 'react'
 import { Flex, Box, Button, Label, Input, Text, Container, Textarea, Switch, Spinner, SxProp, ThemeUIStyleObject, Link } from "theme-ui"
-import { NavigateBack, Tooltip, Field, LocationPicker, TimespanPicker, FileUploader } from '@components/index'
-import { useDebounce, handleOnMouseDown, formatWalletAddress } from 'helpers/hooks'
+import { NavigateBack, Tooltip, Field, LocationPicker, TimespanPicker, FileUploader } from '@components/indexx'
+import { useDebounce, handleOnMouseDown, formatWalletAddress, useAppSelector } from 'helpers/hooks'
 import OutsideClickHandler from 'react-outside-click-handler'
 import { BigNumber, ethers, FixedNumber } from 'ethers'
 import NextImage from 'next/image'
@@ -12,6 +12,8 @@ import dynamic from 'next/dynamic'
 import { Stage, Layer, Text as KonvaText, Image } from "react-konva";
 import { useRouter } from 'next/router'
 import { AppContext } from '../helpers/context'
+import { setEventTitle } from 'features/eventForm/eventFormSlice'
+import { useAppDispatch } from 'helpers/hooks'
 
 const QrScanner = dynamic(() => import('./ui/qrScanner'), {
     ssr: false
@@ -36,6 +38,7 @@ const EventForm = () => {
         creatingEvent
     }
 
+    const dispatch = useAppDispatch();
     const router = useRouter()
     const context = useContext(AppContext)
     const canvasRef = useRef()
@@ -43,7 +46,8 @@ const EventForm = () => {
     const [currentStage, setCurrentStage] = useState<Stage>(Stage.eventConfig)
     const [isTestMode, setIsTestMode] = useState(false)
     const [fieldInFocus, setFieldInFocus] = useState<FieldIds>()
-    const [eventTitle, setEventTitle] = useState<string>()
+    // const [eventTitle, setEventTitle] = useState<string>('')
+    const eventTitle = useAppSelector(state => state.eventForm.eventTitle)
     const [eventDescription, setEventDescription] = useState<string>()
     const [eventLocation, setEventLocation] = useState<Location>()
     const [eventTimespan, setEventTimespan] = useState<Timespan>()
@@ -67,19 +71,12 @@ const EventForm = () => {
     const targetBlockchainLabel = isTestMode ? 'polygon testnet' : 'polygon mainnet'
 
     useEffect(() => {
-        !web3APIProvider.isAuthenticated() && web3APIProvider.auth()
-    }, [])
-
-    useEffect(() => {
-        setCurrentStage(({
-            '/#createEvent': Stage.eventConfig,
-            '/#eventRewards': Stage.rewardConfig
-        })[router.asPath]!)
-    }, [router.asPath])
-
-    useEffect(() => {
         isFreeTicketPrice && setPriceFieldSubtitle('FREE')
     }, [isFreeTicketPrice])
+
+    // useEffect(() => {
+    //     dispatch(setEventTitleAction(eventTitle))
+    // }, [eventTitle])
 
     useEffect(() => {
         setPriceFieldSubtitle(isFreeTicketPrice
@@ -262,7 +259,7 @@ const EventForm = () => {
                             <Field variant='forms.input.dialog' placeholder='description' onMouseDown={event => handleOnMouseDown(event, () => toggleActiveDialog(FieldIds.description))} icon='✏️' readOnly />
                             {fieldInFocus == FieldIds.description &&
                                 <ContainerPopup onOutsideClick={() => setFieldInFocus(undefined)}>
-                                    <Field value={eventTitle} autoFocus variant='forms.input.dialogTransparent' placeholder='title' onChange={event => setEventTitle(event.target.value)} sx={{textAlign: 'center'}} />
+                                    <Field value={eventTitle} autoFocus variant='forms.input.dialogTransparent' placeholder='title' onChange={event => dispatch(setEventTitle(event.target.value))} sx={{textAlign: 'center'}} />
                                     <Textarea value={eventDescription} mt='1rem' placeholder='description' onChange={event => setEventDescription(event.target.value)} />
                                 </ContainerPopup>
                             }

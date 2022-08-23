@@ -1,44 +1,52 @@
-import { NextRouter, Router } from 'next/router'
-import { MouseEventHandler, useEffect, useState } from 'react'
-import { UrlWithParsedQuery } from 'url'
+import { NextRouter, Router } from "next/router";
+import { MouseEventHandler, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useContractRead as WagmiUseContractRead } from "wagmi";
+import type { TypedUseSelectorHook } from "react-redux";
+import type { RootState, AppDispatch } from "../app/store";
 
 export function useDebounce<T>(value: T, delay?: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay || 500)
+    const timer = setTimeout(() => setDebouncedValue(value), delay || 500);
 
     return () => {
-      clearTimeout(timer)
-    }
-  }, [value, delay])
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
 
-  return debouncedValue
+  return debouncedValue;
 }
 
 export function useRouterQuery<T = Record<string, any>>(router: NextRouter): T {
   const getRouterQuery = (routePath: string): T =>
-    [
-        ...(new URL(`d:dummy?${routePath.split('?')[1]}`)
-        .searchParams
-        .entries())
-    ]
-      .map(entry => ({[entry[0]]: entry[1]}))
-      .reduce((a, b) => ({...a, ...b})) as T
+    [...new URL(`d:dummy?${routePath.split("?")[1]}`).searchParams.entries()]
+      .map((entry) => ({ [entry[0]]: entry[1] }))
+      .reduce((a, b) => ({ ...a, ...b })) as T;
 
-  const [query, setQuery] = useState<T>(getRouterQuery(router.asPath))
+  const [query, setQuery] = useState<T>(getRouterQuery(router.asPath));
 
   useEffect(() => {
-    setQuery(getRouterQuery(router.asPath))
-  }, [router.asPath])
+    setQuery(getRouterQuery(router.asPath));
+  }, [router.asPath]);
 
-  return query
+  return query;
 }
 
-export function handleOnMouseDown(event: React.MouseEvent<HTMLElement>, cb: CallableFunction): void {
-  event.button == 0 && cb()
+// Use throughout your app instead of plain `useDispatch` and `useSelector`
+export const useAppDispatch: () => AppDispatch = useDispatch;
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
+export function handleOnMouseDown(
+  event: React.MouseEvent<HTMLElement>,
+  cb: CallableFunction
+): void {
+  event.button == 0 && cb();
 }
 
 export function formatWalletAddress(address: string): string {
-  return address ? `${address.slice(0, 5)}...${address.slice(-3)}` : ''
+  return address ? `${address.slice(0, 5)}...${address.slice(-3)}` : "";
 }
+
+export const useContractRead = WagmiUseContractRead;

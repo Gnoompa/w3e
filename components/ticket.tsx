@@ -1,4 +1,4 @@
-import { Flex, Field } from "@components/index"
+import { Flex, Field } from "@components/indexx"
 import { useEffect } from "react"
 import { Button, Label, Input, Container, Textarea } from "theme-ui"
 

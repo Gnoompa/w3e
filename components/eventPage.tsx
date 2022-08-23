@@ -1,7 +1,7 @@
 import React, { useRef, useState, useMemo, useEffect, useContext, ReactElement } from 'react'
 import QRCode from 'qrcode.react'
 import { Flex, Box, Image, Button, Label, Input, Text, Container, Textarea, Switch, Spinner, SxProp, ThemeUIStyleObject, Link } from "theme-ui"
-import { NavigateBack } from '@components/index'
+import { NavigateBack } from '@components/indexx'
 import { useRouterQuery } from 'helpers/hooks'
 import dynamic from 'next/dynamic'
 import NextImage from 'next/image'

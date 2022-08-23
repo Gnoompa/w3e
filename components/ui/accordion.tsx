@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react"
 import { Divider, Label, IconButton } from "theme-ui"
 import { ArrowDropDownRounded } from "@mui/icons-material"
-import { Flex } from "@components/index"
+import { Flex } from "@components/indexx"
 
 const indexGenerator = (function*() {
 	let index = 0

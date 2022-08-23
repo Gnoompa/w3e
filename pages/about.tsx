@@ -1,7 +1,7 @@
 import { NextPage } from "next"
 import Image from "next/image"
 import { Card, Heading, Text, Badge, Paragraph } from "theme-ui"
-import { Flex, Box } from "@components/index"
+import { Flex, Box } from "@components/indexx"
 
 const AboutPage: NextPage = () => {
     return (

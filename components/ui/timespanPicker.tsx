@@ -2,7 +2,7 @@ import { PropsWithChildren, useState, useEffect, SyntheticEvent, ChangeEvent } f
 import { Field } from './field'
 import calendarIcon from '../../styles/icons/calendar.svg'
 import { Flex, Box, InputProps, Text, Container, Button, Switch, Label } from 'theme-ui'
-import { WeekdaySelector } from '@components/index'
+import { WeekdaySelector } from '@components/indexx'
 import OutsideClickHandler from 'react-outside-click-handler'
 import { useDebounce, handleOnMouseDown, formatWalletAddress } from 'helpers/hooks'
 import date from 'date-and-time'

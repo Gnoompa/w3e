@@ -27,10 +27,10 @@ const EventTicketImage = (props: useEventTicketImageProps) => {
     }, [props.eventTitle, image])
 
     const init = async () => {        
-        const response = await fetch(ticketTemplateImage)
-        const blob = await response.blob()
+        // const response = await fetch(ticketTemplateImage)
+        // const blob = await response.blob()
 
-        setImage(await createImageBitmap(blob))
+        // setImage(await createImageBitmap(blob))
     }
 
     return (
