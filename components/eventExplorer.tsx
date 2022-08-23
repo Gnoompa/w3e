@@ -28,7 +28,6 @@ import dynamic from "next/dynamic";
 import NextImage from "next/image";
 import { Portal } from "react-portal";
 import { useRouter } from "next/router";
-import { AppContext } from "../helpers/context";
 import { formatWalletAddress } from "helpers/hooks";
 import { BigNumber, ethers } from "ethers";
 

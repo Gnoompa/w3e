@@ -7,7 +7,6 @@ import dynamic from 'next/dynamic'
 import NextImage from 'next/image'
 import { Portal } from 'react-portal'
 import { useRouter } from 'next/router'
-import { AppContext } from '../helpers/context'
 import { formatWalletAddress } from 'helpers/hooks'
 import { BigNumber, ethers } from 'ethers'
 import Moralis from 'moralis/types'
@@ -26,8 +25,6 @@ const EventPage = () => {
     }
 
     const router = useRouter()
-    const context = useContext(AppContext)
-    const {web3APIProvider} = useContext(AppContext)
     const routerQuery = useRouterQuery(router)
     const [currentStage, setCurrentStage] = useState<Stage>(Stage.LoadingEvent)
     const [eventTokenId, setEventTokenId] = useState<string>()

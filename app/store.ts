@@ -19,13 +19,12 @@ const persistConfig = {
   whitelist: ["eventForm"],
 };
 
+const reducer = combineReducers({
+  eventForm: eventFormReducer,
+});
+
 export const store = configureStore({
-  reducer: persistReducer(
-    persistConfig,
-    combineReducers({
-      eventForm: eventFormReducer,
-    })
-  ),
+  reducer: persistReducer<ReturnType<typeof reducer>>(persistConfig, reducer),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

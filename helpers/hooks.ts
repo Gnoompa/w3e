@@ -1,7 +1,6 @@
 import { NextRouter, Router } from "next/router";
 import { MouseEventHandler, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useContractRead as WagmiUseContractRead } from "wagmi";
 import type { TypedUseSelectorHook } from "react-redux";
 import type { RootState, AppDispatch } from "../app/store";
 
@@ -34,10 +33,6 @@ export function useRouterQuery<T = Record<string, any>>(router: NextRouter): T {
   return query;
 }
 
-// Use throughout your app instead of plain `useDispatch` and `useSelector`
-export const useAppDispatch: () => AppDispatch = useDispatch;
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
-
 export function handleOnMouseDown(
   event: React.MouseEvent<HTMLElement>,
   cb: CallableFunction
@@ -49,4 +44,5 @@ export function formatWalletAddress(address: string): string {
   return address ? `${address.slice(0, 5)}...${address.slice(-3)}` : "";
 }
 
-export const useContractRead = WagmiUseContractRead;
+export const useAppDispatch: () => AppDispatch = useDispatch;
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

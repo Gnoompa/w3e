@@ -23,7 +23,7 @@ import {
 import { useRouter } from "next/router";
 import Router from "./router";
 
-const App: NextPage = () => {
+const App: React.FC = (props) => {
   return (
     <>
       <ConnectKitButton.Custom>
@@ -35,7 +35,7 @@ const App: NextPage = () => {
           );
         }}
       </ConnectKitButton.Custom>
-      <Router />
+      {props.children}
     </>
   );
 };

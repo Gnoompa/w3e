@@ -23,7 +23,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     getDefaultClient({
       appName: "web3events",
       alchemyId: process.env.alchemyId,
-      chains: [chain.polygonMumbai],
+      chains: [chain.polygonMumbai, chain.polygon],
     })
   );
 
