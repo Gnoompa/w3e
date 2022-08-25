@@ -30,6 +30,7 @@ interface MainInterface extends ethers.utils.Interface {
     "createEvent((uint256[],uint256[],uint256[],uint256[],address,address[],string,string[]))": FunctionFragment;
     "events(uint256)": FunctionFragment;
     "getEventManagers(uint256)": FunctionFragment;
+    "getEventTickets(uint256[])": FunctionFragment;
     "getEvents(uint256[])": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
     "getTicketUsdMaticPrice(uint256)": FunctionFragment;
@@ -86,6 +87,10 @@ interface MainInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "getEventManagers",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getEventTickets",
+    values: [BigNumberish[]]
   ): string;
   encodeFunctionData(
     functionFragment: "getEvents",
@@ -160,6 +165,10 @@ interface MainInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "events", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getEventManagers",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getEventTickets",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getEvents", data: BytesLike): Result;
@@ -339,6 +348,35 @@ export class Main extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string[]]>;
 
+    getEventTickets(
+      eventIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        ([
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          boolean,
+          BigNumber,
+          BigNumber
+        ] & {
+          eventTokenId: BigNumber;
+          ticketType: BigNumber;
+          price: BigNumber;
+          supply: BigNumber;
+          isInfiniteSupply: BigNumber;
+          duration: BigNumber;
+          used: boolean;
+          activatedAt: BigNumber;
+          tier: BigNumber;
+        })[][]
+      ]
+    >;
+
     getEvents(
       eventIds: BigNumberish[],
       overrides?: CallOverrides
@@ -499,6 +537,33 @@ export class Main extends BaseContract {
     overrides?: CallOverrides
   ): Promise<string[]>;
 
+  getEventTickets(
+    eventIds: BigNumberish[],
+    overrides?: CallOverrides
+  ): Promise<
+    ([
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      boolean,
+      BigNumber,
+      BigNumber
+    ] & {
+      eventTokenId: BigNumber;
+      ticketType: BigNumber;
+      price: BigNumber;
+      supply: BigNumber;
+      isInfiniteSupply: BigNumber;
+      duration: BigNumber;
+      used: boolean;
+      activatedAt: BigNumber;
+      tier: BigNumber;
+    })[][]
+  >;
+
   getEvents(
     eventIds: BigNumberish[],
     overrides?: CallOverrides
@@ -654,6 +719,33 @@ export class Main extends BaseContract {
       eventId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string[]>;
+
+    getEventTickets(
+      eventIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<
+      ([
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        boolean,
+        BigNumber,
+        BigNumber
+      ] & {
+        eventTokenId: BigNumber;
+        ticketType: BigNumber;
+        price: BigNumber;
+        supply: BigNumber;
+        isInfiniteSupply: BigNumber;
+        duration: BigNumber;
+        used: boolean;
+        activatedAt: BigNumber;
+        tier: BigNumber;
+      })[][]
+    >;
 
     getEvents(
       eventIds: BigNumberish[],
@@ -933,6 +1025,11 @@ export class Main extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    getEventTickets(
+      eventIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getEvents(
       eventIds: BigNumberish[],
       overrides?: CallOverrides
@@ -1040,6 +1137,11 @@ export class Main extends BaseContract {
 
     getEventManagers(
       eventId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getEventTickets(
+      eventIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

@@ -44,6 +44,7 @@ interface ERC1155MixedFungibleMintableInterface extends ethers.utils.Interface {
     "setURI(uint256,string)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "uri(uint256)": FunctionFragment;
+    "uriOfBatch(uint256[])": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -135,6 +136,10 @@ interface ERC1155MixedFungibleMintableInterface extends ethers.utils.Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "uri", values: [BigNumberish]): string;
+  encodeFunctionData(
+    functionFragment: "uriOfBatch",
+    values: [BigNumberish[]]
+  ): string;
 
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(
@@ -204,6 +209,7 @@ interface ERC1155MixedFungibleMintableInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "uri", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "uriOfBatch", data: BytesLike): Result;
 
   events: {
     "ApprovalForAll(address,address,bool)": EventFragment;
@@ -423,6 +429,11 @@ export class ERC1155MixedFungibleMintable extends BaseContract {
     ): Promise<[boolean]>;
 
     uri(tokenId: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
+
+    uriOfBatch(
+      tokenIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<[string[]]>;
   };
 
   balanceOf(
@@ -545,6 +556,11 @@ export class ERC1155MixedFungibleMintable extends BaseContract {
   ): Promise<boolean>;
 
   uri(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+  uriOfBatch(
+    tokenIds: BigNumberish[],
+    overrides?: CallOverrides
+  ): Promise<string[]>;
 
   callStatic: {
     balanceOf(
@@ -670,6 +686,11 @@ export class ERC1155MixedFungibleMintable extends BaseContract {
     ): Promise<boolean>;
 
     uri(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+    uriOfBatch(
+      tokenIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<string[]>;
   };
 
   filters: {
@@ -897,6 +918,11 @@ export class ERC1155MixedFungibleMintable extends BaseContract {
     ): Promise<BigNumber>;
 
     uri(tokenId: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
+    uriOfBatch(
+      tokenIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -1036,6 +1062,11 @@ export class ERC1155MixedFungibleMintable extends BaseContract {
 
     uri(
       tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    uriOfBatch(
+      tokenIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };
