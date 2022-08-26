@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import type { TypedUseSelectorHook } from "react-redux";
 import type { RootState, AppDispatch } from "../app/store";
 
+export const defaulyIPFSgateway = "https://nftstorage.link/ipfs/";
+
 export function useDebounce<T>(value: T, delay?: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -42,6 +44,13 @@ export function handleOnMouseDown(
 
 export function formatWalletAddress(address: string): string {
   return address ? `${address.slice(0, 5)}...${address.slice(-3)}` : "";
+}
+
+export function getIPFSUri(
+  did: string,
+  gateway: string = defaulyIPFSgateway
+): string | undefined {
+  return did?.replace("ipfs://", gateway);
 }
 
 export const useAppDispatch: () => AppDispatch = useDispatch;

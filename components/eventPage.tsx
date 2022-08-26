@@ -23,13 +23,24 @@ import {
   ThemeUIStyleObject,
   Link,
 } from "theme-ui";
-import { useRouterQuery } from "helpers/hooks";
+import { getIPFSUri, useRouterQuery } from "helpers/hooks";
 import dynamic from "next/dynamic";
 import { Portal } from "react-portal";
 import { useRouter } from "next/router";
 import { formatWalletAddress } from "helpers/hooks";
 import { BigNumber, ethers } from "ethers";
-import { useAccount } from "wagmi";
+import { useAccount, useProvider } from "wagmi";
+import {
+  buyEventTicket,
+  getEventManagers,
+  getEvents,
+  getEventTickets,
+  getNativeCurrencyToUsdPrice,
+  getTokenMetadataUris,
+  prepareBuyEventTicket,
+  useMainContractEvents,
+  useTokenMetadataFetch,
+} from "helpers/contract";
 
 const QrScanner = dynamic(() => import("./ui/qrScanner"), {
   ssr: false,
@@ -42,13 +53,13 @@ const EventPage = () => {
     VerifyingParticipants,
   }
 
+  const provider = useProvider();
   const router = useRouter();
   const routerQuery = useRouterQuery(router);
+  const { address: connectedWalletAddress } = useAccount();
   const [currentStage, setCurrentStage] = useState<Stage>(Stage.LoadingEvent);
   const [eventTokenId, setEventTokenId] = useState<string>();
   const [event, setEvent] = useState<OnchainEvent>();
-  const [eventMetadata, setEventMetadata] = useState<EventMetadata>();
-  const [eventManagers, setEventManagers] = useState<string[]>([]);
   const [isVerifyingEventParticipants, setIsVerifyingEventParticipants] =
     useState(false);
   const [isVerifyingEventParticipant, setIsVerifyingEventParticipant] =
@@ -73,57 +84,110 @@ const EventPage = () => {
     useState(false);
   const [hasTicketsBeenSpentSuccessfully, setHasTicketsBeenSpentSuccessfully] =
     useState<Boolean>();
-  const { address: connectedUserAddress } = useAccount();
-  const currentUserTickets = currentEventSoldTickets
-    ?.filter((ticket) => ticket.buyer == connectedUserAddress)
-    .map((userTicket) =>
+
+  const eventId = routerQuery.id;
+
+  const { data: eventMetadataUri } = getTokenMetadataUris([
+    {
+      args: [[eventId]],
+    },
+  ]);
+
+  const { data: eventMetadata } = useTokenMetadataFetch({
+    did: eventMetadataUri?.[0][0],
+  }) as { data: EventMetadata | undefined };
+
+  const { data: events } = getEvents([{ args: [eventId] }]);
+
+  const { data: eventManagers } = getEventManagers([{ args: [eventId] }]);
+
+  const { data: eventTickets } = getEventTickets([{ args: [[eventId]] }]);
+
+  const [
+    buyEventTicketWritePayloadToPrepare,
+    setCreateEventWritePayloadToPrepare,
+  ] = useState<{
+    args: Parameters<typeof prepareBuyEventTicket>[0]["args"];
+    overrides: Parameters<typeof prepareBuyEventTicket>[0]["overrides"];
+  }>();
+
+  // // todo handle write request errors
+  const {
+    config: preparedBuyEventTicketWriteConfig,
+    refetch: refetchPreparedBuyEventTicketWriteConfig,
+  } = prepareBuyEventTicket({
+    ...buyEventTicketWritePayloadToPrepare,
+    enabled: false,
+  });
+
+  // // todo handle transaction signing rejection
+  const { data: buyEventTicketResponse, write: buyEventTicketWrite } =
+    buyEventTicket(preparedBuyEventTicketWriteConfig);
+
+  const { data: eventTicketsCreatedEvents } = useMainContractEvents({
+    eventName: "TicketsCreated",
+    filters: [routerQuery.id],
+    provider,
+  });
+
+  const { data: eventTicketBoughtEvents } = useMainContractEvents({
+    eventName: "TicketBought",
+    filters: [eventId],
+    provider,
+  });
+
+  const { data: eventTicketUsedEvents } = useMainContractEvents({
+    eventName: "TicketUsed",
+    provider,
+  });
+
+  const {
+    data: nativeCurrencyToUsdPrice,
+    refetch: refetchNativeCurrencyToUsdPrice,
+  } = getNativeCurrencyToUsdPrice();
+
+  const currentUserTickets = eventTicketBoughtEvents?.[0]
+    ?.filter((event) => event.args?.buyer == connectedWalletAddress)
+    .map((connectedWalletTicket) =>
       currentEventTickets?.filter(
-        (ticket) => userTicket.tokenId == ticket.tokenId
+        (ticket) => connectedWalletTicket.args?.tokenId == ticket.tokenId
       )
     );
   const isEventOrganizer =
-    event?.organizer?.toLowerCase() == connectedUserAddress?.toLowerCase();
+    event?.organizer?.toLowerCase() == connectedWalletAddress?.toLowerCase();
 
-  const isEventManager =
-    connectedUserAddress && eventManagers.includes(connectedUserAddress);
-  const canBuyTicket =
-    !currentUserTickets?.length && !isEventManager && !isEventOrganizer;
-  const canVerifyTickets = isEventManager || isEventOrganizer;
   const canShowTicketQr = !!currentUserTickets?.length;
   const ticketQrSigningMessage =
     "Prove that you own the ticket by signing. IT IS FREE.";
 
+  const isEventManager =
+    connectedWalletAddress &&
+    eventManagers &&
+    eventManagers[0].includes(connectedWalletAddress);
+  const canBuyTicket =
+    !currentUserTickets?.length && !isEventManager && !isEventOrganizer;
+  const canVerifyTickets = isEventManager || isEventOrganizer;
+
   useEffect(() => {
-    routerQuery.id ? initEvent(routerQuery.id) : router.push("/app");
+    eventId ? initEvent(eventId) : router.push("/app");
   }, []);
+
+  useEffect(() => {
+    eventMetadata && setCurrentStage(Stage.EventLoaded);
+  }, [eventMetadata]);
+
+  useEffect(() => {
+    events && setEvent(events[0]);
+  }, [events]);
 
   // todo use recently created event data if exists
   const initEvent = async (eventTokenId: string) => {
     setEventTokenId(eventTokenId);
-
-    Promise.all([
-      fetchMetadataWrapper(() =>
-        web3APIProvider.getTokenIdMetadata(eventTokenId)
-      ).then((metadata) => setEventMetadata(JSON.parse(metadata.metadata))),
-      web3APIProvider.getEvent({ eventTokenId }).then(setEvent),
-      web3APIProvider
-        .getTicketsData({ eventTokenId: routerQuery.id })
-        .then(setCurrentEventTickets),
-      web3APIProvider
-        .getEventManagers({ eventId: routerQuery.id })
-        .then(setEventManagers),
-      web3APIProvider
-        .getBoughtTickets({ eventId: routerQuery.id })
-        .then(setCurrentEventSoldTickets),
-      web3APIProvider
-        .getUsedTickets({ eventId: routerQuery.id })
-        .then(setCurrentEventUsedTickets),
-    ]).then(() => setCurrentStage(Stage.EventLoaded));
   };
 
-  useEffect(() => {
-    ticketQrScanResult && verifyTicket(ticketQrScanResult);
-  }, [ticketQrScanResult]);
+  // useEffect(() => {
+  //   ticketQrScanResult && verifyTicket(ticketQrScanResult);
+  // }, [ticketQrScanResult]);
 
   // metadata is not instantly indexed by the IPFS nodes hence trying to fetch it until success
   const fetchMetadataWrapper = (request: Function): Promise<any> =>
@@ -136,26 +200,24 @@ const EventPage = () => {
   const buyTicket = async () => {
     setIsBuyingATicket(true);
 
-    const maticToUsdPrice = await web3APIProvider.getMaticToUsdPrice();
+    // const response = await web3APIProvider
+    //   .buyTicket(
+    //     {
+    //       // ticketId: ticketData., address _for
+    //       ticketId: currentEventTickets[0].tokenId,
+    //       _for: connectedWalletAddress,
+    //     },
+    //     BigNumber.from(nativeCurrencyToUsdPrice[0].answer)
+    //       .mul(currentEventTickets[0].price / 10 ** 8)
+    //       .toString()
+    //   )
+    //   .catch(console.log);
 
-    const response = await web3APIProvider
-      .buyTicket(
-        {
-          // ticketId: ticketData., address _for
-          ticketId: currentEventTickets[0].tokenId,
-          _for: connectedUserAddress,
-        },
-        BigNumber.from(maticToUsdPrice)
-          .mul(currentEventTickets[0].price / 10 ** 8)
-          .toString()
-      )
-      .catch(console.log);
-
-    response
-      .wait()
-      .catch(() => alert("Couldn't buy a ticket"))
-      .then(() => setCurrentUserTickets([currentEventTickets[0]]))
-      .finally(() => setIsBuyingATicket(false));
+    // response
+    //   .wait()
+    //   .catch(() => alert("Couldn't buy a ticket"))
+    //   .then(() => setCurrentUserTickets([currentEventTickets[0]]))
+    //   .finally(() => setIsBuyingATicket(false));
 
     // console.log(maticToUsdPrice, ethers.BigNumber.from(maticToUsdPrice).mul(+event!.ticketPrice / 10**8).toString());
 
@@ -176,31 +238,6 @@ const EventPage = () => {
   const startVerification = () => {
     setIsVerifyingEventParticipants(true);
   };
-
-  const soulboundParticipants = async () => {
-    setIsSoulboundingInProcess(true);
-
-    const response = await web3APIProvider.soulboundParticipants({
-      eventTokenId: eventTokenId!,
-      addresses: scannedWalletQRsToSoulbound,
-    });
-
-    const receipt = await response.wait();
-
-    setIsSoulboundingInProcess(false);
-    setIsSoulbounding(false);
-  };
-
-  const onSoulboundingWalletQrScanResult = (address: string): void => {
-    !scannedWalletQRsToSoulbound.includes(address) &&
-      setScannedWalletQRsToSoulbound([...scannedWalletQRsToSoulbound, address]);
-  };
-
-  const verifyEventParticipant = async () =>
-    await web3APIProvider.verifyEventParticipant({
-      eventTokenId: eventTokenId!,
-      participantAddress: ticketQrScanResult!,
-    });
 
   const onTicketQrScanned = (scannedTicketData: string) => {
     setTicketQrScanResult(scannedTicketData);
@@ -246,64 +283,61 @@ const EventPage = () => {
 
     // console.log(ethers.utils.verifyMessage(message, '0xe136e6faee59c8f8100f690fd6c428bfcf05ca21569e9a1c45f9adf8918e59374169b91513cb2187d2219ef03765e12c44c7439ca698c5422855ec768216dfa21c'))
 
-    web3APIProvider
-      .getAPIAdapter()
-      .Moralis.Moralis.internalWeb3Provider.signer.signMessage(
-        ticketQrSigningMessage
-      )
-      .then((message) =>
-        setTicketQr(
-          new Buffer(JSON.stringify({ ticketId, message })).toString("base64")
-        )
-      );
+    // web3APIProvider
+    //   .getAPIAdapter()
+    //   .Moralis.Moralis.internalWeb3Provider.signer.signMessage(
+    //     ticketQrSigningMessage
+    //   )
+    //   .then((message) =>
+    //     setTicketQr(
+    //       new Buffer(JSON.stringify({ ticketId, message })).toString("base64")
+    //     )
+    //   );
   };
 
-  const verifyTicket = (ticketSignedVerificationMessage: string): void => {
-    const { ticketId, message } = JSON.parse(
-      Buffer.from(ticketSignedVerificationMessage, "base64").toString()
-    );
-    const address =
-      message && ethers.utils.verifyMessage(ticketQrSigningMessage, message);
+  // const verifyTicket = (ticketSignedVerificationMessage: string): void => {
+  //   const { ticketId, message } = JSON.parse(
+  //     Buffer.from(ticketSignedVerificationMessage, "base64").toString()
+  //   );
+  //   const address =
+  //     message && ethers.utils.verifyMessage(ticketQrSigningMessage, message);
 
-    address &&
-    ticketId &&
-    message &&
-    currentEventSoldTickets?.filter((ticket) => ticket.buyer == address).length
-      ? (setScannedTickets([...scannedTickets, { ticketId, address }]),
-        setVerificationResult("😊 verified 😊"))
-      : setVerificationResult("🚷 not verified 🚷");
-  };
+  //   address &&
+  //   ticketId &&
+  //   message &&
+  //   currentEventSoldTickets?.filter((ticket) => ticket.buyer == address).length
+  //     ? (setScannedTickets([...scannedTickets, { ticketId, address }]),
+  //       setVerificationResult("😊 verified 😊"))
+  //     : setVerificationResult("🚷 not verified 🚷");
+  // };
 
   const commitScannedTickets = () => {
     setIsCommitingScannedTickets(true);
 
-    web3APIProvider
-      .spendTickets(scannedTickets)
-      .then(
-        () => (setScannedTickets([]), setHasTicketsBeenSpentSuccessfully(true))
-      )
-      .catch(
-        (e) => (
-          alert("Smth went wrong"),
-          console.error(e),
-          setHasTicketsBeenSpentSuccessfully(false)
-        )
-      )
-      .finally(
-        () => (
-          setIsCommitingScannedTickets(false),
-          setTimeout(() => setHasTicketsBeenSpentSuccessfully(undefined), 3000)
-        )
-      );
+    // web3APIProvider
+    //   .spendTickets(scannedTickets)
+    //   .then(
+    //     () => (setScannedTickets([]), setHasTicketsBeenSpentSuccessfully(true))
+    //   )
+    //   .catch(
+    //     (e) => (
+    //       alert("Smth went wrong"),
+    //       console.error(e),
+    //       setHasTicketsBeenSpentSuccessfully(false)
+    //     )
+    //   )
+    //   .finally(
+    //     () => (
+    //       setIsCommitingScannedTickets(false),
+    //       setTimeout(() => setHasTicketsBeenSpentSuccessfully(undefined), 3000)
+    //     )
+    //   );
   };
 
   return (
     <Flex
       sx={{
         flexDirection: "column",
-        width: "22rem",
-        margin: "31rem auto",
-        transform: "translateY(-50%)",
       }}
     >
       <Flex sx={{ alignItems: "center", justifyContent: "flex-end" }}>
@@ -338,8 +372,13 @@ const EventPage = () => {
             <Text mt=".75em" as="h1">
               {eventMetadata?.name}
             </Text>
+            <Text mt=".75em" as="h1">
+              {eventMetadata?.description}
+            </Text>
             <Flex mt="3rem" sx={{ flexDirection: "column" }}>
-              {eventMetadata?.image && <Image src={eventMetadata?.image} />}
+              {eventMetadata?.image && (
+                <Image src={getIPFSUri(eventMetadata?.image)} />
+              )}
               {eventMetadata?.description && (
                 <Text variant="secondary">{eventMetadata.description}</Text>
               )}
@@ -348,14 +387,14 @@ const EventPage = () => {
                 variant="dialogSecondary"
                 sx={{ fontSize: "1.5rem", alignSelf: "center" }}
               >
-                {isEventOrganizer
+                {/* {isEventOrganizer
                   ? "you are an organizer"
                   : (event?.isSubscription ? "subscribe for " : "ticket for ") +
                     ethers.utils.formatUnits(
                       currentEventTickets[0].price,
                       "ether"
                     ) +
-                    " $"}
+                    " $"} */}
               </Text>
               <Flex
                 mt="2rem"
@@ -365,7 +404,7 @@ const EventPage = () => {
                   alignItems: "center",
                 }}
               >
-                {canBuyTicket && (
+                {/* {canBuyTicket && (
                   <Flex sx={{ alignItems: "center" }}>
                     <Button
                       variant="accent"
@@ -386,7 +425,6 @@ const EventPage = () => {
                             position: "relative",
                           }}
                         >
-                          {/* <NextImage src={buyTicketImage} alt="buy a ticket" width='30px' height='30px' objectFit='contain' /> */}
                         </Box>
                         {event?.isSubscription ? "subscribe" : "buy a ticket"}
                       </Flex>
@@ -398,13 +436,13 @@ const EventPage = () => {
                       />
                     )}
                   </Flex>
-                )}
-                {!!currentUserTickets?.length && (
+                )} */}
+                {/* {!!currentUserTickets?.length && (
                   <Text mt="1rem" mb="1rem" as="h3" variant="infoContent">
                     🔥 participating 🔥
                   </Text>
-                )}
-                {canShowTicketQr && (
+                )} */}
+                {/* {canShowTicketQr && (
                   <Flex sx={{ alignItems: "center" }}>
                     <Button
                       variant="accent"
@@ -415,8 +453,8 @@ const EventPage = () => {
                       Show ticket QR
                     </Button>
                   </Flex>
-                )}
-                {canVerifyTickets && (
+                )} */}
+                {/* {canVerifyTickets && (
                   <Button variant="accent" onClick={startVerification}>
                     <Flex
                       sx={{
@@ -426,12 +464,11 @@ const EventPage = () => {
                       }}
                     >
                       <Box sx={{ width: "3rem", height: "2rem" }}>
-                        {/* <NextImage src={verifyImage} width='30px' height='30px' alt="verify participant" /> */}
                       </Box>
                       scan tickets
                     </Flex>
                   </Button>
-                )}
+                )} */}
                 {/* {canGrantSoulbound &&
                                 <Button variant='accent' onClick={() => setIsSoulbounding(true)}>
                                     <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
@@ -445,84 +482,6 @@ const EventPage = () => {
                             } */}
               </Flex>
             </Flex>
-            {isSoulbounding && (
-              <Portal>
-                <Container variant="layout.container.modalBackground">
-                  <Flex
-                    p="2rem 1rem"
-                    sx={{
-                      maxHeight: "100%",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      margin: "max(50vh, 10rem) auto",
-                      transform: "translateY(-50%)",
-                      overflow: "scroll",
-                      maxWidth: "25rem",
-                    }}
-                  >
-                    <Flex
-                      sx={{
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        width: "100%",
-                      }}
-                    >
-                      <Text as="h2">Grant POAs</Text>
-                      {/* <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsSoulbounding(false)}/> */}
-                    </Flex>
-                    <Box mt="2rem" sx={{ maxWidth: "100%" }}>
-                      <QrScanner
-                        showResult={false}
-                        onResult={onSoulboundingWalletQrScanResult}
-                      />
-                    </Box>
-                    <Flex
-                      mt="2rem"
-                      sx={{ flexDirection: "column", flex: 1, width: "100%" }}
-                    >
-                      {scannedWalletQRsToSoulbound.length ? (
-                        <Flex
-                          sx={{
-                            flexDirection: "column",
-                            alignSelf: "flex-start",
-                            width: "100%",
-                            gap: ".5rem",
-                          }}
-                        >
-                          <Text mb="1rem" as="h2">
-                            Scanned wallets:
-                          </Text>
-                          {scannedWalletQRsToSoulbound.map((scannedAddress) => (
-                            <Text as="h3" key={scannedAddress}>
-                              {formatWalletAddress(scannedAddress)}
-                            </Text>
-                          ))}
-                          <Button
-                            mt="1rem"
-                            disabled={!scannedWalletQRsToSoulbound.length}
-                            variant="accent"
-                            sx={{ alignSelf: "center" }}
-                            onClick={soulboundParticipants}
-                          >
-                            Grant POAs
-                          </Button>
-                          {isSoulboundingInProcess && <Spinner />}
-                        </Flex>
-                      ) : (
-                        <Text variant="dialog" sx={{ alignSelf: "center" }}>
-                          scan multiple wallet QRs
-                        </Text>
-                      )}
-                    </Flex>
-                    {/* {scannedBeneficiaryAddress &&
-                                        <Button variant='accent' mt='2rem' onClick={() => (setBeneficiary(scannedBeneficiaryAddress), setIsScanningBeneficiaryQr(false))}>
-                                            set the beneficiary
-                                        </Button>
-                                    } */}
-                  </Flex>
-                </Container>
-              </Portal>
-            )}
             {isShowingTicketQr && (
               <Portal>
                 <Container variant="layout.container.modalBackground">

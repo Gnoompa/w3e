@@ -21,6 +21,8 @@ export interface State {
 const initialState: State = {
   eventTitle: "",
   beneficiary: "",
+  ticketPrice: undefined,
+  isFreeTicketPrice: false,
 };
 
 export const slice = createSlice({
@@ -28,9 +30,10 @@ export const slice = createSlice({
   initialState,
   reducers: {
     setEvent: (state, action: PayloadAction<State>) => action.payload,
+    resetEvent: () => initialState,
   },
 });
 
-export const { setEvent } = slice.actions;
+export const { setEvent, resetEvent } = slice.actions;
 
 export default slice.reducer;

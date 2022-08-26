@@ -4,7 +4,8 @@ import { MainInterface } from "./typechain/Main";
 export {};
 
 declare global {
-  type OnchainEvent = Awaited<ReturnType<typeof Main.prototype.getEvents>>[1];
+  type OnchainEvent = Awaited<ReturnType<typeof Main.prototype.events>>;
+  type OnchainEventTicket = Awaited<ReturnType<typeof Main.prototype.tickets>>;
 
   interface EventMetadata {
     name: string;

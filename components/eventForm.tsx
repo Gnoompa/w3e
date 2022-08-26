@@ -1,24 +1,15 @@
-import React, {
-  useRef,
-  useState,
-  useEffect,
-  ReactElement,
-  useContext,
-} from "react";
+import React, { useState, useEffect, ReactElement, useContext } from "react";
 import {
   Flex,
   Box,
   Button,
   Label,
-  Input,
   Text,
   Container,
   Textarea,
   Switch,
   Spinner,
-  SxProp,
   ThemeUIStyleObject,
-  Link,
 } from "theme-ui";
 import {
   NavigateBack,
@@ -28,32 +19,25 @@ import {
   TimespanPicker,
   FileUploader,
 } from "@components/indexx";
-import {
-  useDebounce,
-  handleOnMouseDown,
-  formatWalletAddress,
-  useAppSelector,
-} from "helpers/hooks";
+import { useDebounce, handleOnMouseDown, useAppSelector } from "helpers/hooks";
 import OutsideClickHandler from "react-outside-click-handler";
 import { BigNumber, BigNumberish, ethers, FixedNumber } from "ethers";
-import NextImage from "next/image";
-import { Location } from "./ui/locationPicker";
-import { Timespan } from "./ui/timespanPicker";
 import { Portal } from "react-portal";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
-import { setEvent as setEventAction } from "features/eventForm/eventFormSlice";
+import {
+  setEvent as setEventAction,
+  resetEvent as resetEventAction,
+} from "features/eventForm/eventFormSlice";
 import { useAppDispatch } from "helpers/hooks";
 import {
-  getEvents,
   getNativeCurrencyToUsdPrice,
   prepareCreateEvent,
   createEvent,
   parseTransactionLogs,
 } from "helpers/contract";
 import { context as appContext } from "./context";
-import { Main } from "types/typechain";
-import { useAccount, useWaitForTransaction } from "wagmi";
+import { useAccount, useProvider, useWaitForTransaction } from "wagmi";
 
 const QrScanner = dynamic(() => import("./ui/qrScanner"), {
   ssr: false,
@@ -81,7 +65,8 @@ const EventForm = () => {
   const context = useContext(appContext);
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { address } = useAccount();
+  const { address: connectedWalletAddress, isConnected: isWalletConnected } =
+    useAccount();
   const [currentEventCreationStage, setCurrentEventCreationStage] =
     useState<EventCreationStages>(EventCreationStages.eventConfig);
   const [eventFormActiveFieldModal, setEventFormActiveFieldModal] =
@@ -117,8 +102,8 @@ const EventForm = () => {
 
   // todo handle write request errors
   const {
-    config: preparedEventWriteConfig,
-    refetch: refetchPreparedEventWriteConfig,
+    config: preparedCreateEventWriteConfig,
+    refetch: refetchPreparedCreateEventWriteConfig,
   } = prepareCreateEvent({
     args: createEventWritePayloadToPrepare,
     enabled: false,
@@ -126,11 +111,12 @@ const EventForm = () => {
 
   // todo handle transaction signing rejection
   const { data: createEventWriteResponse, write: createEventWrite } =
-    createEvent(preparedEventWriteConfig);
+    createEvent(preparedCreateEventWriteConfig);
 
   const {
     isLoading: isLoadingCreateEventWriteData,
     data: createEventWriteReceipt,
+    isSuccess: isSuccessCreateEventWrite,
   } = useWaitForTransaction({
     hash: createEventWriteResponse?.hash,
     wait: createEventWriteResponse?.wait,
@@ -142,17 +128,19 @@ const EventForm = () => {
 
   useEffect(() => {
     createEventWriteReceipt &&
-      router.push(
+      isSuccessCreateEventWrite &&
+      (router.push(
         "/#event?id=" +
           parseTransactionLogs(createEventWriteReceipt.logs).filter(
             (log) => log.name == "EventCreated"
           )[0].args.tokenId
-      );
-  }, [createEventWriteReceipt]);
+      ),
+      dispatch(resetEventAction()));
+  }, [createEventWriteReceipt, isSuccessCreateEventWrite]);
 
   useEffect(() => {
     nativeCurrencyToUsdPriceResponse?.length &&
-      setNativeCurrencyToUsdPrice(nativeCurrencyToUsdPriceResponse[0]);
+      setNativeCurrencyToUsdPrice(nativeCurrencyToUsdPriceResponse[0].answer);
   }, [nativeCurrencyToUsdPriceResponse]);
 
   useEffect(() => {
@@ -190,7 +178,7 @@ const EventForm = () => {
   useEffect(() => {
     createEventWritePayloadToPrepare &&
       (!createEventWrite
-        ? refetchPreparedEventWriteConfig()
+        ? refetchPreparedCreateEventWriteConfig()
         : createEventWrite?.());
   }, [createEventWritePayloadToPrepare, createEventWrite]);
 
@@ -283,64 +271,52 @@ const EventForm = () => {
   });
 
   const beforeEventCreation = () => {
-    validateEventForm() &&
+    !isWalletConnected && alert("Connect a wallet");
+
+    isWalletConnected &&
+      validateEventForm() &&
       setCurrentEventCreationStage(EventCreationStages.creatingEvent);
   };
 
   // todo prepare request before uploading to ipfs
   const prepareEventForCreation = async () => {
-    // const eventMetadata = getEventMetadata(eventFormData);
-    // const eventTicketMetadata = getEventTicketMetadata(eventFormData);
+    const eventMetadata = getEventMetadata(eventFormData);
+    const eventTicketMetadata = getEventTicketMetadata(eventFormData);
 
-    // const eventMetadataUrl = await uploadMetadata({
-    //   ...(eventMetadata as EventMetadata),
-    //   image: eventPosterImageFile!,
-    // });
+    const eventMetadataUrl = await uploadMetadata({
+      ...(eventMetadata as EventMetadata),
+      image: eventPosterImageFile!,
+    });
 
-    // const ticketMetadataUrl = await uploadMetadata({
-    //   ...(eventTicketMetadata as EventTicketMetadata),
-    //   image: eventPosterImageFile!,
-    // });
+    const ticketMetadataUrl = await uploadMetadata({
+      ...(eventTicketMetadata as EventTicketMetadata),
+      image: eventPosterImageFile!,
+    });
 
     setCreateEventWritePayloadToPrepare({
-      ticketSupply: [Math.floor(2! || 0)],
-      ticketPrice: [ethers.utils.parseEther(`${1! || 0}`)],
-      beneficiary: "0x5b3999bc2e8c46f75BF629DA951559D83E34FBdD",
-      managers: ["0x5b3999bc2e8c46f75BF629DA951559D83E34FBdD"],
-      params: [0],
-      subscriptionDuration: [0],
-      eventMetadataUri: "",
-      ticketMetadataUri: [""],
-      // ticketSupply: [Math.floor(+eventFormData.ticketSupply! || 0)],
-      // ticketPrice: [
-      //   ethers.utils.parseEther(`${+eventFormData.ticketPrice! || 0}`),
-      // ],
-      // beneficiary: eventFormData.beneficiary,
-      // managers: [eventFormData.beneficiary],
+      // ticketSupply: [Math.floor(2! || 0)],
+      // ticketPrice: [ethers.utils.parseEther(`${1! || 0}`)],
+      // beneficiary: "0x5b3999bc2e8c46f75BF629DA951559D83E34FBdD",
+      // managers: ["0x5b3999bc2e8c46f75BF629DA951559D83E34FBdD"],
       // params: [0],
-      // subscriptionDuration: [eventFormData.subscriptionDuration || 0],
-      // eventMetadataUri: eventMetadataUrl.url.replace(
-      //   "ipfs://",
-      //   eventMetadataUrl.embed().image.origin
-      // ),
-      // ticketMetadataUri: [
-      //   ticketMetadataUrl.url.replace(
-      //     "ipfs://",
-      //     eventMetadataUrl.embed().image.origin
-      //   ),
-      // ],
+      // subscriptionDuration: [0],
+      // eventMetadataUri: "testuri",
+      // ticketMetadataUri: ["testuri"],
+      ticketSupply: [Math.floor(+eventFormData.ticketSupply! || 0)],
+      ticketPrice: [
+        ethers.utils.parseEther(`${+eventFormData.ticketPrice! || 0}`),
+      ],
+      beneficiary: eventFormData.beneficiary,
+      managers: [eventFormData.beneficiary],
+      params: [0],
+      subscriptionDuration: [eventFormData.subscriptionDuration || 0],
+      eventMetadataUri: eventMetadataUrl.url,
+      ticketMetadataUri: [ticketMetadataUrl.url],
     });
   };
 
   return (
-    <Flex
-      sx={{
-        flexDirection: "column",
-        width: "22rem",
-        margin: "31rem auto",
-        transform: "translateY(-50%)",
-      }}
-    >
+    <Flex sx={{ flexDirection: "column" }}>
       <EventTicketImage
         eventTitle={ticketEventTitle}
         onImageGenerated={setTicketEventImageResult}
@@ -641,7 +617,7 @@ const EventForm = () => {
                           variant="fieldDialog"
                           onMouseDown={(event) =>
                             handleOnMouseDown(event, () =>
-                              setEvent({ beneficiary: address })
+                              setEvent({ beneficiary: connectedWalletAddress })
                             )
                           }
                         >
@@ -740,12 +716,7 @@ const EventForm = () => {
                 variant="accent"
                 sx={{ alignSelf: "flex-end" }}
               >
-                <Flex sx={{ alignItems: "center" }}>
-                  next
-                  <Box ml="1rem" sx={{ transform: "rotate(180deg)" }}>
-                    {/* <NextImage width='30px' height='30px' src={arrowBackSvg} /> */}
-                  </Box>
-                </Flex>
+                <Flex sx={{ alignItems: "center" }}>next</Flex>
               </Button>
             </>
           ),
