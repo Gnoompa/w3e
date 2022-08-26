@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { Routes } from "helpers/routes";
 import StartPage from "./startPage";
 import { useState, useEffect } from "react";
-import App from './app'
+import App from "./app";
 import { Route } from "react-router-dom";
 
 const EventForm = dynamic(() => import("./eventForm"), {
@@ -31,8 +31,8 @@ const Router: React.FC = () => {
   const [routePath, setRoutePath] = useState<Routes>();
 
   useEffect(() => {
-    setRoutePath(router.asPath.split("?")[0] as Routes)
-  }, [router.asPath])
+    setRoutePath(router.asPath.split("?")[0] as Routes);
+  }, [router.asPath]);
 
   const RouteToComponentMap = {
     [Routes.StartPage]: () => <StartPage />,
@@ -41,9 +41,15 @@ const Router: React.FC = () => {
     [Routes.EventExplorer]: () => <EventExplorer />,
   };
 
-  return routePath && routePath !== Routes.StartPage
-      ? <App>{(RouteToComponentMap[routePath])()}</App>
-      : RouteToComponentMap[Routes.StartPage]()
+  return routePath ? (
+    routePath !== Routes.StartPage ? (
+      <App>{RouteToComponentMap[routePath]()}</App>
+    ) : (
+      RouteToComponentMap[Routes.StartPage]()
+    )
+  ) : (
+    <></>
+  );
 };
 
 export default Router;
