@@ -68,17 +68,7 @@ const EventPage = () => {
   const [verificationResult, setVerificationResult] = useState("");
   const [isShowingTicketQr, setIsShowingTicketQr] = useState(false);
   const [ticketQr, setTicketQr] = useState("");
-  const [isSoulbounding, setIsSoulbounding] = useState(false);
-  const [isSoulboundingInProcess, setIsSoulboundingInProcess] = useState(false);
   const [scannedTickets, setScannedTickets] = useState<Array<object>>([]);
-  const [scannedWalletQRsToSoulbound, setScannedWalletQRsToSoulbound] =
-    useState<Array<string>>([]);
-  const [currentEventTickets, setCurrentEventTickets] =
-    useState<Array<object>>();
-  const [currentEventSoldTickets, setCurrentEventSoldTickets] =
-    useState<Array<object>>();
-  const [currentEventUsedTickets, setCurrentEventUsedTickets] =
-    useState<Array<object>>();
   const [isBuyingATicket, setIsBuyingATicket] = useState(false);
   const [isCommitingScannedTickets, setIsCommitingScannedTickets] =
     useState(false);
@@ -173,8 +163,8 @@ const EventPage = () => {
   }, []);
 
   useEffect(() => {
-    eventMetadata && setCurrentStage(Stage.EventLoaded);
-  }, [eventMetadata]);
+    event && eventMetadata && setCurrentStage(Stage.EventLoaded);
+  }, [event, eventMetadata]);
 
   useEffect(() => {
     events && setEvent(events[0]);
@@ -188,14 +178,6 @@ const EventPage = () => {
   // useEffect(() => {
   //   ticketQrScanResult && verifyTicket(ticketQrScanResult);
   // }, [ticketQrScanResult]);
-
-  // metadata is not instantly indexed by the IPFS nodes hence trying to fetch it until success
-  const fetchMetadataWrapper = (request: Function): Promise<any> =>
-    new Promise((res) =>
-      request()
-        .then(res)
-        .catch(() => setTimeout(() => fetchMetadataWrapper(request), 500))
-    );
 
   const buyTicket = async () => {
     setIsBuyingATicket(true);
