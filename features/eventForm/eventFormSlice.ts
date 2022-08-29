@@ -16,6 +16,7 @@ export interface State {
   ticketSupply?: number;
   ticketPrice?: number;
   beneficiary: string;
+  tabIndex: number;
 }
 
 const initialState: State = {
@@ -23,6 +24,7 @@ const initialState: State = {
   beneficiary: "",
   ticketPrice: undefined,
   isFreeTicketPrice: false,
+  tabIndex: 0
 };
 
 export const slice = createSlice({

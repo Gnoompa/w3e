@@ -9,11 +9,11 @@ import {
   Container,
   Label,
 } from "theme-ui";
-import { Flex, Box } from "@components/indexx";
+import { Flex, Box } from "@chakra-ui/react";
 
 const AboutPage: NextPage = () => {
   return (
-    <Flex column alignItemsCenter justifyItemsCenter mt="5%">
+    <Flex direction={"column"} align={"center"} justify={"center"} mt="5%">
       <Container variant="layout.container.accent" sx={{ width: "1296px" }}>
         <Heading variant="text.heading.contrast" as="h1">
           FAQ
