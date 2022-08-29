@@ -2,7 +2,6 @@ import { ethers } from 'ethers';
 import QrScannerAdapter from 'qr-scanner'
 import { formatWalletAddress } from 'helpers/hooks';
 import { useEffect, useRef, useState } from 'react';
-import { Flex, Container, Text } from 'theme-ui';
 
 type QrScannerProps = {
     showResult?: boolean;
