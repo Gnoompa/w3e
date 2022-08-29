@@ -8,20 +8,7 @@ import React, {
 } from "react";
 import {
   Flex,
-  Box,
-  Image,
-  Button,
-  Label,
-  Input,
-  Text,
-  Container,
-  Textarea,
-  Switch,
-  Spinner,
-  SxProp,
-  ThemeUIStyleObject,
-  Link,
-} from "theme-ui";
+} from "@chakra-ui/react"
 import { NavigateBack } from "@components/indexx";
 import { useRouterQuery } from "helpers/hooks";
 import dynamic from "next/dynamic";

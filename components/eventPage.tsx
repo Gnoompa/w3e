@@ -6,23 +6,22 @@ import React, {
   useContext,
   ReactElement,
 } from "react";
+import { Global, css } from "@emotion/react";
 import QRCode from "qrcode.react";
 import {
   Flex,
   Box,
   Image,
   Button,
-  Label,
-  Input,
   Text,
   Container,
-  Textarea,
-  Switch,
   Spinner,
-  SxProp,
-  ThemeUIStyleObject,
-  Link,
-} from "theme-ui";
+  useTheme,
+  Heading,
+  IconButton,
+  useClipboard,
+  useToast,
+} from "@chakra-ui/react";
 import { getIPFSUri, useRouterQuery } from "helpers/hooks";
 import dynamic from "next/dynamic";
 import { Portal } from "react-portal";
@@ -41,6 +40,7 @@ import {
   useMainContractEvents,
   useTokenMetadataFetch,
 } from "helpers/contract";
+import { ExternalLinkIcon, LinkIcon } from "@chakra-ui/icons";
 
 const QrScanner = dynamic(() => import("./ui/qrScanner"), {
   ssr: false,
@@ -56,6 +56,9 @@ const EventPage = () => {
   const provider = useProvider();
   const router = useRouter();
   const routerQuery = useRouterQuery(router);
+  const toast = useToast();
+  const [copiedValue, setCopiedValue] = useState<string>("");
+  const { hasCopied, onCopy } = useClipboard(copiedValue);
   const { address: connectedWalletAddress } = useAccount();
   const [currentStage, setCurrentStage] = useState<Stage>(Stage.LoadingEvent);
   const [eventTokenId, setEventTokenId] = useState<string>();
@@ -68,18 +71,20 @@ const EventPage = () => {
   const [verificationResult, setVerificationResult] = useState("");
   const [isShowingTicketQr, setIsShowingTicketQr] = useState(false);
   const [ticketQr, setTicketQr] = useState("");
-  const [isSoulbounding, setIsSoulbounding] = useState(false);
-  const [isSoulboundingInProcess, setIsSoulboundingInProcess] = useState(false);
   const [scannedTickets, setScannedTickets] = useState<Array<object>>([]);
-  const [scannedWalletQRsToSoulbound, setScannedWalletQRsToSoulbound] =
-    useState<Array<string>>([]);
-  const [currentEventTickets, setCurrentEventTickets] =
-    useState<Array<object>>();
-  const [currentEventSoldTickets, setCurrentEventSoldTickets] =
-    useState<Array<object>>();
-  const [currentEventUsedTickets, setCurrentEventUsedTickets] =
-    useState<Array<object>>();
   const [isBuyingATicket, setIsBuyingATicket] = useState(false);
+  const [isVerifyingATicket, setIsVerifyingATicket] = useState(false);
+  const [eventTicketStartingPrice, setEventTicketStartingPrice] =
+    useState<number>();
+  const [eventTicketsTotalSupply, setEventTicketsTotalSupply] =
+    useState<number>();
+  const [eventTicketsMintedAmount, setEventTicketsMintedAmount] =
+    useState<number>();
+  const [eventTicketPriceLabel, setEventTicketPriceLabel] = useState<string>();
+  const [
+    eventTicketNativeCurrencyPriceLabel,
+    setEventTicketNativeCurrencyPriceLabel,
+  ] = useState<string>();
   const [isCommitingScannedTickets, setIsCommitingScannedTickets] =
     useState(false);
   const [hasTicketsBeenSpentSuccessfully, setHasTicketsBeenSpentSuccessfully] =
@@ -164,21 +169,57 @@ const EventPage = () => {
     connectedWalletAddress &&
     eventManagers &&
     eventManagers[0].includes(connectedWalletAddress);
-  const canBuyTicket =
-    !currentUserTickets?.length && !isEventManager && !isEventOrganizer;
-  const canVerifyTickets = isEventManager || isEventOrganizer;
 
   useEffect(() => {
     eventId ? initEvent(eventId) : router.push("/app");
   }, []);
 
   useEffect(() => {
-    eventMetadata && setCurrentStage(Stage.EventLoaded);
-  }, [eventMetadata]);
+    event && eventMetadata && setCurrentStage(Stage.EventLoaded);
+  }, [event, eventMetadata]);
 
   useEffect(() => {
     events && setEvent(events[0]);
   }, [events]);
+
+  useEffect(() => {
+    eventTickets &&
+      setEventTicketPriceLabel(
+        `$${(+ethers.utils.formatEther(
+          eventTickets[0][0][0].price.toString()
+        )).toFixed(2)}`
+      );
+  }, [eventTickets]);
+
+  useEffect(() => {
+    eventTickets &&
+      (setEventTicketStartingPrice(
+        +ethers.utils.formatEther(eventTickets[0][0][0].price.toString())
+      ),
+      setEventTicketsTotalSupply(
+        eventTickets[0][0]
+          .map((ticketTier) => +ticketTier.supply)
+          .reduce((a, b) => a + b)
+      ),
+      setEventTicketsMintedAmount(2));
+  }, [eventTickets]);
+
+  useEffect(() => {
+    console.log(eventTicketBoughtEvents);
+  }, [eventTicketBoughtEvents]);
+
+  useEffect(() => {
+    eventTicketStartingPrice &&
+      nativeCurrencyToUsdPrice &&
+      setEventTicketNativeCurrencyPriceLabel(
+        `~${(+ethers.utils.formatUnits(
+          nativeCurrencyToUsdPrice[0].answer
+            .mul(eventTicketStartingPrice)
+            .toString(),
+          8
+        )).toFixed(4)} MATIC`
+      );
+  }, [eventTicketStartingPrice, nativeCurrencyToUsdPrice]);
 
   // todo use recently created event data if exists
   const initEvent = async (eventTokenId: string) => {
@@ -188,14 +229,6 @@ const EventPage = () => {
   // useEffect(() => {
   //   ticketQrScanResult && verifyTicket(ticketQrScanResult);
   // }, [ticketQrScanResult]);
-
-  // metadata is not instantly indexed by the IPFS nodes hence trying to fetch it until success
-  const fetchMetadataWrapper = (request: Function): Promise<any> =>
-    new Promise((res) =>
-      request()
-        .then(res)
-        .catch(() => setTimeout(() => fetchMetadataWrapper(request), 500))
-    );
 
   const buyTicket = async () => {
     setIsBuyingATicket(true);
@@ -334,83 +367,335 @@ const EventPage = () => {
     //   );
   };
 
+  const shareEvent = () => {
+    navigator.share &&
+      navigator.share({
+        title: eventMetadata?.name,
+        url: location.href,
+      });
+  };
+
+  const onEventLinkCopyButtonClick = () => {
+    setCopiedValue(global.location.href);
+    onCopy();
+
+    toast({
+      title: "copied event link",
+      status: "success",
+      isClosable: true,
+    });
+  };
+
+  const onVerifyEventTicketButtonClick = () => {
+
+  }
+
+  const onBuyEventTicketButtonClick = () => {
+
+  }
+
   return (
-    <Flex
-      sx={{
-        flexDirection: "column",
-      }}
-    >
-      <Flex sx={{ alignItems: "center", justifyContent: "flex-end" }}>
-        {/* <NavigateBack href='/app'>
-                    to main menu
-                </NavigateBack> */}
-        <Button
-          variant="accentSmall"
+    <Container mt={"-2.5rem"} variant={"fullscreen"}>
+      <Global
+        styles={css`
+          body {
+            background: var(--chakra-colors-accentPrimary) !important;
+          }
+        `}
+      />
+      <Flex
+        sx={{
+          flexDirection: "column",
+        }}
+      >
+        {/* <Button
+          variant={"accent"}
           onClick={() =>
             navigator.share({ title: eventMetadata?.name, url: location.href })
           }
         >
-          <Flex sx={{ alignItems: "center" }}>
-            {/* <NextImage src={shareIcon} width='30px' height='30px' alt='share'/> */}
-            <Box ml=".5rem">share</Box>
-          </Flex>
-        </Button>
-      </Flex>
-      {{
-        [Stage.LoadingEvent]: () => (
-          <Spinner
-            sx={{ margin: "31rem auto", transform: "translateY(-50%)" }}
-          />
-        ),
-        [Stage.VerifyingParticipants]: () => (
-          <Spinner
-            sx={{ margin: "31rem auto", transform: "translateY(-50%)" }}
-          />
-        ),
-        [Stage.EventLoaded]: () => (
-          <>
-            <Text mt=".75em" as="h1">
-              {eventMetadata?.name}
-            </Text>
-            <Text mt=".75em" as="h1">
-              {eventMetadata?.description}
-            </Text>
-            <Flex mt="3rem" sx={{ flexDirection: "column" }}>
-              {eventMetadata?.image && (
-                <Image src={getIPFSUri(eventMetadata?.image)} />
-              )}
-              {eventMetadata?.description && (
-                <Text variant="secondary">{eventMetadata.description}</Text>
-              )}
-              <Text
-                mt="2rem"
-                variant="dialogSecondary"
-                sx={{ fontSize: "1.5rem", alignSelf: "center" }}
+          share
+        </Button> */}
+        {{
+          [Stage.LoadingEvent]: () => (
+            <Spinner
+              sx={{ margin: "31rem auto", transform: "translateY(-50%)" }}
+            />
+          ),
+          [Stage.VerifyingParticipants]: () => (
+            <Spinner
+              sx={{ margin: "31rem auto", transform: "translateY(-50%)" }}
+            />
+          ),
+          [Stage.EventLoaded]: () => (
+            <Flex direction={"column"} justifyContent={"center"}>
+              <Container
+                h={"20rem"}
+                pos={"relative"}
+                overflow={"hidden"}
+                zIndex={"base"}
               >
-                {/* {isEventOrganizer
-                  ? "you are an organizer"
-                  : (event?.isSubscription ? "subscribe for " : "ticket for ") +
-                    ethers.utils.formatUnits(
-                      currentEventTickets[0].price,
-                      "ether"
-                    ) +
-                    " $"} */}
-              </Text>
-              <Flex
-                mt="2rem"
-                sx={{
-                  flexDirection: "column",
-                  gap: "1.5rem",
-                  alignItems: "center",
-                }}
-              >
-                {/* {canBuyTicket && (
-                  <Flex sx={{ alignItems: "center" }}>
-                    <Button
-                      variant="accent"
-                      onClick={buyTicket}
-                      disabled={isBuyingATicket}
+                {eventMetadata?.image && (
+                  <Flex justify={"center"}>
+                    <Box
+                      pos={"fixed"}
+                      mt={"0rem"}
+                      left={0}
+                      w={"100vw"}
+                      h={"20rem"}
+                      zIndex={"base"}
+                      overflow={"hidden"}
                     >
+                      <Image
+                        src={getIPFSUri(eventMetadata?.image)}
+                        w={"100vw"}
+                        filter={"blur(40px)"}
+                      />
+                    </Box>
+                    <Image
+                      src={getIPFSUri(eventMetadata?.image)}
+                      zIndex={"docked"}
+                      mt={"5rem"}
+                      px={"1rem"}
+                    />
+                  </Flex>
+                )}
+                <Flex
+                  pos={"absolute"}
+                  maxW={"1440px"}
+                  bottom={"3rem"}
+                  zIndex={"docked"}
+                  w={"100%"}
+                  left={"50%"}
+                  transform={"translateX(-50%)"}
+                  px={"2rem"}
+                >
+                  <Heading color={"textContrast"}>
+                    {eventMetadata?.name}
+                  </Heading>
+                </Flex>
+              </Container>
+              <Container
+                variant={"undersceen"}
+                bg={"accentPrimary"}
+                zIndex={"docked"}
+                px={"2rem"}
+              >
+                <Flex
+                  maxW={"1440px"}
+                  margin={"3rem auto"}
+                  direction={"column"}
+                  pos={"relative"}
+                  gap={"2rem"}
+                >
+                  <Flex
+                    pos={"absolute"}
+                    top={"-4.25rem"}
+                    right={0}
+                    gap={"1rem"}
+                  >
+                    <Button
+                      onClick={shareEvent}
+                      variant={"secondary"}
+                      bg={"bg"}
+                      leftIcon={<ExternalLinkIcon />}
+                    >
+                      Share
+                    </Button>
+                    <IconButton
+                      aria-label="copy event link"
+                      variant={"secondary"}
+                      icon={<LinkIcon />}
+                      bg={"bg"}
+                      onClick={onEventLinkCopyButtonClick}
+                    />
+                  </Flex>
+                  <Container variant="contrastAccent">
+                    <Flex justify={"space-between"} align={"center"}>
+                      <Flex gap={"2rem"}>
+                        <Flex
+                          direction={"column"}
+                          justify={"space-between"}
+                          gap={".5rem"}
+                        >
+                          <Heading color={"textContrast"} fontSize={"md"}>
+                            minting price
+                          </Heading>
+                          <Flex align={"flex-end"} gap={".5rem"}>
+                            <Text
+                              color={"textAccent"}
+                              fontSize={"3xl"}
+                              fontWeight="bold"
+                            >
+                              {eventTicketPriceLabel}
+                            </Text>
+                            <Text
+                              fontSize={"sm"}
+                              color={"textContrastSecondary"}
+                            >
+                              {eventTicketNativeCurrencyPriceLabel}
+                            </Text>
+                          </Flex>
+                        </Flex>
+                        <Flex
+                          direction={"column"}
+                          justify={"space-between"}
+                          gap={".5rem"}
+                        >
+                          <Heading color={"textContrast"} fontSize={"md"}>
+                            Total supply
+                          </Heading>
+                          <Text
+                            color={"textContrast"}
+                            fontSize={"3xl"}
+                            fontWeight="bold"
+                          >
+                            {eventTicketsTotalSupply}
+                          </Text>
+                        </Flex>
+                        <Flex
+                          direction={"column"}
+                          justify={"space-between"}
+                          gap={".5rem"}
+                        >
+                          <Heading color={"textContrast"} fontSize={"md"}>
+                            Total minted
+                          </Heading>
+                          <Text
+                            color={"textContrast"}
+                            fontSize={"3xl"}
+                            fontWeight="bold"
+                          >
+                            {eventTicketsMintedAmount}
+                          </Text>
+                        </Flex>
+                      </Flex>
+                      {isEventManager ? (
+                        <Button
+                          variant={"accent"}
+                          onClick={onVerifyEventTicketButtonClick}
+                          isLoading={isVerifyingATicket}
+                        >
+                          <Flex direction={"column"}>
+                            Validate tickets
+                            <Text
+                              fontSize={"sm"}
+                              fontWeight={"light"}
+                              textTransform={"none"}
+                            >
+                              as a manager
+                            </Text>
+                          </Flex>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant={"accent"}
+                          onClick={onBuyEventTicketButtonClick}
+                          isLoading={isBuyingATicket}
+                        >
+                          buy
+                        </Button>
+                      )}
+                    </Flex>
+                  </Container>
+                  <Flex direction={"column"} px={"1rem"}>
+                    <Heading
+                      fontSize={"md"}
+                      color={"textContrastSecondary"}
+                      fontWeight={"md"}
+                    >
+                      Description
+                    </Heading>
+                    <Text color={"textContrast"} mt={".5rem"}>
+                      {eventMetadata?.description || "-"}
+                    </Text>
+                  </Flex>
+                </Flex>
+              </Container>
+              <Text mt=".75em" as="h1">
+                {eventMetadata?.name}
+              </Text>
+              <Text mt=".75em" as="h1">
+                {eventMetadata?.description}
+              </Text>
+              <Flex mt="3rem" sx={{ flexDirection: "column" }}>
+                {eventMetadata?.description && (
+                  <Text variant="secondary">{eventMetadata.description}</Text>
+                )}
+                <Text
+                  mt="2rem"
+                  variant="dialogSecondary"
+                  sx={{ fontSize: "1.5rem", alignSelf: "center" }}
+                >
+                  {/* {isEventOrganizer
+                    ? "you are an organizer"
+                    : (event?.isSubscription ? "subscribe for " : "ticket for ") +
+                      ethers.utils.formatUnits(
+                        currentEventTickets[0].price,
+                        "ether"
+                      ) +
+                      " $"} */}
+                </Text>
+                <Flex
+                  mt="2rem"
+                  sx={{
+                    flexDirection: "column",
+                    gap: "1.5rem",
+                    alignItems: "center",
+                  }}
+                >
+                  {/* {canBuyTicket && (
+                    <Flex sx={{ alignItems: "center" }}>
+                      <Button
+                        variant="accent"
+                        onClick={buyTicket}
+                        disabled={isBuyingATicket}
+                      >
+                        <Flex
+                          sx={{
+                            alignItems: "center",
+                            justifyContent: "space-around",
+                            gap: "1rem",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: "3rem",
+                              height: "2rem",
+                              position: "relative",
+                            }}
+                          >
+                          </Box>
+                          {event?.isSubscription ? "subscribe" : "buy a ticket"}
+                        </Flex>
+                      </Button>
+                      {isBuyingATicket && (
+                        <Spinner
+                          size={30}
+                          sx={{ position: "absolute", right: "2rem" }}
+                        />
+                      )}
+                    </Flex>
+                  )} */}
+                  {/* {!!currentUserTickets?.length && (
+                    <Text mt="1rem" mb="1rem" as="h3" variant="infoContent">
+                      🔥 participating 🔥
+                    </Text>
+                  )} */}
+                  {/* {canShowTicketQr && (
+                    <Flex sx={{ alignItems: "center" }}>
+                      <Button
+                        variant="accent"
+                        onClick={() =>
+                          showTicketQr(currentEventTickets[0].tokenId)
+                        }
+                      >
+                        Show ticket QR
+                      </Button>
+                    </Flex>
+                  )} */}
+                  {/* {canVerifyTickets && (
+                    <Button variant="accent" onClick={startVerification}>
                       <Flex
                         sx={{
                           alignItems: "center",
@@ -418,197 +703,157 @@ const EventPage = () => {
                           gap: "1rem",
                         }}
                       >
-                        <Box
-                          sx={{
-                            width: "3rem",
-                            height: "2rem",
-                            position: "relative",
-                          }}
-                        >
+                        <Box sx={{ width: "3rem", height: "2rem" }}>
                         </Box>
-                        {event?.isSubscription ? "subscribe" : "buy a ticket"}
+                        scan tickets
                       </Flex>
                     </Button>
-                    {isBuyingATicket && (
-                      <Spinner
-                        size={30}
-                        sx={{ position: "absolute", right: "2rem" }}
-                      />
-                    )}
-                  </Flex>
-                )} */}
-                {/* {!!currentUserTickets?.length && (
-                  <Text mt="1rem" mb="1rem" as="h3" variant="infoContent">
-                    🔥 participating 🔥
-                  </Text>
-                )} */}
-                {/* {canShowTicketQr && (
-                  <Flex sx={{ alignItems: "center" }}>
-                    <Button
-                      variant="accent"
-                      onClick={() =>
-                        showTicketQr(currentEventTickets[0].tokenId)
-                      }
-                    >
-                      Show ticket QR
-                    </Button>
-                  </Flex>
-                )} */}
-                {/* {canVerifyTickets && (
-                  <Button variant="accent" onClick={startVerification}>
-                    <Flex
-                      sx={{
-                        alignItems: "center",
-                        justifyContent: "space-around",
-                        gap: "1rem",
-                      }}
-                    >
-                      <Box sx={{ width: "3rem", height: "2rem" }}>
-                      </Box>
-                      scan tickets
-                    </Flex>
-                  </Button>
-                )} */}
-                {/* {canGrantSoulbound &&
-                                <Button variant='accent' onClick={() => setIsSoulbounding(true)}>
-                                    <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
-                                        <Box sx={{width: '3rem', height: '2rem', position: 'relative'}}>
-                                            <NextImage src={buyTicketImage} alt="buy a ticket" width='30px' height='30px' objectFit='contain' />
-                                        </Box>
-                                        <Text>grant POA</Text>
+                  )} */}
+                  {/* {canGrantSoulbound &&
+                                  <Button variant='accent' onClick={() => setIsSoulbounding(true)}>
+                                      <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
+                                          <Box sx={{width: '3rem', height: '2rem', position: 'relative'}}>
+                                              <NextImage src={buyTicketImage} alt="buy a ticket" width='30px' height='30px' objectFit='contain' />
+                                          </Box>
+                                          <Text>grant POA</Text>
 
-                                    </Flex>
-                                </Button>
-                            } */}
+                                      </Flex>
+                                  </Button>
+                              } */}
+                </Flex>
               </Flex>
-            </Flex>
-            {isShowingTicketQr && (
-              <Portal>
-                <Container variant="layout.container.modalBackground">
-                  <Flex
-                    p="2rem 1rem"
-                    sx={{
-                      maxHeight: "100%",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      margin: "max(50vh, 10rem) auto",
-                      transform: "translateY(-50%)",
-                      overflow: "scroll",
-                      maxWidth: "25rem",
-                    }}
-                  >
+              {isShowingTicketQr && (
+                <Portal>
+                  <Container variant="layout.container.modalBackground">
                     <Flex
+                      p="2rem 1rem"
                       sx={{
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        width: "100%",
-                      }}
-                    >
-                      <Text as="h2">Ticket QR</Text>
-                      {/* <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsShowingTicketQr(false)}/> */}
-                    </Flex>
-                    <Flex
-                      mt="2rem"
-                      sx={{ justifyContent: "center", width: "100%" }}
-                    >
-                      {ticketQr && (
-                        <QRCode renderAs="canvas" size={300} value={ticketQr} />
-                      )}
-                    </Flex>
-                  </Flex>
-                </Container>
-              </Portal>
-            )}
-            {isVerifyingEventParticipants && (
-              <Portal>
-                <Container variant="layout.container.modalBackground">
-                  <Flex
-                    p="2rem 1rem"
-                    sx={{
-                      maxHeight: "100%",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      margin: "max(50vh, 10rem) auto",
-                      transform: "translateY(-50%)",
-                      overflow: "scroll",
-                      maxWidth: "25rem",
-                    }}
-                  >
-                    <Flex
-                      sx={{
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        width: "100%",
-                      }}
-                    >
-                      <Text as="h2">Verify Participants</Text>
-                      {/* <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsVerifyingEventParticipants(false)}/> */}
-                    </Flex>
-                    <Box mt="2rem" sx={{ maxWidth: "100%" }}>
-                      <QrScanner
-                        showResult={false}
-                        onResult={onTicketQrScanned}
-                      />
-                    </Box>
-                    <Flex
-                      mt="2rem"
-                      sx={{
+                        maxHeight: "100%",
                         flexDirection: "column",
                         alignItems: "center",
-                        flex: 1,
-                        width: "100%",
-                        justifyContent: "center",
+                        margin: "max(50vh, 10rem) auto",
+                        transform: "translateY(-50%)",
+                        overflow: "scroll",
+                        maxWidth: "25rem",
                       }}
                     >
-                      <Text variant="dialog">scan wallet QR to verify</Text>
-                    </Flex>
-                    <Flex
-                      mt="2rem"
-                      sx={{
-                        flexDirection: "column",
-                        alignItems: "center",
-                        flex: 1,
-                        width: "100%",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Text variant="accent">
-                        scanned {scannedTickets.length} of{" "}
-                        {currentEventTickets!.length -
-                          currentEventUsedTickets!.length}{" "}
-                        unused tickets
-                      </Text>
-                    </Flex>
-                    <Flex mt="2rem" sx={{ alignItems: "center" }}>
-                      <Button
-                        variant="accent"
-                        onClick={commitScannedTickets}
-                        disabled={!scannedTickets.length}
+                      <Flex
+                        sx={{
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          width: "100%",
+                        }}
                       >
-                        verify scanned tickets
-                      </Button>
-                      {isCommitingScannedTickets && (
-                        <Spinner
-                          size={30}
-                          sx={{ position: "absolute", right: "2rem" }}
+                        <Text as="h2">Ticket QR</Text>
+                        {/* <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsShowingTicketQr(false)}/> */}
+                      </Flex>
+                      <Flex
+                        mt="2rem"
+                        sx={{ justifyContent: "center", width: "100%" }}
+                      >
+                        {ticketQr && (
+                          <QRCode
+                            renderAs="canvas"
+                            size={300}
+                            value={ticketQr}
+                          />
+                        )}
+                      </Flex>
+                    </Flex>
+                  </Container>
+                </Portal>
+              )}
+              {isVerifyingEventParticipants && (
+                <Portal>
+                  <Container variant="layout.container.modalBackground">
+                    <Flex
+                      p="2rem 1rem"
+                      sx={{
+                        maxHeight: "100%",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        margin: "max(50vh, 10rem) auto",
+                        transform: "translateY(-50%)",
+                        overflow: "scroll",
+                        maxWidth: "25rem",
+                      }}
+                    >
+                      <Flex
+                        sx={{
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          width: "100%",
+                        }}
+                      >
+                        <Text as="h2">Verify Participants</Text>
+                        {/* <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsVerifyingEventParticipants(false)}/> */}
+                      </Flex>
+                      <Box mt="2rem" sx={{ maxWidth: "100%" }}>
+                        <QrScanner
+                          showResult={false}
+                          onResult={onTicketQrScanned}
                         />
+                      </Box>
+                      <Flex
+                        mt="2rem"
+                        sx={{
+                          flexDirection: "column",
+                          alignItems: "center",
+                          flex: 1,
+                          width: "100%",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text variant="dialog">scan wallet QR to verify</Text>
+                      </Flex>
+                      <Flex
+                        mt="2rem"
+                        sx={{
+                          flexDirection: "column",
+                          alignItems: "center",
+                          flex: 1,
+                          width: "100%",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text variant="accent">
+                          scanned {scannedTickets.length} of{" "}
+                          {currentEventTickets!.length -
+                            currentEventUsedTickets!.length}{" "}
+                          unused tickets
+                        </Text>
+                      </Flex>
+                      <Flex mt="2rem" sx={{ alignItems: "center" }}>
+                        <Button
+                          variant="accent"
+                          onClick={commitScannedTickets}
+                          disabled={!scannedTickets.length}
+                        >
+                          verify scanned tickets
+                        </Button>
+                        {isCommitingScannedTickets && (
+                          <Spinner
+                            size={30}
+                            sx={{ position: "absolute", right: "2rem" }}
+                          />
+                        )}
+                      </Flex>
+                      {hasTicketsBeenSpentSuccessfully !== undefined && (
+                        <Text>
+                          {hasTicketsBeenSpentSuccessfully
+                            ? "Tickets has been verified"
+                            : "Error while verifying tickets"}
+                        </Text>
                       )}
                     </Flex>
-                    {hasTicketsBeenSpentSuccessfully !== undefined && (
-                      <Text>
-                        {hasTicketsBeenSpentSuccessfully
-                          ? "Tickets has been verified"
-                          : "Error while verifying tickets"}
-                      </Text>
-                    )}
-                  </Flex>
-                </Container>
-              </Portal>
-            )}
-          </>
-        ),
-      }[currentStage]()}
-    </Flex>
+                  </Container>
+                </Portal>
+              )}
+            </Flex>
+          ),
+        }[currentStage]()}
+      </Flex>
+    </Container>
   );
 };
 

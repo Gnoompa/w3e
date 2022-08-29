@@ -1,12 +1,11 @@
 import type { NextPage } from "next";
 import dynamic from "next/dynamic";
-import { Spinner } from "theme-ui";
+import { Spinner } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { Routes } from "helpers/routes";
 import StartPage from "./startPage";
 import { useState, useEffect } from "react";
 import App from "./app";
-import { Route } from "react-router-dom";
 
 const EventForm = dynamic(() => import("./eventForm"), {
   loading: () => (
@@ -34,6 +33,10 @@ const Router: React.FC = () => {
     setRoutePath(router.asPath.split("?")[0] as Routes);
   }, [router.asPath]);
 
+  useEffect(() => {
+    console.log(routePath)
+  }, [routePath]);
+
   const RouteToComponentMap = {
     [Routes.StartPage]: () => <StartPage />,
     [Routes.EventForm]: () => <EventForm />,
@@ -42,11 +45,11 @@ const Router: React.FC = () => {
   };
 
   return routePath ? (
-    routePath !== Routes.StartPage ? (
-      <App>{RouteToComponentMap[routePath]()}</App>
-    ) : (
-      RouteToComponentMap[Routes.StartPage]()
-    )
+    <App>
+      {(
+        RouteToComponentMap[routePath] || RouteToComponentMap[Routes.StartPage]
+      )()}
+    </App>
   ) : (
     <></>
   );

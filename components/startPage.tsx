@@ -1,64 +1,109 @@
 import type { NextPage } from "next";
-import { Flex, Button, Link, Image, Heading } from "theme-ui";
+import {
+  Flex,
+  Button,
+  Link,
+  Image,
+  Heading,
+  Text,
+  Highlight,
+  useToken,
+  Container,
+} from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { Routes } from "helpers/routes";
+import Head from "next/head";
+import { useTheme } from "@emotion/react";
+import NextLink from "next/link";
 
 const StartPage: NextPage = () => {
   const router = useRouter();
+  const theme = useTheme();
 
   return (
-    <Flex
-      bg="bg"
-      sx={{ flexDirection: "column", maxWidth: "100%", position: "relative" }}
-    >
-      <Flex
-        sx={{
-          flexDirection: "column",
-          width: "100%",
-          gap: "2rem",
-          maxWidth: "1280px",
-          position: "relative",
-          margin: "10rem auto",
-          alignItems: "center",
-        }}
-      >
-		<Heading variant="text.heading.accent" as="h1">
-			Web3Events
-		</Heading>
-        <Image src="/startPageGraphics.png"></Image>
-        <Flex
-          sx={{
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
+    <Container variant="padded" mt={["5rem", 0]}>
+      <Flex position={"relative"}>
+        <Image
+          src="/startPageGraphics.png"
+          filter={["blur(40px)", "none"]}
+        ></Image>
+        <Flex direction={"column"} align={"center"}>
           <Flex
-            sx={{
-              flexDirection: "column",
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-            }}
+            direction={"column"}
+            pos={"absolute"}
+            top={"50%"}
+            left={"50%"}
+            transform={["translate(-50%, -25%)", "translate(-50%, -50%)"]}
+            align={"center"}
           >
-            <Button
-              variant="accent"
-              onClick={() => router.push(Routes.EventForm)}
+            <Heading
+              as="h1"
+              variant="contrast"
+              fontSize={["xx-large", "xx-large", "xxx-large"]}
+              fontWeight={"black"}
             >
-              create new event
-            </Button>
-          </Flex>
-          <Flex sx={{ gap: "2rem" }}>
-            <Link href="/about.html" target="_blank">
-              about
-            </Link>
-            <Link href="/faq.html" target="_blank">
-              FAQ
-            </Link>
+              Web3Events
+            </Heading>
+            <Heading
+              whiteSpace={"nowrap"}
+              mt={[".25em", ".25em", "1em"]}
+              as="h2"
+              variant="contrastFaded"
+              fontSize={["lg", "2xl"]}
+              fontWeight={"md"}
+            >
+              Create and receive tickets on blockchain
+            </Heading>
+            <Flex
+              mt={["2em", ".5em"]}
+              direction={["column", "column", "row"]}
+              align={["center", "center", "initial"]}
+              gap={".5em"}
+            >
+              <Heading
+                whiteSpace={["nowrap"]}
+                as="h2"
+                variant="contrastFaded"
+                fontSize={["lg", "lg", "2xl"]}
+                fontWeight={"md"}
+              >
+                Collab & share profit.
+              </Heading>
+
+              <Heading
+                whiteSpace={["nowrap"]}
+                as="h2"
+                variant="contrastFaded"
+                fontSize={["lg", "lg", "2xl"]}
+                fontWeight={"md"}
+              >
+                <Highlight
+                  query={"Secondary market royalties."}
+                  styles={theme.components.Highlight.baseStyle}
+                >
+                  Secondary market royalties.
+                </Highlight>
+              </Heading>
+              <Heading
+                whiteSpace={["nowrap"]}
+                as="h2"
+                variant="contrastFaded"
+                fontSize={["lg", "lg", "2xl"]}
+                fontWeight={"md"}
+              >
+                Invest in events.
+              </Heading>
+            </Flex>
+            <Flex mt={["4rem", "1rem", "4rem"]}>
+              <Button  variant={"accent"}>
+                <NextLink href={Routes.EventForm}>organize new event</NextLink>
+              </Button>
+              <Link></Link>
+            </Flex>
           </Flex>
         </Flex>
       </Flex>
-    </Flex>
+    </Container>
   );
 };
 

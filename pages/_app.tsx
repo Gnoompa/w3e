@@ -2,21 +2,15 @@ import normalizeCss from "../node_modules/normalize.css/normalize.css";
 import resetCss from "../styles/reset.css";
 import globalCss from "../styles/index.css";
 import theme from "../styles/theme";
-import { useAmp } from "next/amp";
-import { ThemeProvider } from "theme-ui";
+import { ChakraProvider } from "@chakra-ui/react";
 import type { AppProps } from "next/app";
 import Head from "next/head";
-import { StyledEngineProvider } from "@mui/material/styles";
+// import { StyledEngineProvider } from "@mui/material/styles";
 import { store } from "../app/store";
 import { Provider } from "react-redux";
 import process from "process";
-import { WagmiConfig, createClient, chain, useAccount } from "wagmi";
-import {
-  ConnectKitProvider,
-  ConnectKitButton,
-  getDefaultClient,
-  useModal,
-} from "connectkit";
+import { WagmiConfig, createClient, chain } from "wagmi";
+import { ConnectKitProvider, getDefaultClient } from "connectkit";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const client = createClient(
@@ -39,15 +33,15 @@ function MyApp({ Component, pageProps }: AppProps) {
       `}</style>
       </Head>
       <Provider store={store}>
-        <StyledEngineProvider injectFirst>
-          <ThemeProvider theme={theme}>
-            <WagmiConfig client={client}>
-              <ConnectKitProvider>
-                <Component {...pageProps} />
-              </ConnectKitProvider>
-            </WagmiConfig>
-          </ThemeProvider>
-        </StyledEngineProvider>
+        {/* <StyledEngineProvider injectFirst> */}
+        <ChakraProvider theme={theme}>
+          <WagmiConfig client={client}>
+            <ConnectKitProvider>
+              <Component {...pageProps} />
+            </ConnectKitProvider>
+          </WagmiConfig>
+        </ChakraProvider>
+        {/* </StyledEngineProvider> */}
       </Provider>
     </>
   );

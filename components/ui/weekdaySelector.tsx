@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Container, Button } from "theme-ui"
+import { Container, Button } from "@chakra-ui/react"
 
 export type Weekday = {
     label: string; // short

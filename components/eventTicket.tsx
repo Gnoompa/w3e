@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react"
-import { Image as ThemeImage } from "theme-ui"
 import { Stage, Layer, Text, Image } from "react-konva"
 // import ticketTemplateImage from "../styles/images/ticketTemplate.png"
 

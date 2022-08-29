@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { DropzoneOptions, useDropzone } from "react-dropzone";
-import { Flex, Box, Container, Text, Button } from "theme-ui";
+import { Flex, Box, Container, Text, Button } from "@chakra-ui/react";
 import cameraIcon from "../../styles/icons/picture.svg";
 import NextImage from "next/image";
 
@@ -46,7 +46,7 @@ export const FileUploader = (props: FileUploaderProps) => {
 
   return (
     <Flex sx={{ flexDirection: "column" }}>
-      <Container variant="layout.container.fileUploader" {...getRootProps()}>
+      <Container variant="fileUploader" {...getRootProps()}>
         <input {...getInputProps()} />
         {preview ? (
           <NextImage
@@ -58,22 +58,13 @@ export const FileUploader = (props: FileUploaderProps) => {
           ></NextImage>
         ) : (
           <Flex sx={{ flexDirection: "column", alignItems: "center" }}>
-            <Box sx={{ width: "3rem", height: "3rem" }}>
-              <NextImage
-                width="100%"
-                height="100%"
-                src={cameraIcon}
-                alt="upload poster image"
-                objectFit="fill"
-              />
-            </Box>
             {files && files.length > 1 ? (
               <Text mt=".5rem" variant="hint">
                 ({files.length}) files
               </Text>
             ) : (
               props.subtitle && (
-                <Text mt=".5rem" variant="hint">
+                <Text  variant="hint">
                   {props.subtitle}
                 </Text>
               )
