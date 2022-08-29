@@ -4,5 +4,5 @@ export enum Routes {
   EventPage = "/#event",
   EventExplorer = "/#eventExplorer",
   FAQ = "/faq.html",
-  About = "/about"
+  About = "/about.html"
 }
