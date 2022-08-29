@@ -73,6 +73,7 @@ const EventPage = () => {
   const [ticketQr, setTicketQr] = useState("");
   const [scannedTickets, setScannedTickets] = useState<Array<object>>([]);
   const [isBuyingATicket, setIsBuyingATicket] = useState(false);
+  const [isVerifyingATicket, setIsVerifyingATicket] = useState(false);
   const [eventTicketStartingPrice, setEventTicketStartingPrice] =
     useState<number>();
   const [eventTicketsTotalSupply, setEventTicketsTotalSupply] =
@@ -385,6 +386,14 @@ const EventPage = () => {
     });
   };
 
+  const onVerifyEventTicketButtonClick = () => {
+
+  }
+
+  const onBuyEventTicketButtonClick = () => {
+
+  }
+
   return (
     <Container mt={"-2.5rem"} variant={"fullscreen"}>
       <Global
@@ -561,10 +570,14 @@ const EventPage = () => {
                           </Text>
                         </Flex>
                       </Flex>
-                      <Button variant={"accent"}>
-                        <Flex direction={"column"}>
-                          {isEventManager ? "Validate tickets" : "buy"}
-                          {isEventManager && (
+                      {isEventManager ? (
+                        <Button
+                          variant={"accent"}
+                          onClick={onVerifyEventTicketButtonClick}
+                          isLoading={isVerifyingATicket}
+                        >
+                          <Flex direction={"column"}>
+                            Validate tickets
                             <Text
                               fontSize={"sm"}
                               fontWeight={"light"}
@@ -572,9 +585,17 @@ const EventPage = () => {
                             >
                               as a manager
                             </Text>
-                          )}
-                        </Flex>
-                      </Button>
+                          </Flex>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant={"accent"}
+                          onClick={onBuyEventTicketButtonClick}
+                          isLoading={isBuyingATicket}
+                        >
+                          buy
+                        </Button>
+                      )}
                     </Flex>
                   </Container>
                   <Flex direction={"column"} px={"1rem"}>

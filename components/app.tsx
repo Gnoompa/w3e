@@ -42,8 +42,8 @@ const App: React.FC = (props) => {
               </NextLink>
             </MenuItem>
             <MenuItem>
-              <NextLink href={Routes.FAQ} passHref>
-                <Link>FAQ</Link>
+              <NextLink href={Routes.About} passHref>
+                <Link target={"_blank"}>About</Link>
               </NextLink>
             </MenuItem>
           </MenuList>
@@ -55,7 +55,7 @@ const App: React.FC = (props) => {
             <Link>Create event</Link>
           </NextLink>
           <Link href={Routes.EventExplorer}>Explore events</Link>
-          <Link href={Routes.FAQ}>FAQ</Link>
+          <Link href={Routes.About} target={"_blank"}>About</Link>
         </Flex>
       ),
     });

@@ -119,6 +119,12 @@ const theme = extendTheme({
 				undersceen: {
 					boxShadow: "0 -30px 45px #00000082"
 				},
+				contrast: {
+					borderRadius: "md",
+					bg: "accentPrimary",
+					px: "2rem",
+					py: "2rem",
+				},
 				contrastAccent: {
 					bg: "accentPrimaryContrast",
 					borderRadius: "md",
