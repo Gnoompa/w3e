@@ -159,7 +159,7 @@ const EventForm = () => {
       ) : eventFormData.ticketPrice && nativeCurrencyToUsdPrice ? (
         `~${(
           +ethers.utils.formatUnits(nativeCurrencyToUsdPrice, 8) *
-          eventFormData.ticketPrice
+          +eventFormData.ticketPrice
         ).toFixed(2)} MATIC`
       ) : eventFormData.ticketPrice && !nativeCurrencyToUsdPrice ? (
         <Spinner size={".75rem"} />
@@ -428,9 +428,11 @@ const EventForm = () => {
                         <InputLeftAddon children="$" fontWeight={"black"} />
                         <Input
                           value={eventFormData.ticketPrice}
+                          type="number"
                           placeholder="ticket price"
                           onChange={(event) =>
-                            setEvent({ ticketPrice: +event.target.value })
+                            console.log(event.target.value) ||
+                            setEvent({ ticketPrice: event.target.value })
                           }
                           textAlign={"center"}
                         />

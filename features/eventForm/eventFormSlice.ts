@@ -14,7 +14,7 @@ export interface State {
   isUnlimitedTicketSupply?: boolean;
   isFreeTicketPrice?: boolean;
   ticketSupply?: number;
-  ticketPrice?: number;
+  ticketPrice?: string;
   beneficiary: string;
   tabIndex: number;
 }

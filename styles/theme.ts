@@ -146,6 +146,11 @@ const theme = extendTheme({
           overflow: "hidden",
           bg: "accentPrimary",
         },
+				scanner: {
+					video: {
+						borderRadius: "md"
+					}
+				}
       },
     },
     Tabs: {
