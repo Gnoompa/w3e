@@ -62,7 +62,7 @@ type getContractEventsArgs = {
   };
   eventName: string;
   provider: Provider;
-  filters?: Array<any>;
+  filters?: Record<Chain["id"], any>;
   enabled?: boolean;
   chainIds?: Chain["id"][];
 };
@@ -80,22 +80,13 @@ export const getContractEvents = ({
 
       return contract?.filters[eventName]
         ? contract.queryFilter(
-            contract?.filters[eventName]?.(...(filters || []))
+            contract?.filters[eventName]?.(...(filters?.[chainId] || []))
           )
         : [];
     })
   );
 
-type useContractEventsProps = {
-  chainIdToContractMap: {
-    [chainId: Chain["id"]]: (provider: Provider) => Contract;
-  };
-  eventName: string;
-  provider: Provider;
-  filters?: Array<any>;
-  enabled?: boolean;
-  chainIds?: Chain["id"][];
-};
+type useContractEventsProps = getContractEventsArgs;
 
 export const useContractEvents = ({
   chainIdToContractMap,
@@ -224,7 +215,7 @@ export const prepareBuyEventTicket = ({
   usePrepareContractWrite({
     addressOrName: chainIdToMainContractAddressMap[chainId],
     contractInterface: MainContractABI.abi,
-    functionName: "createEvent",
+    functionName: "buyTickets",
     chainId,
     ...config,
   });
@@ -235,7 +226,7 @@ export const buyEventTicket = ({
 }:
   | ReturnType<typeof usePrepareContractWrite>["config"]
   | (Parameters<typeof useContractWrite>[0] & {
-      args: Parameters<typeof MainContractTypechain.prototype.buyTickets>[0];
+      args: Parameters<typeof MainContractTypechain.prototype.buyTickets>;
     })) => useContractWrite(config);
 
 export const getEventManagers = (
@@ -277,6 +268,51 @@ export const getTokenMetadataUris = (
   }) as ReturnType<typeof useContractReads> & {
     data: Awaited<
       ReturnType<typeof TokenContractTypechain.prototype.uriOfBatch>
+    >[];
+  };
+
+export const getOwnerOfToken = (
+  configs: (Omit<Partial<Parameters<typeof useContractRead>[0]>, "args"> & {
+    args: (
+      | Parameters<typeof TokenContractTypechain.prototype.ownerOf>[0]
+      | undefined
+    )[];
+  })[],
+  chainIds: Chain["id"][] = [defaultChainId]
+) =>
+  useContractReads({
+    contracts: chainIds.map((chainId, i) => ({
+      addressOrName: chainIdToTokenContractAddressMap[chainId],
+      contractInterface: TokenContractABI.abi,
+      functionName: "ownerOf",
+      chainId,
+      ...configs[i],
+    })),
+  }) as ReturnType<typeof useContractReads> & {
+    data: Awaited<
+      ReturnType<typeof TokenContractTypechain.prototype.ownerOf>
+    >[];
+  };
+
+export const getBalanceOfToken = <T>(
+  configs: (Omit<Partial<Parameters<typeof useContractRead>[0]>, "args"> & {
+    args: Partial<
+      Parameters<typeof TokenContractTypechain.prototype.balanceOf>
+    >;
+  })[],
+  chainIds: Chain["id"][] = [defaultChainId]
+) =>
+  useContractReads({
+    contracts: chainIds.map((chainId, i) => ({
+      addressOrName: chainIdToTokenContractAddressMap[chainId],
+      contractInterface: TokenContractABI.abi,
+      functionName: "balanceOf",
+      chainId,
+      ...configs[i],
+    })),
+  }) as ReturnType<typeof useContractReads> & {
+    data: Awaited<
+      ReturnType<typeof TokenContractTypechain.prototype.balanceOf>
     >[];
   };
 

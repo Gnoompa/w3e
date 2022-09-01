@@ -36,7 +36,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         {/* <StyledEngineProvider injectFirst> */}
         <ChakraProvider theme={theme}>
           <WagmiConfig client={client}>
-            <ConnectKitProvider>
+            <ConnectKitProvider options={{walletConnectName: "Zerion & Wallet Connect" }} >
               <Component {...pageProps} />
             </ConnectKitProvider>
           </WagmiConfig>

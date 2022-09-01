@@ -1,30 +1,38 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { Location } from "../../components/ui/locationPicker";
-import { Timespan } from "../../components/ui/timespanPicker";
 
 export interface State {
   eventTitle: string;
-  eventDescription?: string;
-  eventLocation?: Location;
-  eventTimespan?: Timespan;
+  eventShortDescription?: string;
+  eventLongDescription?: string;
+  eventTicketDescription?: string;
+  eventLocation?: string;
+  eventAdditionalLocationInfo?: string;
+  eventStartDate?: string;
+  eventStartTime?: string;
+  eventEndDate?: string;
+  eventEndTime?: string;
   isInSubscriptionMode?: boolean;
   isIndefiniteSubscription?: boolean;
   subscriptionDuration?: number;
   isUnlimitedTicketSupply?: boolean;
   isFreeTicketPrice?: boolean;
   ticketSupply?: number;
-  ticketPrice?: number;
+  ticketPrice?: string;
   beneficiary: string;
+  eventManagers?: (string | undefined)[];
   tabIndex: number;
 }
 
-const initialState: State = {
+export const initialState: State = {
   eventTitle: "",
   beneficiary: "",
+  eventShortDescription: "",
+  eventLongDescription: "",
   ticketPrice: undefined,
   isFreeTicketPrice: false,
-  tabIndex: 0
+  eventManagers: [],
+  tabIndex: 0,
 };
 
 export const slice = createSlice({

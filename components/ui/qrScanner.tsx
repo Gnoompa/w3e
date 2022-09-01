@@ -1,62 +1,45 @@
-import { ethers } from 'ethers';
-import QrScannerAdapter from 'qr-scanner'
-import { formatWalletAddress } from 'helpers/hooks';
-import { useEffect, useRef, useState } from 'react';
+import { ethers } from "ethers";
+import QrScannerAdapter from "qr-scanner";
+import { formatWalletAddress } from "helpers/hooks";
+import { Container, Flex, Text } from "@chakra-ui/react";
+import { useEffect, useRef, useState } from "react";
 
 type QrScannerProps = {
-    showResult?: boolean;
-    onResult: (result: string) => any;
-    onError?: (error: any) => any
-}
+  showResult?: boolean;
+  onResult: (result: string) => any;
+  onError?: (error: any) => any;
+};
 
 export const QrScanner = (props: QrScannerProps) => {
-    const videoRef = useRef()
+  const videoRef = useRef();
 
-    const [result, setResult] = useState('')
-    const [resultLabel, setResultLabel] = useState('scanning for wallet address QR...')
+  const [result, setResult] = useState("");
 
-    useEffect(() => {
-        let scanner = new QrScannerAdapter(
-            videoRef.current,
-            setResult,
-            {
-                highlightScanRegion: true
-            }
-        )
+  useEffect(() => {
+    let scanner = new QrScannerAdapter(videoRef.current, setResult, {
+      highlightScanRegion: true,
+    });
 
-        scanner.start().then(() => {}, props.onError)
+    scanner.start().then(() => {}, props.onError);
 
-        return () => scanner.stop()
-    }, [])
+    return () => scanner.stop();
+  }, []);
 
-    const formatAddress = (address: string): string|undefined =>
-        address ? [...(address.match(/0x[a-fA-F0-9]{40}/) || [])][0] : undefined
+  useEffect(() => {
+    props.onResult(result?.data);
+  }, [result]);
 
-    useEffect(() => {
-        // let formattedAddress = formatAddress(result?.data)
-
-        // formattedAddress
-        //     && ethers.utils.isAddress(formattedAddress)
-        //     && props.onResult(formattedAddress)
-        props.onResult(result?.data)
-
-        // props.showResult && formattedAddress && setResultLabel('scanned wallet address: ' + formatWalletAddress(formattedAddress))
-    }, [result])
-
-    return (
-        <Container variant='layout.container.video'>
-            <Flex sx={{flexDirection: 'column', alignItems: 'center'}}>
-                <video style={{width: '100%'}} ref={videoRef} />
-                <Text mt='.5rem' variant='hint' sx={{whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                    {resultLabel}
-                </Text>
-            </Flex>
-        </Container>
-    )
-}
+  return (
+    <Container variant="scanner">
+      <Flex sx={{ flexDirection: "column", alignItems: "center" }}>
+        <video style={{ width: "100%" }} ref={videoRef} />
+      </Flex>
+    </Container>
+  );
+};
 
 QrScanner.defaultProps = {
-    showResult: true
-}
+  showResult: true,
+};
 
-export default QrScanner
+export default QrScanner;

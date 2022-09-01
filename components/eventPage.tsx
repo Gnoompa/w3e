@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useContext,
   ReactElement,
+  RefObject,
 } from "react";
 import { Global, css } from "@emotion/react";
 import QRCode from "qrcode.react";
@@ -21,26 +22,51 @@ import {
   IconButton,
   useClipboard,
   useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  Highlight,
+  Icon,
+  AlertIcon,
 } from "@chakra-ui/react";
 import { getIPFSUri, useRouterQuery } from "helpers/hooks";
 import dynamic from "next/dynamic";
 import { Portal } from "react-portal";
 import { useRouter } from "next/router";
 import { formatWalletAddress } from "helpers/hooks";
-import { BigNumber, ethers } from "ethers";
-import { useAccount, useProvider } from "wagmi";
+import { BigNumber, BigNumberish, ethers } from "ethers";
+import {
+  chain,
+  useAccount,
+  useProvider,
+  useSignMessage,
+  useWaitForTransaction,
+} from "wagmi";
 import {
   buyEventTicket,
+  getBalanceOfToken,
   getEventManagers,
   getEvents,
   getEventTickets,
   getNativeCurrencyToUsdPrice,
+  getOwnerOfToken,
   getTokenMetadataUris,
   prepareBuyEventTicket,
   useMainContractEvents,
   useTokenMetadataFetch,
 } from "helpers/contract";
-import { ExternalLinkIcon, LinkIcon } from "@chakra-ui/icons";
+import { CheckIcon, ExternalLinkIcon, LinkIcon } from "@chakra-ui/icons";
 
 const QrScanner = dynamic(() => import("./ui/qrScanner"), {
   ssr: false,
@@ -53,6 +79,7 @@ const EventPage = () => {
     VerifyingParticipants,
   }
 
+  const ERROR_TOAST_ID = "error_toast";
   const provider = useProvider();
   const router = useRouter();
   const routerQuery = useRouterQuery(router);
@@ -63,19 +90,11 @@ const EventPage = () => {
   const [currentStage, setCurrentStage] = useState<Stage>(Stage.LoadingEvent);
   const [eventTokenId, setEventTokenId] = useState<string>();
   const [event, setEvent] = useState<OnchainEvent>();
-  const [isVerifyingEventParticipants, setIsVerifyingEventParticipants] =
-    useState(false);
-  const [isVerifyingEventParticipant, setIsVerifyingEventParticipant] =
-    useState(false);
-  const [ticketQrScanResult, setTicketQrScanResult] = useState<string>();
-  const [verificationResult, setVerificationResult] = useState("");
-  const [isShowingTicketQr, setIsShowingTicketQr] = useState(false);
-  const [ticketQr, setTicketQr] = useState("");
   const [scannedTickets, setScannedTickets] = useState<Array<object>>([]);
   const [isBuyingATicket, setIsBuyingATicket] = useState(false);
   const [isVerifyingATicket, setIsVerifyingATicket] = useState(false);
   const [eventTicketStartingPrice, setEventTicketStartingPrice] =
-    useState<number>();
+    useState<BigNumberish>();
   const [eventTicketsTotalSupply, setEventTicketsTotalSupply] =
     useState<number>();
   const [eventTicketsMintedAmount, setEventTicketsMintedAmount] =
@@ -85,90 +104,142 @@ const EventPage = () => {
     eventTicketNativeCurrencyPriceLabel,
     setEventTicketNativeCurrencyPriceLabel,
   ] = useState<string>();
-  const [isCommitingScannedTickets, setIsCommitingScannedTickets] =
-    useState(false);
-  const [hasTicketsBeenSpentSuccessfully, setHasTicketsBeenSpentSuccessfully] =
-    useState<Boolean>();
+  const {
+    isOpen: isTicketPreviewModalOpen,
+    onOpen: onTicketPreviewModalOpen,
+    onClose: onTicketPreviewModalClose,
+  } = useDisclosure();
+  const {
+    isOpen: isTicketVerificationModalOpen,
+    onOpen: onTicketVerificationModalOpen,
+    onClose: onTicketVerificationModalClose,
+  } = useDisclosure();
+  const {
+    isOpen: isSimpleAlertOpen,
+    onOpen: onSimpleAlertOpen,
+    onClose: onSimpleAlertClose,
+  } = useDisclosure();
 
+  const simpleAlertLeastDestructiveRef =
+    useRef() as RefObject<HTMLButtonElement>;
+  const [simpleAlertData, setSimpleAlertData] = useState<{
+    title: string | JSX.Element;
+    description: string | JSX.Element;
+  }>();
+
+  const [ticketPreviewQrData, setTicketPreviewQrData] = useState<string>();
+  const ticketSigningMessage =
+    "Prove that you own the ticket by signing. IT IS FREE.";
+  const {
+    data: ticketMessageSigningData,
+    isError: isTicketMessageSigningError,
+    isLoading: isLoadingTicketMessage,
+    isSuccess: isTicketMessageSigningSuccess,
+    signMessage: signTicketMessage,
+    error: ticketMessageSigningError,
+  } = useSignMessage({
+    message: ticketSigningMessage,
+  });
+
+  const [isTicketVerificationSuccessful, setIsTicketVerificationSuccessful] =
+    useState<boolean>();
   const eventId = routerQuery.id;
-
   const { data: eventMetadataUri } = getTokenMetadataUris([
     {
       args: [[eventId]],
     },
   ]);
-
   const { data: eventMetadata } = useTokenMetadataFetch({
     did: eventMetadataUri?.[0][0],
   }) as { data: EventMetadata | undefined };
-
   const { data: events } = getEvents([{ args: [eventId] }]);
-
   const { data: eventManagers } = getEventManagers([{ args: [eventId] }]);
-
   const { data: eventTickets } = getEventTickets([{ args: [[eventId]] }]);
-
+  const [verifyingTicketTokenId, setVerifyingTicketTokenId] =
+    useState<BigNumberish>();
+  const [verifiedTicketWalletAddress, setVerifiedTicketWalletAddress] =
+    useState<string>();
+  const {
+    data: balanceOfVerifyingTicketData,
+    refetch: refetchBalanceOfVerifyingTicket,
+  } = getBalanceOfToken([
+    {
+      args: [verifiedTicketWalletAddress, verifyingTicketTokenId],
+      enabled: false,
+    },
+  ]);
   const [
-    buyEventTicketWritePayloadToPrepare,
-    setCreateEventWritePayloadToPrepare,
+    buyEventTicketWriteConfigToPrepare,
+    setBuyEventTicketWriteConfigToPrepare,
   ] = useState<{
     args: Parameters<typeof prepareBuyEventTicket>[0]["args"];
     overrides: Parameters<typeof prepareBuyEventTicket>[0]["overrides"];
   }>();
-
   // // todo handle write request errors
   const {
     config: preparedBuyEventTicketWriteConfig,
     refetch: refetchPreparedBuyEventTicketWriteConfig,
+    error: preparedBuyEventTicketWriteConfigError,
   } = prepareBuyEventTicket({
-    ...buyEventTicketWritePayloadToPrepare,
+    ...buyEventTicketWriteConfigToPrepare,
     enabled: false,
   });
-
   // // todo handle transaction signing rejection
-  const { data: buyEventTicketResponse, write: buyEventTicketWrite } =
+  const { data: buyEventTicketWriteResponse, write: buyEventTicketWrite } =
     buyEventTicket(preparedBuyEventTicketWriteConfig);
-
+  const {
+    isLoading: isLoadingBuyEventTicketWrite,
+    data: buyEventTicketWriteData,
+    isSuccess: isSuccessBuyEventTicketWrite,
+    isError: isErrorBuyEventTicketWrite,
+    error: buyEventTicketWriteError,
+  } = useWaitForTransaction({
+    hash: buyEventTicketWriteResponse?.hash,
+    wait: buyEventTicketWriteResponse?.wait,
+  });
   const { data: eventTicketsCreatedEvents } = useMainContractEvents({
     eventName: "TicketsCreated",
-    filters: [routerQuery.id],
+    filters: {
+      [chain.polygonMumbai.id]: [
+        null,
+        BigNumber.from(routerQuery.id).toHexString(),
+      ],
+    },
     provider,
   });
-
-  const { data: eventTicketBoughtEvents } = useMainContractEvents({
+  const {
+    data: eventTicketBoughtEvents,
+    refetch: refetchEventTicketBoughtEvents,
+    isLoading: isLoadingEventTicketBoughtEvents,
+  } = useMainContractEvents({
     eventName: "TicketBought",
-    filters: [eventId],
+    filters: {
+      [chain.polygonMumbai.id]: [BigNumber.from(routerQuery.id).toHexString()],
+    },
     provider,
   });
-
   const { data: eventTicketUsedEvents } = useMainContractEvents({
     eventName: "TicketUsed",
     provider,
   });
-
   const {
     data: nativeCurrencyToUsdPrice,
     refetch: refetchNativeCurrencyToUsdPrice,
   } = getNativeCurrencyToUsdPrice();
-
-  const currentUserTickets = eventTicketBoughtEvents?.[0]
-    ?.filter((event) => event.args?.buyer == connectedWalletAddress)
-    .map((connectedWalletTicket) =>
-      currentEventTickets?.filter(
-        (ticket) => connectedWalletTicket.args?.tokenId == ticket.tokenId
+  const connectedWalletOwnedTickets = eventTicketBoughtEvents?.[0]
+    .filter((event) => event.args?.buyer == connectedWalletAddress)
+    .map((connectedWalletOwnedTicket) =>
+      eventTicketsCreatedEvents?.[0].filter((ticket) =>
+        connectedWalletOwnedTicket.args?.tokenId.eq(ticket.args?.tokenId)
       )
     );
-  const isEventOrganizer =
-    event?.organizer?.toLowerCase() == connectedWalletAddress?.toLowerCase();
-
-  const canShowTicketQr = !!currentUserTickets?.length;
-  const ticketQrSigningMessage =
-    "Prove that you own the ticket by signing. IT IS FREE.";
-
-  const isEventManager =
+  const canShowTicketQr = !!connectedWalletOwnedTickets?.length;
+  const isConnectedWalletAnEventManager =
     connectedWalletAddress &&
     eventManagers &&
     eventManagers[0].includes(connectedWalletAddress);
+  const canConnectedWalletBuyTickets =
+    !connectedWalletOwnedTickets?.length && !isConnectedWalletAnEventManager;
 
   useEffect(() => {
     eventId ? initEvent(eventId) : router.push("/app");
@@ -193,19 +264,17 @@ const EventPage = () => {
 
   useEffect(() => {
     eventTickets &&
-      (setEventTicketStartingPrice(
-        +ethers.utils.formatEther(eventTickets[0][0][0].price.toString())
-      ),
+      (setEventTicketStartingPrice(eventTickets[0][0][0].price),
       setEventTicketsTotalSupply(
         eventTickets[0][0]
           .map((ticketTier) => +ticketTier.supply)
           .reduce((a, b) => a + b)
-      ),
-      setEventTicketsMintedAmount(2));
+      ));
   }, [eventTickets]);
 
   useEffect(() => {
-    console.log(eventTicketBoughtEvents);
+    eventTicketBoughtEvents &&
+      setEventTicketsMintedAmount(eventTicketBoughtEvents[0].length);
   }, [eventTicketBoughtEvents]);
 
   useEffect(() => {
@@ -216,10 +285,77 @@ const EventPage = () => {
           nativeCurrencyToUsdPrice[0].answer
             .mul(eventTicketStartingPrice)
             .toString(),
-          8
+          26
         )).toFixed(4)} MATIC`
       );
   }, [eventTicketStartingPrice, nativeCurrencyToUsdPrice]);
+
+  useEffect(() => {
+    buyEventTicketWriteConfigToPrepare &&
+      (buyEventTicketWrite
+        ? buyEventTicketWrite()
+        : refetchPreparedBuyEventTicketWriteConfig());
+  }, [buyEventTicketWriteConfigToPrepare, buyEventTicketWrite]);
+
+  useEffect(() => {
+    buyEventTicketWriteData &&
+      (isSuccessBuyEventTicketWrite &&
+        (refetchEventTicketBoughtEvents(),
+        setIsBuyingATicket(false),
+        toast({
+          title: "A ticket has been bought",
+          status: "success",
+          isClosable: true,
+        })),
+      isErrorBuyEventTicketWrite &&
+        (toast({
+          title: "Couldn't buy a ticket",
+          status: "error",
+          isClosable: true,
+        }),
+        console.error(buyEventTicketWriteError)));
+  }, [buyEventTicketWriteData, isSuccessBuyEventTicketWrite]);
+
+  useEffect(() => {
+    ticketMessageSigningData &&
+      isTicketMessageSigningSuccess &&
+      (prepareTicketQrData(ticketMessageSigningData),
+      onTicketPreviewModalOpen(),
+      onSimpleAlertClose());
+  }, [ticketMessageSigningData, isTicketMessageSigningSuccess]);
+
+  useEffect(() => {
+    isTicketMessageSigningError &&
+      (handleError(ticketMessageSigningError), onSimpleAlertClose());
+  }, [isTicketMessageSigningError]);
+
+  useEffect(() => {
+    verifyingTicketTokenId && refetchBalanceOfVerifyingTicket();
+  }, [verifyingTicketTokenId]);
+
+  useEffect(() => {
+    balanceOfVerifyingTicketData &&
+      balanceOfVerifyingTicketData[0] &&
+      (setIsTicketVerificationSuccessful(
+        balanceOfVerifyingTicketData[0].gte(1)
+      ),
+      setTimeout(
+        () => (
+          setIsTicketVerificationSuccessful(undefined),
+          setIsVerifyingATicket(false),
+          setVerifyingTicketTokenId(undefined)
+        ),
+        3000
+      ));
+  }, [balanceOfVerifyingTicketData]);
+
+  useEffect(() => {
+    copiedValue && onCopy();
+  }, [copiedValue]);
+
+  useEffect(() => {
+    console.log(connectedWalletAddress, eventTicketBoughtEvents);
+  }, [connectedWalletAddress, eventTicketBoughtEvents]);
 
   // todo use recently created event data if exists
   const initEvent = async (eventTokenId: string) => {
@@ -230,141 +366,38 @@ const EventPage = () => {
   //   ticketQrScanResult && verifyTicket(ticketQrScanResult);
   // }, [ticketQrScanResult]);
 
-  const buyTicket = async () => {
-    setIsBuyingATicket(true);
+  const getEventTicketPrice = (ticketIndex: number, inNativeCurrency = false) =>
+    inNativeCurrency
+      ? eventTickets[0][0][ticketIndex].price
+      : nativeCurrencyToUsdPrice[0].answer
+          .mul(10 ** 10)
+          .mul(
+            +ethers.utils.formatEther(eventTickets[0][0][0].price.toString())
+          );
 
-    // const response = await web3APIProvider
-    //   .buyTicket(
-    //     {
-    //       // ticketId: ticketData., address _for
-    //       ticketId: currentEventTickets[0].tokenId,
-    //       _for: connectedWalletAddress,
-    //     },
-    //     BigNumber.from(nativeCurrencyToUsdPrice[0].answer)
-    //       .mul(currentEventTickets[0].price / 10 ** 8)
-    //       .toString()
-    //   )
-    //   .catch(console.log);
+  const onTicketVerificationQrScanned = (scannedTicketQrDataJSON: string) => {
+    if (scannedTicketQrDataJSON) {
+      try {
+        const { ticketTokenId, signedMessage } = JSON.parse(
+          scannedTicketQrDataJSON
+        );
+        const address =
+          signedMessage &&
+          ethers.utils.verifyMessage(ticketSigningMessage, signedMessage);
 
-    // response
-    //   .wait()
-    //   .catch(() => alert("Couldn't buy a ticket"))
-    //   .then(() => setCurrentUserTickets([currentEventTickets[0]]))
-    //   .finally(() => setIsBuyingATicket(false));
-
-    // console.log(maticToUsdPrice, ethers.BigNumber.from(maticToUsdPrice).mul(+event!.ticketPrice / 10**8).toString());
-
-    // const contract = new ethers.Contract(
-    //     '0xc6D8A34F714E129d19C39edD2D5Af7edceCb9Fcc',
-    //     '[ { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "account", "type": "address" }, { "indexed": true, "internalType": "address", "name": "operator", "type": "address" }, { "indexed": false, "internalType": "bool", "name": "approved", "type": "bool" } ], "name": "ApprovalForAll", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "uint256", "name": "tokenId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "organizer", "type": "address" } ], "name": "EventCreated", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "bytes32", "name": "role", "type": "bytes32" }, { "indexed": true, "internalType": "bytes32", "name": "previousAdminRole", "type": "bytes32" }, { "indexed": true, "internalType": "bytes32", "name": "newAdminRole", "type": "bytes32" } ], "name": "RoleAdminChanged", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "bytes32", "name": "role", "type": "bytes32" }, { "indexed": true, "internalType": "address", "name": "account", "type": "address" }, { "indexed": true, "internalType": "address", "name": "sender", "type": "address" } ], "name": "RoleGranted", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "bytes32", "name": "role", "type": "bytes32" }, { "indexed": true, "internalType": "address", "name": "account", "type": "address" }, { "indexed": true, "internalType": "address", "name": "sender", "type": "address" } ], "name": "RoleRevoked", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "operator", "type": "address" }, { "indexed": true, "internalType": "address", "name": "from", "type": "address" }, { "indexed": true, "internalType": "address", "name": "to", "type": "address" }, { "indexed": false, "internalType": "uint256[]", "name": "ids", "type": "uint256[]" }, { "indexed": false, "internalType": "uint256[]", "name": "values", "type": "uint256[]" } ], "name": "TransferBatch", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "operator", "type": "address" }, { "indexed": true, "internalType": "address", "name": "from", "type": "address" }, { "indexed": true, "internalType": "address", "name": "to", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "id", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "value", "type": "uint256" } ], "name": "TransferSingle", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": false, "internalType": "string", "name": "value", "type": "string" }, { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" } ], "name": "URI", "type": "event" }, { "inputs": [], "name": "DEFAULT_ADMIN_ROLE", "outputs": [ { "internalType": "bytes32", "name": "", "type": "bytes32" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "NATIVE_TOKEN_ID", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "account", "type": "address" }, { "internalType": "uint256", "name": "id", "type": "uint256" } ], "name": "balanceOf", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "address[]", "name": "accounts", "type": "address[]" }, { "internalType": "uint256[]", "name": "ids", "type": "uint256[]" } ], "name": "balanceOfBatch", "outputs": [ { "internalType": "uint256[]", "name": "", "type": "uint256[]" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "_eventTokenId", "type": "uint256" }, { "internalType": "uint256", "name": "ticketsAmount", "type": "uint256" } ], "name": "buyTickets", "outputs": [], "stateMutability": "payable", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "ticketSupply", "type": "uint256" }, { "internalType": "bool", "name": "isInfiniteTicketSupply", "type": "bool" }, { "internalType": "uint256", "name": "ticketPrice", "type": "uint256" }, { "internalType": "bool", "name": "isSubscription", "type": "bool" }, { "internalType": "uint256", "name": "subscriptionDuration", "type": "uint256" }, { "internalType": "address payable", "name": "beneficiary", "type": "address" }, { "internalType": "string", "name": "eventMetadataUri", "type": "string" }, { "internalType": "string", "name": "ticketsMetadataUri", "type": "string" } ], "name": "createEvent", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "defaultTicketFee", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "eventTokenId", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "name": "events", "outputs": [ { "internalType": "address", "name": "organizer", "type": "address" }, { "internalType": "address payable", "name": "beneficiary", "type": "address" }, { "internalType": "uint256", "name": "ticketSupply", "type": "uint256" }, { "internalType": "bool", "name": "isInfiniteTicketSupply", "type": "bool" }, { "internalType": "uint256", "name": "ticketPrice", "type": "uint256" }, { "internalType": "bool", "name": "isSubscription", "type": "bool" }, { "internalType": "uint256", "name": "subscriptionDuration", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "bytes32", "name": "role", "type": "bytes32" } ], "name": "getRoleAdmin", "outputs": [ { "internalType": "bytes32", "name": "", "type": "bytes32" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "_eventTokenId", "type": "uint256" } ], "name": "getTicketUsdMaticPrice", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "bytes32", "name": "role", "type": "bytes32" }, { "internalType": "address", "name": "account", "type": "address" } ], "name": "grantRole", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "bytes32", "name": "role", "type": "bytes32" }, { "internalType": "address", "name": "account", "type": "address" } ], "name": "hasRole", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "account", "type": "address" }, { "internalType": "address", "name": "operator", "type": "address" } ], "name": "isApprovedForAll", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "_eventTokenId", "type": "uint256" }, { "internalType": "address[]", "name": "participantAddresses", "type": "address[]" } ], "name": "mintSoulbound", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "_eventTokenId", "type": "uint256" }, { "internalType": "address", "name": "participant", "type": "address" } ], "name": "prolongSubscription", "outputs": [], "stateMutability": "payable", "type": "function" }, { "inputs": [ { "internalType": "bytes32", "name": "role", "type": "bytes32" }, { "internalType": "address", "name": "account", "type": "address" } ], "name": "renounceRole", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "bytes32", "name": "role", "type": "bytes32" }, { "internalType": "address", "name": "account", "type": "address" } ], "name": "revokeRole", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "from", "type": "address" }, { "internalType": "address", "name": "to", "type": "address" }, { "internalType": "uint256[]", "name": "ids", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "amounts", "type": "uint256[]" }, { "internalType": "bytes", "name": "data", "type": "bytes" } ], "name": "safeBatchTransferFrom", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "from", "type": "address" }, { "internalType": "address", "name": "to", "type": "address" }, { "internalType": "uint256", "name": "id", "type": "uint256" }, { "internalType": "uint256", "name": "amount", "type": "uint256" }, { "internalType": "bytes", "name": "data", "type": "bytes" } ], "name": "safeTransferFrom", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "operator", "type": "address" }, { "internalType": "bool", "name": "approved", "type": "bool" } ], "name": "setApprovalForAll", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "fee", "type": "uint256" } ], "name": "setDefaultTicketFee", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "string", "name": "newuri", "type": "string" } ], "name": "setURI", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "slippageRate", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "name": "soulboundTokens", "outputs": [ { "internalType": "uint256", "name": "eventTokenId", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "", "type": "address" } ], "name": "subscriptions", "outputs": [ { "internalType": "uint256", "name": "eventTokenId", "type": "uint256" }, { "internalType": "uint256", "name": "activatedAt", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "bytes4", "name": "interfaceId", "type": "bytes4" } ], "name": "supportsInterface", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "tokenId", "type": "uint256" } ], "name": "uri", "outputs": [ { "internalType": "string", "name": "", "type": "string" } ], "stateMutability": "view", "type": "function" } ]',
-    //     web3APIProvider.getAPIAdapter().Moralis.Moralis.web3?.getSigner()
-    // );
-
-    // const es = await contract.estimateGas.buyTickets(+eventTokenId, 1, {value: ethers.BigNumber.from(maticToUsdPrice).mul(+event!.ticketPrice / 10**8)});
-    // // const az  = await contract.buyTickets(+eventTokenId, 1, {value: ethers.BigNumber.from(maticToUsdPrice).mul(+event!.ticketPrice / 10**8)})
-
-    // console.log(maticToUsdPrice, es, (web3APIProvider.getAPIAdapter().Moralis.Moralis as Moralis).web3?.getSigner())
-
-    // // console.log(response, receipt)
-  };
-
-  const startVerification = () => {
-    setIsVerifyingEventParticipants(true);
-  };
-
-  const onTicketQrScanned = (scannedTicketData: string) => {
-    setTicketQrScanResult(scannedTicketData);
-  };
-
-  const showTicketQr = (ticketId: string): void => {
-    setIsShowingTicketQr(true);
-
-    // const domain = {
-    //     name: 'Tickero Ticketing Platform',
-    //     version: '1',
-    //     chainId: web3APIProvider.getAPIAdapter().Moralis.Moralis.internalWeb3Provider.chainId,
-    //     verifyingContract: TICKERO_CONTRACT_ADDRESS[CHAIN]
-    // };
-
-    // // The named list of all type definitions
-    // const types = {
-    //     Data: [
-    //         { name: 'name', type: 'string' },
-    //         { name: 'wallet', type: 'address' }
-    //     ],
-    //     Mail: [
-    //         { name: 'from', type: 'Person' },
-    //         { name: 'to', type: 'Person' },
-    //         { name: 'contents', type: 'string' }
-    //     ]
-    // };
-
-    // // The data to sign
-    // const value = {
-    //     name: 'Cow',
-    //     wallet: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
-    //     contents: 'Hello, Bob!'
-    // };
-
-    // web3APIProvider.getAPIAdapter().Moralis.Moralis.internalWeb3Provider.signer._signTypedData(domain, types, value).then(r => {
-    //     console.log('message: ' + r);
-    //     console.log(ethers.utils.verifyTypedData(domain, types, value, r))
-    // });
-    // => console.log(ethers.utils.verifyMessage(message, r))
-
-    // const message = ethers.utils.solidityKeccak256(['string'], ["Prove that you own the ticket by signing. IT IS FREE."])
-
-    // console.log(ethers.utils.verifyMessage(message, '0xe136e6faee59c8f8100f690fd6c428bfcf05ca21569e9a1c45f9adf8918e59374169b91513cb2187d2219ef03765e12c44c7439ca698c5422855ec768216dfa21c'))
-
-    // web3APIProvider
-    //   .getAPIAdapter()
-    //   .Moralis.Moralis.internalWeb3Provider.signer.signMessage(
-    //     ticketQrSigningMessage
-    //   )
-    //   .then((message) =>
-    //     setTicketQr(
-    //       new Buffer(JSON.stringify({ ticketId, message })).toString("base64")
-    //     )
-    //   );
-  };
-
-  // const verifyTicket = (ticketSignedVerificationMessage: string): void => {
-  //   const { ticketId, message } = JSON.parse(
-  //     Buffer.from(ticketSignedVerificationMessage, "base64").toString()
-  //   );
-  //   const address =
-  //     message && ethers.utils.verifyMessage(ticketQrSigningMessage, message);
-
-  //   address &&
-  //   ticketId &&
-  //   message &&
-  //   currentEventSoldTickets?.filter((ticket) => ticket.buyer == address).length
-  //     ? (setScannedTickets([...scannedTickets, { ticketId, address }]),
-  //       setVerificationResult("😊 verified 😊"))
-  //     : setVerificationResult("🚷 not verified 🚷");
-  // };
-
-  const commitScannedTickets = () => {
-    setIsCommitingScannedTickets(true);
-
-    // web3APIProvider
-    //   .spendTickets(scannedTickets)
-    //   .then(
-    //     () => (setScannedTickets([]), setHasTicketsBeenSpentSuccessfully(true))
-    //   )
-    //   .catch(
-    //     (e) => (
-    //       alert("Smth went wrong"),
-    //       console.error(e),
-    //       setHasTicketsBeenSpentSuccessfully(false)
-    //     )
-    //   )
-    //   .finally(
-    //     () => (
-    //       setIsCommitingScannedTickets(false),
-    //       setTimeout(() => setHasTicketsBeenSpentSuccessfully(undefined), 3000)
-    //     )
-    //   );
+        ticketTokenId &&
+          address &&
+          (setIsVerifyingATicket(true),
+          setVerifyingTicketTokenId(ticketTokenId),
+          setVerifiedTicketWalletAddress(address));
+      } catch (error) {
+        handleError(error as Error, {
+          title: "Ivalid ticket QR code",
+          description: "",
+        });
+        setIsVerifyingATicket(false);
+      }
+    }
   };
 
   const shareEvent = () => {
@@ -387,12 +420,80 @@ const EventPage = () => {
   };
 
   const onVerifyEventTicketButtonClick = () => {
+    onTicketVerificationModalOpen();
+  };
 
-  }
+  const getTicketTokenId = (ticketIndex: number): BigNumberish | undefined =>
+    eventTicketsCreatedEvents
+      ? eventTicketsCreatedEvents[0][ticketIndex].args?.tokenId
+      : undefined;
 
-  const onBuyEventTicketButtonClick = () => {
+  const onBuyEventTicketButtonClick = (ticketIndex: number) => {
+    setIsBuyingATicket(true);
 
-  }
+    try {
+      const ticketTokenId = getTicketTokenId(ticketIndex);
+
+      ticketTokenId
+        ? setBuyEventTicketWriteConfigToPrepare({
+            args: [ticketTokenId, connectedWalletAddress!],
+            overrides: {
+              value: getEventTicketPrice(ticketIndex, true),
+            },
+          })
+        : handleError(new Error("Unable to prepare write config"));
+    } catch (error) {
+      handleError(error as Error);
+    }
+  };
+
+  const onTicketPreviewModalOpenButtonClick = () => {
+    setSimpleAlertData({
+      title: <Text>Prove ticket ownership by signing</Text>,
+      description: (
+        <Highlight
+          query={["free"]}
+          styles={{
+            bg: "accentSecondary",
+            borderRadius: "5px",
+            color: "textContrast",
+            p: ".25em .5em",
+          }}
+        >
+          It is free and for security reasons only
+        </Highlight>
+      ),
+    });
+
+    setTimeout(onSimpleAlertOpen);
+  };
+
+  const onTicketSignButtonClick = () => {
+    signTicketMessage();
+  };
+
+  const prepareTicketQrData = (signedMessage: string) =>
+    setTicketPreviewQrData(
+      JSON.stringify({
+        ticketTokenId: getTicketTokenId(0)?._hex,
+        signedMessage,
+      })
+    );
+
+  const handleError = (
+    error: Error | null,
+    toastConfig?: Parameters<typeof toast>[0]
+  ) => {
+    !toast.isActive(ERROR_TOAST_ID) &&
+      toast({
+        id: ERROR_TOAST_ID,
+        title: "An error occured. Please, try later",
+        status: "error",
+        ...toastConfig,
+      }),
+      console.error(error),
+      setIsBuyingATicket(false);
+  };
 
   return (
     <Container mt={"-2.5rem"} variant={"fullscreen"}>
@@ -408,14 +509,6 @@ const EventPage = () => {
           flexDirection: "column",
         }}
       >
-        {/* <Button
-          variant={"accent"}
-          onClick={() =>
-            navigator.share({ title: eventMetadata?.name, url: location.href })
-          }
-        >
-          share
-        </Button> */}
         {{
           [Stage.LoadingEvent]: () => (
             <Spinner
@@ -494,14 +587,16 @@ const EventPage = () => {
                     right={0}
                     gap={"1rem"}
                   >
-                    <Button
-                      onClick={shareEvent}
-                      variant={"secondary"}
-                      bg={"bg"}
-                      leftIcon={<ExternalLinkIcon />}
-                    >
-                      Share
-                    </Button>
+                    {global.navigator.share && (
+                      <Button
+                        onClick={shareEvent}
+                        variant={"secondary"}
+                        bg={"bg"}
+                        leftIcon={<ExternalLinkIcon />}
+                      >
+                        Share
+                      </Button>
+                    )}
                     <IconButton
                       aria-label="copy event link"
                       variant={"secondary"}
@@ -511,91 +606,248 @@ const EventPage = () => {
                     />
                   </Flex>
                   <Container variant="contrastAccent">
-                    <Flex justify={"space-between"} align={"center"}>
-                      <Flex gap={"2rem"}>
+                    <Flex align={"center"}>
+                      <Flex
+                        direction={["column", "column", "row"]}
+                        justify={"space-between"}
+                        align={"center"}
+                        gap={"2rem"}
+                        flex={1}
+                      >
                         <Flex
-                          direction={"column"}
-                          justify={"space-between"}
-                          gap={".5rem"}
+                          gap={"2rem"}
+                          direction={["column", "column", "row"]}
+                          align={"center"}
+                          justify={"center"}
                         >
-                          <Heading color={"textContrast"} fontSize={"md"}>
-                            minting price
-                          </Heading>
-                          <Flex align={"flex-end"} gap={".5rem"}>
-                            <Text
-                              color={"textAccent"}
-                              fontSize={"3xl"}
-                              fontWeight="bold"
+                          <Flex
+                            direction={"column"}
+                            justify={"space-between"}
+                            align={["center", "center", "flex-start"]}
+                            gap={".5rem"}
+                          >
+                            <Heading color={"textContrast"} fontSize={"md"}>
+                              minting price
+                            </Heading>
+                            <Flex
+                              align={["center", "center", "flex-end"]}
+                              gap={".5rem"}
+                              direction={["column", "column", "row"]}
                             >
-                              {eventTicketPriceLabel}
-                            </Text>
-                            <Text
-                              fontSize={"sm"}
-                              color={"textContrastSecondary"}
+                              <Text
+                                color={"textAccent"}
+                                fontSize={"3xl"}
+                                fontWeight="bold"
+                              >
+                                {eventTicketPriceLabel}
+                              </Text>
+                              <Text
+                                fontSize={"sm"}
+                                color={"textContrastSecondary"}
+                              >
+                                {eventTicketNativeCurrencyPriceLabel}
+                              </Text>
+                            </Flex>
+                          </Flex>
+                          <Flex gap={"2rem"}>
+                            <Flex
+                              direction={"column"}
+                              justify={"space-between"}
+                              align={["center", "center", "flex-start"]}
+                              gap={".5rem"}
                             >
-                              {eventTicketNativeCurrencyPriceLabel}
-                            </Text>
+                              <Heading color={"textContrast"} fontSize={"md"}>
+                                Total supply
+                              </Heading>
+                              <Text
+                                color={"textContrast"}
+                                fontSize={"3xl"}
+                                fontWeight="bold"
+                              >
+                                {eventTicketsTotalSupply}
+                              </Text>
+                            </Flex>
+                            <Flex
+                              direction={"column"}
+                              justify={"space-between"}
+                              align={["center", "center", "flex-start"]}
+                              gap={".5rem"}
+                            >
+                              <Heading color={"textContrast"} fontSize={"md"}>
+                                Total minted
+                              </Heading>
+                              <Text
+                                color={"textContrast"}
+                                fontSize={"3xl"}
+                                fontWeight="bold"
+                              >
+                                {eventTicketsMintedAmount}
+                              </Text>
+                            </Flex>
                           </Flex>
                         </Flex>
-                        <Flex
-                          direction={"column"}
-                          justify={"space-between"}
-                          gap={".5rem"}
-                        >
-                          <Heading color={"textContrast"} fontSize={"md"}>
-                            Total supply
-                          </Heading>
-                          <Text
-                            color={"textContrast"}
-                            fontSize={"3xl"}
-                            fontWeight="bold"
+                        {isConnectedWalletAnEventManager && (
+                          <Button
+                            variant={"accent"}
+                            onClick={onVerifyEventTicketButtonClick}
                           >
-                            {eventTicketsTotalSupply}
-                          </Text>
-                        </Flex>
-                        <Flex
-                          direction={"column"}
-                          justify={"space-between"}
-                          gap={".5rem"}
-                        >
-                          <Heading color={"textContrast"} fontSize={"md"}>
-                            Total minted
-                          </Heading>
-                          <Text
-                            color={"textContrast"}
-                            fontSize={"3xl"}
-                            fontWeight="bold"
+                            <Flex direction={"column"}>
+                              Validate tickets
+                              <Text
+                                fontSize={"sm"}
+                                fontWeight={"light"}
+                                textTransform={"none"}
+                              >
+                                as a manager
+                              </Text>
+                            </Flex>
+                          </Button>
+                        )}
+                        {canConnectedWalletBuyTickets ? (
+                          <Button
+                            variant={"accent"}
+                            onClick={() => onBuyEventTicketButtonClick(0)}
+                            isLoading={
+                              isBuyingATicket ||
+                              isLoadingEventTicketBoughtEvents
+                            }
                           >
-                            {eventTicketsMintedAmount}
-                          </Text>
-                        </Flex>
+                            buy
+                          </Button>
+                        ) : (
+                          !isConnectedWalletAnEventManager && (
+                            <Flex direction={"column"} gap={".5rem"}>
+                              <Button
+                                variant={"accent"}
+                                onClick={onTicketPreviewModalOpenButtonClick}
+                              >
+                                Show my ticket
+                              </Button>
+                            </Flex>
+                          )
+                        )}
                       </Flex>
-                      {isEventManager ? (
-                        <Button
-                          variant={"accent"}
-                          onClick={onVerifyEventTicketButtonClick}
-                          isLoading={isVerifyingATicket}
-                        >
-                          <Flex direction={"column"}>
-                            Validate tickets
-                            <Text
-                              fontSize={"sm"}
-                              fontWeight={"light"}
-                              textTransform={"none"}
+                      <AlertDialog
+                        isOpen={isSimpleAlertOpen}
+                        leastDestructiveRef={simpleAlertLeastDestructiveRef}
+                        onClose={onSimpleAlertClose}
+                      >
+                        <AlertDialogOverlay>
+                          <AlertDialogContent>
+                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                              {simpleAlertData?.title}
+                            </AlertDialogHeader>
+
+                            <AlertDialogBody>
+                              {simpleAlertData?.description}
+                            </AlertDialogBody>
+
+                            <AlertDialogFooter>
+                              <Button
+                                variant={"accent"}
+                                isLoading={isLoadingTicketMessage}
+                                onClick={onTicketSignButtonClick}
+                                ref={simpleAlertLeastDestructiveRef}
+                                ml={3}
+                              >
+                                Sign
+                              </Button>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialogOverlay>
+                      </AlertDialog>
+                      <Modal
+                        isOpen={isTicketPreviewModalOpen}
+                        onClose={onTicketPreviewModalClose}
+                      >
+                        <ModalOverlay />
+                        <ModalContent>
+                          <ModalHeader>My Ticket</ModalHeader>
+                          <ModalCloseButton />
+                          <ModalBody paddingBottom={"3rem"}>
+                            <Flex
+                              flex={1}
+                              direction={"column"}
+                              align={"center"}
+                              justify={"center"}
+                              gap={"1rem"}
                             >
-                              as a manager
-                            </Text>
-                          </Flex>
-                        </Button>
-                      ) : (
-                        <Button
-                          variant={"accent"}
-                          onClick={onBuyEventTicketButtonClick}
-                          isLoading={isBuyingATicket}
-                        >
-                          buy
-                        </Button>
-                      )}
+                              {ticketPreviewQrData && (
+                                <QRCode
+                                  renderAs="canvas"
+                                  size={300}
+                                  value={ticketPreviewQrData}
+                                />
+                              )}
+                              <Text color={"text"}>
+                                show this to an event manager
+                              </Text>
+                            </Flex>
+                          </ModalBody>
+                        </ModalContent>
+                      </Modal>
+                      <Modal
+                        isOpen={isTicketVerificationModalOpen}
+                        onClose={onTicketVerificationModalClose}
+                      >
+                        <ModalOverlay />
+                        <ModalContent>
+                          <ModalHeader>Verifying Tickets</ModalHeader>
+                          <ModalCloseButton />
+                          <ModalBody>
+                            <Flex
+                              flex={1}
+                              direction={"column"}
+                              align={"center"}
+                              justify={"center"}
+                              gap={"1rem"}
+                            >
+                              <QrScanner
+                                showResult={false}
+                                onResult={onTicketVerificationQrScanned}
+                              />
+                              {isVerifyingATicket ? (
+                                (isTicketVerificationSuccessful ===
+                                  undefined && (
+                                  <Flex align={"center"} gap={"1rem"}>
+                                    <Text fontWeight={"bold"}>
+                                      verifying a ticket
+                                    </Text>
+                                    <Spinner />
+                                  </Flex>
+                                )) ||
+                                (isTicketVerificationSuccessful === true && (
+                                  <Flex align={"center"} gap={"1rem"}>
+                                    <Text fontWeight={"bold"}>
+                                      ticket is valid
+                                    </Text>
+                                    <CheckIcon color={"green"} />
+                                  </Flex>
+                                )) ||
+                                (isTicketVerificationSuccessful === false && (
+                                  <Flex align={"center"} gap={"1rem"}>
+                                    <Text fontWeight={"bold"}>
+                                      ticket is not valid
+                                    </Text>
+                                    <AlertIcon color={"red"} />
+                                  </Flex>
+                                ))
+                              ) : (
+                                <Text color={"text"}>scan ticket QR codes</Text>
+                              )}
+                            </Flex>
+                          </ModalBody>
+                          <ModalFooter>
+                            <Button
+                              variant={"accent"}
+                              onClick={onTicketVerificationModalClose}
+                              m={"0 auto"}
+                            >
+                              Complete Verification
+                            </Button>
+                          </ModalFooter>
+                        </ModalContent>
+                      </Modal>
                     </Flex>
                   </Container>
                   <Flex direction={"column"} px={"1rem"}>
@@ -612,243 +864,6 @@ const EventPage = () => {
                   </Flex>
                 </Flex>
               </Container>
-              <Text mt=".75em" as="h1">
-                {eventMetadata?.name}
-              </Text>
-              <Text mt=".75em" as="h1">
-                {eventMetadata?.description}
-              </Text>
-              <Flex mt="3rem" sx={{ flexDirection: "column" }}>
-                {eventMetadata?.description && (
-                  <Text variant="secondary">{eventMetadata.description}</Text>
-                )}
-                <Text
-                  mt="2rem"
-                  variant="dialogSecondary"
-                  sx={{ fontSize: "1.5rem", alignSelf: "center" }}
-                >
-                  {/* {isEventOrganizer
-                    ? "you are an organizer"
-                    : (event?.isSubscription ? "subscribe for " : "ticket for ") +
-                      ethers.utils.formatUnits(
-                        currentEventTickets[0].price,
-                        "ether"
-                      ) +
-                      " $"} */}
-                </Text>
-                <Flex
-                  mt="2rem"
-                  sx={{
-                    flexDirection: "column",
-                    gap: "1.5rem",
-                    alignItems: "center",
-                  }}
-                >
-                  {/* {canBuyTicket && (
-                    <Flex sx={{ alignItems: "center" }}>
-                      <Button
-                        variant="accent"
-                        onClick={buyTicket}
-                        disabled={isBuyingATicket}
-                      >
-                        <Flex
-                          sx={{
-                            alignItems: "center",
-                            justifyContent: "space-around",
-                            gap: "1rem",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: "3rem",
-                              height: "2rem",
-                              position: "relative",
-                            }}
-                          >
-                          </Box>
-                          {event?.isSubscription ? "subscribe" : "buy a ticket"}
-                        </Flex>
-                      </Button>
-                      {isBuyingATicket && (
-                        <Spinner
-                          size={30}
-                          sx={{ position: "absolute", right: "2rem" }}
-                        />
-                      )}
-                    </Flex>
-                  )} */}
-                  {/* {!!currentUserTickets?.length && (
-                    <Text mt="1rem" mb="1rem" as="h3" variant="infoContent">
-                      🔥 participating 🔥
-                    </Text>
-                  )} */}
-                  {/* {canShowTicketQr && (
-                    <Flex sx={{ alignItems: "center" }}>
-                      <Button
-                        variant="accent"
-                        onClick={() =>
-                          showTicketQr(currentEventTickets[0].tokenId)
-                        }
-                      >
-                        Show ticket QR
-                      </Button>
-                    </Flex>
-                  )} */}
-                  {/* {canVerifyTickets && (
-                    <Button variant="accent" onClick={startVerification}>
-                      <Flex
-                        sx={{
-                          alignItems: "center",
-                          justifyContent: "space-around",
-                          gap: "1rem",
-                        }}
-                      >
-                        <Box sx={{ width: "3rem", height: "2rem" }}>
-                        </Box>
-                        scan tickets
-                      </Flex>
-                    </Button>
-                  )} */}
-                  {/* {canGrantSoulbound &&
-                                  <Button variant='accent' onClick={() => setIsSoulbounding(true)}>
-                                      <Flex sx={{alignItems: 'center', justifyContent: 'space-around', gap: '1rem'}}>
-                                          <Box sx={{width: '3rem', height: '2rem', position: 'relative'}}>
-                                              <NextImage src={buyTicketImage} alt="buy a ticket" width='30px' height='30px' objectFit='contain' />
-                                          </Box>
-                                          <Text>grant POA</Text>
-
-                                      </Flex>
-                                  </Button>
-                              } */}
-                </Flex>
-              </Flex>
-              {isShowingTicketQr && (
-                <Portal>
-                  <Container variant="layout.container.modalBackground">
-                    <Flex
-                      p="2rem 1rem"
-                      sx={{
-                        maxHeight: "100%",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        margin: "max(50vh, 10rem) auto",
-                        transform: "translateY(-50%)",
-                        overflow: "scroll",
-                        maxWidth: "25rem",
-                      }}
-                    >
-                      <Flex
-                        sx={{
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          width: "100%",
-                        }}
-                      >
-                        <Text as="h2">Ticket QR</Text>
-                        {/* <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsShowingTicketQr(false)}/> */}
-                      </Flex>
-                      <Flex
-                        mt="2rem"
-                        sx={{ justifyContent: "center", width: "100%" }}
-                      >
-                        {ticketQr && (
-                          <QRCode
-                            renderAs="canvas"
-                            size={300}
-                            value={ticketQr}
-                          />
-                        )}
-                      </Flex>
-                    </Flex>
-                  </Container>
-                </Portal>
-              )}
-              {isVerifyingEventParticipants && (
-                <Portal>
-                  <Container variant="layout.container.modalBackground">
-                    <Flex
-                      p="2rem 1rem"
-                      sx={{
-                        maxHeight: "100%",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        margin: "max(50vh, 10rem) auto",
-                        transform: "translateY(-50%)",
-                        overflow: "scroll",
-                        maxWidth: "25rem",
-                      }}
-                    >
-                      <Flex
-                        sx={{
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          width: "100%",
-                        }}
-                      >
-                        <Text as="h2">Verify Participants</Text>
-                        {/* <NextImage src={crossIcon} alt='back' width='30px' height='30px' onClick={() => setIsVerifyingEventParticipants(false)}/> */}
-                      </Flex>
-                      <Box mt="2rem" sx={{ maxWidth: "100%" }}>
-                        <QrScanner
-                          showResult={false}
-                          onResult={onTicketQrScanned}
-                        />
-                      </Box>
-                      <Flex
-                        mt="2rem"
-                        sx={{
-                          flexDirection: "column",
-                          alignItems: "center",
-                          flex: 1,
-                          width: "100%",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Text variant="dialog">scan wallet QR to verify</Text>
-                      </Flex>
-                      <Flex
-                        mt="2rem"
-                        sx={{
-                          flexDirection: "column",
-                          alignItems: "center",
-                          flex: 1,
-                          width: "100%",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Text variant="accent">
-                          scanned {scannedTickets.length} of{" "}
-                          {currentEventTickets!.length -
-                            currentEventUsedTickets!.length}{" "}
-                          unused tickets
-                        </Text>
-                      </Flex>
-                      <Flex mt="2rem" sx={{ alignItems: "center" }}>
-                        <Button
-                          variant="accent"
-                          onClick={commitScannedTickets}
-                          disabled={!scannedTickets.length}
-                        >
-                          verify scanned tickets
-                        </Button>
-                        {isCommitingScannedTickets && (
-                          <Spinner
-                            size={30}
-                            sx={{ position: "absolute", right: "2rem" }}
-                          />
-                        )}
-                      </Flex>
-                      {hasTicketsBeenSpentSuccessfully !== undefined && (
-                        <Text>
-                          {hasTicketsBeenSpentSuccessfully
-                            ? "Tickets has been verified"
-                            : "Error while verifying tickets"}
-                        </Text>
-                      )}
-                    </Flex>
-                  </Container>
-                </Portal>
-              )}
             </Flex>
           ),
         }[currentStage]()}
