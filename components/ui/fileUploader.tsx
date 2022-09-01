@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { DropzoneOptions, useDropzone } from "react-dropzone";
-import { Flex, Box, Container, Text, Button } from "@chakra-ui/react";
-import cameraIcon from "../../styles/icons/picture.svg";
-import NextImage from "next/image";
+import { Flex, Box, Container, Text, Button, Image } from "@chakra-ui/react";
+import { DeleteIcon } from "@chakra-ui/icons";
 
 type FileUploaderProps = {
-  subtitle?: string;
+  placeholder?: string | JSX.Element;
   config?: DropzoneOptions;
   onChange?: (files: Array<Blob>) => any;
 };
@@ -45,17 +44,18 @@ export const FileUploader = (props: FileUploaderProps) => {
   };
 
   return (
-    <Flex sx={{ flexDirection: "column" }}>
+    <Flex sx={{ flexDirection: "column" }} gap={".5rem"}>
       <Container variant="fileUploader" {...getRootProps()}>
         <input {...getInputProps()} />
         {preview ? (
-          <NextImage
+          <Image
             src={preview}
             width="100%"
             height="100%"
             objectFit="contain"
             alt="uploaded image"
-          ></NextImage>
+            p={".5rem"}
+          ></Image>
         ) : (
           <Flex sx={{ flexDirection: "column", alignItems: "center" }}>
             {files && files.length > 1 ? (
@@ -63,9 +63,13 @@ export const FileUploader = (props: FileUploaderProps) => {
                 ({files.length}) files
               </Text>
             ) : (
-              props.subtitle && (
-                <Text  variant="hint">
-                  {props.subtitle}
+              props.placeholder && (
+                <Text
+                  color={"textContrastSecondary"}
+                  textAlign={["center", "center", "center", "initial"]}
+                  lineHeight={"2.5rem"}
+                >
+                  {props.placeholder}
                 </Text>
               )
             )}
@@ -74,12 +78,13 @@ export const FileUploader = (props: FileUploaderProps) => {
       </Container>
       {files && !!files.length && (
         <Button
+          variant={"ghost"}
+          display={"flex"}
+          gap={"1rem"}
           onClick={removeAll}
-          mt=".5rem"
-          variant="accentSmall"
-          sx={{ alignSelf: "center", zIndex: 1 }}
         >
-          clear
+          <DeleteIcon color={"accentSecondary"} />
+          <Text>Remove files</Text>
         </Button>
       )}
     </Flex>

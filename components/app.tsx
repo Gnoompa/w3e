@@ -12,53 +12,68 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Text,
   useBreakpoint,
   useBreakpointValue,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { Routes } from "helpers/routes";
-import { HamburgerIcon } from "@chakra-ui/icons";
+import { ExternalLinkIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { useEffect, useState } from "react";
 
 const App: React.FC = (props) => {
-  const ResponsiveMenu = () =>
-    useBreakpointValue({
-      sm: (
-        <Menu>
-          <MenuButton
-            as={IconButton}
-            aria-label="Menu"
-            fontSize={"3xl"}
-            icon={<HamburgerIcon />}
-          />
-          <MenuList>
-            <MenuItem>
-              <NextLink href={Routes.EventForm} passHref>
-                <Link>Create event</Link>
-              </NextLink>
-            </MenuItem>
-            <MenuItem>
-              <NextLink href={Routes.EventExplorer} passHref>
-                <Link>Explore events</Link>
-              </NextLink>
-            </MenuItem>
-            <MenuItem>
-              <NextLink href={Routes.About} passHref>
-                <Link target={"_blank"}>About</Link>
-              </NextLink>
-            </MenuItem>
-          </MenuList>
-        </Menu>
-      ),
-      md: (
-        <Flex gap={10}>
-          <NextLink href={Routes.EventForm} passHref>
-            <Link>Create event</Link>
-          </NextLink>
-          <Link href={Routes.EventExplorer}>Explore events</Link>
-          <Link href={Routes.About} target={"_blank"}>About</Link>
-        </Flex>
-      ),
-    });
+  const MenuBreakpointValue = () =>
+    useBreakpointValue(
+      {
+        base: (
+          <Menu>
+            <MenuButton
+              as={IconButton}
+              aria-label="Menu"
+              fontSize={"3xl"}
+              icon={<HamburgerIcon />}
+            />
+            <MenuList>
+              <MenuItem>
+                <NextLink href={Routes.EventForm} passHref>
+                  <Link>Create event</Link>
+                </NextLink>
+              </MenuItem>
+              <MenuItem>
+                <NextLink href={Routes.EventExplorer} passHref>
+                  <Link>Explore events</Link>
+                </NextLink>
+              </MenuItem>
+              <MenuItem>
+                <Flex align={"center"} gap={".5rem"}>
+                  <NextLink href={Routes.About} passHref>
+                    <Link target={"_blank"}>About</Link>
+                  </NextLink>
+                  <ExternalLinkIcon />
+                </Flex>
+              </MenuItem>
+            </MenuList>
+          </Menu>
+        ),
+        lg: (
+          <Flex gap={10}>
+            <NextLink href={Routes.EventForm} passHref>
+              <Link>Create event</Link>
+            </NextLink>
+            <Link href={Routes.EventExplorer}>Explore events</Link>
+            <Link href={Routes.About} target={"_blank"}>
+              <Flex align={"center"} gap={".5rem"}>
+                <NextLink href={Routes.About} passHref>
+                  <Link target={"_blank"}>About</Link>
+                </NextLink>
+                <ExternalLinkIcon />
+              </Flex>
+            </Link>
+          </Flex>
+        ),
+      },
+      { ssr: false }
+    );
 
   return (
     <Flex direction={"column"} align={"center"} pb={"2rem"}>
@@ -88,7 +103,7 @@ const App: React.FC = (props) => {
               <Heading>Web3Events</Heading>
             </Link>
           </Flex>
-          <ResponsiveMenu />
+          <MenuBreakpointValue></MenuBreakpointValue>
           <Flex flexGrow={1} flexBasis={0} justifyContent={"flex-end"}>
             <ConnectKitButton.Custom>
               {({ isConnected, show, truncatedAddress, ensName }) => {
@@ -96,6 +111,7 @@ const App: React.FC = (props) => {
                   <Button
                     variant={"walletConnect"}
                     flex={1}
+                    maxW={"fit-content"}
                     justifySelf={"flex-end"}
                     onClick={show}
                   >

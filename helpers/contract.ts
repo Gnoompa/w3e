@@ -294,6 +294,28 @@ export const getOwnerOfToken = (
     >[];
   };
 
+export const getBalanceOfToken = <T>(
+  configs: (Omit<Partial<Parameters<typeof useContractRead>[0]>, "args"> & {
+    args: Partial<
+      Parameters<typeof TokenContractTypechain.prototype.balanceOf>
+    >;
+  })[],
+  chainIds: Chain["id"][] = [defaultChainId]
+) =>
+  useContractReads({
+    contracts: chainIds.map((chainId, i) => ({
+      addressOrName: chainIdToTokenContractAddressMap[chainId],
+      contractInterface: TokenContractABI.abi,
+      functionName: "balanceOf",
+      chainId,
+      ...configs[i],
+    })),
+  }) as ReturnType<typeof useContractReads> & {
+    data: Awaited<
+      ReturnType<typeof TokenContractTypechain.prototype.balanceOf>
+    >[];
+  };
+
 export const getNativeCurrencyToUsdPrice = (
   chainIds: Chain["id"][] = [defaultChainId]
 ) =>
