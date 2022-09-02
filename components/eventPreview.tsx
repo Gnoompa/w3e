@@ -1,15 +1,16 @@
 import React from "react";
 import { Flex, Box, Image, Text, Container, Heading } from "@chakra-ui/react";
+import { ArrowForwardIcon } from "@chakra-ui/icons";
 
 export type EventProps = {
-  name?: string;
-  shortDescription?: string;
-  longDescription?: string;
-  image?: string;
-  location?: string;
-  date?: string;
-  eventTicketPriceLabel?: string;
-  eventTicketsTotalSupply?: string;
+  name?: string | JSX.Element;
+  shortDescription?: string | JSX.Element;
+  longDescription?: string | JSX.Element;
+  image?: string | JSX.Element;
+  location?: string | JSX.Element;
+  date?: (string | JSX.Element)[];
+  eventTicketPriceLabel?: string | JSX.Element;
+  eventTicketsTotalSupply?: string | JSX.Element;
 };
 
 const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
@@ -19,8 +20,9 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
       px={0}
       py={0}
       pos={"relative"}
-      w={"45rem"}
+      w={["auto", "30rem", "38rem", "38rem", "45rem"]}
       minW={"35rem"}
+      minH={"41rem"}
       overflow={"hidden"}
       h={"100%"}
     >
@@ -92,22 +94,50 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
         zIndex={"docked"}
         px={"2rem"}
       >
-        <Container pos={"absolute"} top={"-.5 rem"} left={"2rem"} zIndex={"overlay"}>
+        <Container
+          pos={"absolute"}
+          top={"-.5 rem"}
+          left={"2rem"}
+          zIndex={"overlay"}
+        >
           <Flex
             pos={"absolute"}
             bottom={"1rem"}
             gap={"3rem"}
             zIndex={"overlay"}
           >
-            <Flex gap={".5rem"}>
+            <Flex gap={".5rem"} align={"center"}>
               <Image src="/icons/calendar.svg"></Image>
-              <Text color={"textContrast"} whiteSpace={"nowrap"}>
-                {eventData?.date || "date"}
+              <Text
+                color={"textContrast"}
+                whiteSpace={"nowrap"}
+                fontSize={["sm"]}
+              >
+                {eventData?.date?.[0] || "date"}
               </Text>
+              {eventData?.date?.[1] && (
+                <Flex gap={".5rem"}>
+                  <ArrowForwardIcon color={"textContrast"} />
+                  <Text
+                    color={"textContrast"}
+                    whiteSpace={"nowrap"}
+                    fontSize={["sm"]}
+                  >
+                    {eventData?.date?.[1]}
+                  </Text>
+                </Flex>
+              )}
             </Flex>
-            <Flex gap={".5rem"}>
+            <Flex gap={".5rem"} align={"center"}>
               <Image src="/icons/location.svg"></Image>
-              <Text color={"textContrast"} whiteSpace={"nowrap"}>
+              <Text
+                color={"textContrast"}
+                whiteSpace={"nowrap"}
+                maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
+                fontSize={["sm"]}
+                overflow={"hidden"}
+                textOverflow={"ellipsis"}
+              >
                 {eventData?.location || "location"}
               </Text>
             </Flex>
@@ -118,7 +148,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
             zIndex={"docked"}
             w={"100%"}
             left={"50%"}
-            transform={"translateX(-50%)"}            
+            transform={"translateX(-50%)"}
           >
             <Heading
               color={"textContrast"}

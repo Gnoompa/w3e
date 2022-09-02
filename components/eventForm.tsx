@@ -39,9 +39,17 @@ import {
   FormHelperText,
   Highlight,
   Select,
+  SlideFade,
+  ScaleFade,
+  Collapse,
 } from "@chakra-ui/react";
 import FileUploader from "./ui/fileUploader";
-import { useDebounce, handleOnMouseDown, useAppSelector } from "helpers/hooks";
+import {
+  useDebounce,
+  handleOnMouseDown,
+  useAppSelector,
+  defaultDateFormat,
+} from "helpers/hooks";
 import { BigNumber, BigNumberish, ethers, FixedNumber } from "ethers";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
@@ -57,6 +65,7 @@ import {
   createEvent,
   parseTransactionLogs,
 } from "helpers/contract";
+import date from "date-and-time";
 import { context as appContext } from "./context";
 import {
   useAccount,
@@ -72,6 +81,7 @@ import {
 } from "@chakra-ui/icons";
 import { useModal } from "connectkit";
 import EventPreview, { EventProps as EventPreviewProps } from "./eventPreview";
+import { AnimatePresence, motion } from "framer-motion";
 
 const EventTicketImage = dynamic(() => import("./eventTicket"), {
   ssr: false,
@@ -212,10 +222,26 @@ const EventForm = () => {
       name: eventFormData.eventTitle,
       shortDescription: eventFormData.eventShortDescription,
       longDescription: eventFormData.eventLongDescription,
-      location: eventFormData.eventLocation,
+      location: [
+        eventFormData.eventLocation,
+        eventFormData.eventAdditionalLocationInfo,
+      ]
+        .filter(Boolean)
+        .join(", "),
       eventTicketPriceLabel: eventFormData.ticketPrice
         ? "$" + eventFormData.ticketPrice
         : "",
+      date: [
+        eventFormData.eventStartDate
+          ? date.format(
+              new Date(eventFormData.eventStartDate),
+              defaultDateFormat
+            )
+          : "",
+        eventFormData.eventEndDate
+          ? date.format(new Date(eventFormData.eventEndDate), defaultDateFormat)
+          : "",
+      ].filter(Boolean),
       eventTicketsTotalSupply: `${eventFormData.ticketSupply || ""}`,
     });
   }, [eventFormData]);
@@ -349,36 +375,43 @@ const EventForm = () => {
     name: eventData.eventTitle || "",
     description: eventData.eventShortDescription || "",
     attributes: [
-      // (eventData.eventTimespan?.fromDate ||
-      //   eventData.eventTimespan?.fromTime) && {
-      //   trait_type: "Event Start Date/Time",
-      //   value: `
-      //               ${
-      //                 eventData.eventTimespan.fromDate
-      //                   ? eventData.eventTimespan.fromDate + " "
-      //                   : ""
-      //               }
-      //               ${
-      //                 eventData.eventTimespan.fromTime
-      //                   ? eventData.eventTimespan.fromTime
-      //                   : ""
-      //               }
-      //               `,
-      // },
-      // eventData.eventTimespan?.weekdays?.length && {
-      //   trait_type: "Happens On Every",
-      //   value: eventData.eventTimespan.weekdays
-      //     .map((weekday) => weekday.title)
-      //     .join(", "),
-      // },
-      // eventData.eventTimespan?.at && {
-      //   trait_type: "Happens At",
-      //   value: eventData.eventTimespan.at,
-      // },
-      // eventData.eventLocation && {
-      //   trait_type: "Location",
-      //   value: eventData.eventLocation,
-      // },
+      eventData.eventLongDescription && {
+        trait_type: "Long Description",
+        value: eventData.eventLongDescription,
+      },
+      eventData.eventStartDate && {
+        trait_type: "Event Start Date",
+        value: date.format(
+          new Date(eventData.eventStartDate),
+          defaultDateFormat
+        ),
+      },
+      eventData.eventStartTime && {
+        trait_type: "Event Start Time",
+        value: date.format(
+          new Date(date.parse(eventData.eventStartTime, "hh:mm")),
+          "hh:mm A"
+        ),
+      },
+      eventData.eventEndDate && {
+        trait_type: "Event End Date",
+        value: date.format(new Date(eventData.eventEndDate), defaultDateFormat),
+      },
+      eventData.eventEndTime && {
+        trait_type: "Event End Time",
+        value: date.format(
+          new Date(date.parse(eventData.eventEndTime, "hh:mm")),
+          "hh:mm A"
+        ),
+      },
+      eventData.eventLocation && {
+        trait_type: "Location",
+        value: eventData.eventLocation,
+      },
+      eventData.eventAdditionalLocationInfo && {
+        trait_type: "Additional Location Info",
+        value: eventData.eventAdditionalLocationInfo,
+      },
     ].filter(Boolean) as object[],
   });
 
@@ -460,616 +493,607 @@ const EventForm = () => {
         eventTitle={ticketEventTitle}
         onImageGenerated={setTicketEventImageResult}
       />
-      {{
-        [EventCreationStages.eventConfig]: (
-          <Flex
-            gap={"2rem"}
-            maxW={"100vw"}
-            padding={[".5rem", ".5rem", ".5rem", 0]}
+      <Flex
+        gap={"2rem"}
+        maxW={"100vw"}
+        padding={[".5rem", ".5rem", ".5rem", 0]}
+      >
+        <Box
+          as={motion.div}
+          flex={1}
+          display={["none", "none", "none", "block"]}
+          initial={{ opacity: 0, x: "-20%" }}
+          animate={
+            !isSuccessCreateEventWrite
+              ? { x: 0, opacity: 1 }
+              : { x: "-20%", opacity: 0 }
+          }
+        >
+          <EventPreview eventData={eventPreviewData} />
+        </Box>
+        <Container
+          as={motion.div}
+          initial={{ opacity: 0, x: "20%" }}
+          animate={
+            !isSuccessCreateEventWrite
+              ? { x: 0, opacity: 1 }
+              : { x: "20%", opacity: 0 }
+          }
+          variant={"simple"}
+        >
+          <Heading as="h1">Ticket constructor</Heading>
+          <Tabs
+            index={eventFormData.tabIndex}
+            display={"flex"}
+            flexDirection={"column"}
+            justifyContent={"space-between"}
+            mt={"2rem"}
+            variant={"unstyled"}
+            minH={"41rem"}
+            w={"25rem"}
+            maxW={"100%"}
+            onChange={(tabIndex) => setEvent({ tabIndex: tabIndex || 0 })}
           >
-            <Box flex={1} display={["none", "none", "none", "block"]}>
-              <EventPreview eventData={eventPreviewData} />
-            </Box>
-            <Container variant={"simple"}>
-              <Heading as="h1">Ticket constructor</Heading>
-              <Tabs
-                index={eventFormData.tabIndex}
-                display={"flex"}
-                flexDirection={"column"}
-                justifyContent={"space-between"}
-                mt={"2rem"}
-                variant={"unstyled"}
-                minH={"41rem"}
-                w={"25rem"}
-                maxW={"100%"}
-                onChange={(tabIndex) => setEvent({ tabIndex: tabIndex || 0 })}
-              >
-                <TabPanels>
-                  <TabPanel>
-                    <Heading as="h3" fontSize={"xx-large"}>
-                      Main info
-                    </Heading>
-                    <Flex
-                      direction={"column"}
-                      maxH={"32rem"}
-                      px={".5rem"}
-                      overflow={"scroll"}
-                    >
-                      <Flex mt={"1.5rem"} direction={"column"} gap={"1.5rem"}>
-                        <FormControl variant="floating" id="title" isRequired>
-                          <Input
-                            value={eventFormData.eventTitle}
-                            autoFocus
-                            placeholder=" "
-                            onChange={(event) =>
-                              setEvent({ eventTitle: event.target.value })
-                            }
-                          />
-                          <FormLabel>Event title</FormLabel>
-                        </FormControl>
-                        <Select placeholder="Event Type" isRequired>
-                          <option>Event</option>
-                        </Select>
-                        <FormControl
-                          variant="floating"
-                          id="shortdesc"
-                          isRequired
+            <TabPanels>
+              <TabPanel>
+                <Heading as="h3" fontSize={"xx-large"}>
+                  Main info
+                </Heading>
+                <Flex
+                  direction={"column"}
+                  maxH={"32rem"}
+                  px={".5rem"}
+                  overflow={"scroll"}
+                >
+                  <Flex mt={"1.5rem"} direction={"column"} gap={"1.5rem"}>
+                    <FormControl variant="floating" id="title" isRequired>
+                      <Input
+                        value={eventFormData.eventTitle}
+                        autoFocus
+                        placeholder=" "
+                        onChange={(event) =>
+                          setEvent({ eventTitle: event.target.value })
+                        }
+                      />
+                      <FormLabel>Event title</FormLabel>
+                    </FormControl>
+                    <Select placeholder="Event Type" isRequired>
+                      <option>Event</option>
+                    </Select>
+                    <FormControl variant="floating" id="shortdesc" isRequired>
+                      <Textarea
+                        value={eventFormData.eventShortDescription}
+                        placeholder=" "
+                        onChange={(event) =>
+                          setEvent({
+                            eventShortDescription: event.target.value,
+                          })
+                        }
+                      />
+                      <FormLabel>Short description</FormLabel>
+                      <FormHelperText>
+                        Min 30, Max 200 symbols. Description will be shown on
+                        the list of all events
+                      </FormHelperText>
+                    </FormControl>
+                    <FileUploader
+                      placeholder={
+                        <Highlight
+                          query={"upload event cover"}
+                          styles={{
+                            background: "accentSecondary",
+                            color: "textContrast",
+                            px: ".5rem",
+                            py: ".5rem",
+                            borderRadius: "sm",
+                          }}
                         >
-                          <Textarea
-                            value={eventFormData.eventShortDescription}
+                          Drad and grop or click to upload event cover
+                        </Highlight>
+                      }
+                      onChange={(files) => setEventPosterImageFile(files[0])}
+                      config={{
+                        maxFiles: 1,
+                        accept: { "image/*": [], "video/*": [] },
+                      }}
+                    />
+                    <Button
+                      variant={"ghost"}
+                      display={"flex"}
+                      gap={"1rem"}
+                      onClick={() =>
+                        isLongEventDescriptionFieldOpen
+                          ? (onCloseLongEventDescriptionField(),
+                            setEvent({
+                              eventLongDescription: "",
+                            }))
+                          : onOpenLongEventDescriptionField()
+                      }
+                    >
+                      {isLongEventDescriptionFieldOpen ? (
+                        <DeleteIcon color={"textAccent"} />
+                      ) : (
+                        <AddIcon color={"accentSecondary"} />
+                      )}
+                      <Text>
+                        {isLongEventDescriptionFieldOpen ? "Remove " : "Add "}
+                        long description
+                      </Text>
+                    </Button>
+                    {isLongEventDescriptionFieldOpen && (
+                      <FormControl variant="floating" id="longdesc">
+                        <Textarea
+                          autoFocus
+                          value={eventFormData.eventLongDescription}
+                          placeholder=" "
+                          rows={6}
+                          onChange={(event) =>
+                            setEvent({
+                              eventLongDescription: event.target.value,
+                            })
+                          }
+                        />
+                        <FormLabel>Long description</FormLabel>
+                      </FormControl>
+                    )}
+                  </Flex>
+                </Flex>
+              </TabPanel>
+              <TabPanel>
+                <Flex direction={"column"}>
+                  <Heading as="h3" fontSize={"xx-large"}>
+                    Additional Info
+                  </Heading>
+                  <Flex
+                    paddingTop={"1.5rem"}
+                    maxH={"32rem"}
+                    px={".5rem"}
+                    direction={"column"}
+                    gap={"1.5rem"}
+                    overflow={"scroll"}
+                  >
+                    <Flex gap={"1.5rem"}>
+                      <FormControl
+                        variant="floating"
+                        id="ticketSupply"
+                        isRequired
+                      >
+                        <Input
+                          value={eventFormData.eventStartDate}
+                          placeholder=" "
+                          min={eventFormData.eventEndDate}
+                          type="date"
+                          onChange={(event) =>
+                            setEvent({ eventStartDate: event.target.value })
+                          }
+                        />
+                        <FormLabel>Start Date</FormLabel>
+                      </FormControl>
+                      {!isEventStartTimeFieldOpen && (
+                        <Button
+                          variant={"ghost"}
+                          display={"flex"}
+                          gap={"1rem"}
+                          onClick={onOpenEventStartTimeField}
+                        >
+                          <AddIcon color={"accentSecondary"} />
+                          <Text>Add time</Text>
+                        </Button>
+                      )}
+                    </Flex>
+                    {isEventStartTimeFieldOpen && (
+                      <Flex gap={"1rem"}>
+                        <FormControl variant="floating" id="longdesc">
+                          <Input
+                            autoFocus
+                            value={eventFormData.eventStartTime}
                             placeholder=" "
+                            type="time"
                             onChange={(event) =>
                               setEvent({
-                                eventShortDescription: event.target.value,
+                                eventStartTime: event.target.value,
                               })
                             }
                           />
-                          <FormLabel>Short description</FormLabel>
-                          <FormHelperText>
-                            Min 30, Max 200 symbols. Description will be shown
-                            on the list of all events
-                          </FormHelperText>
+                          <FormLabel>Start time</FormLabel>
                         </FormControl>
-                        <FileUploader
-                          placeholder={
-                            <Highlight
-                              query={"upload event cover"}
-                              styles={{
-                                background: "accentSecondary",
-                                color: "textContrast",
-                                px: ".5rem",
-                                py: ".5rem",
-                                borderRadius: "sm",
-                              }}
-                            >
-                              Drad and grop or click to upload event cover
-                            </Highlight>
-                          }
-                          onChange={(files) =>
-                            setEventPosterImageFile(files[0])
-                          }
-                          config={{
-                            maxFiles: 1,
-                            accept: { "image/*": [], "video/*": [] },
-                          }}
-                        />
                         <Button
                           variant={"ghost"}
                           display={"flex"}
                           gap={"1rem"}
-                          onClick={() =>
-                            isLongEventDescriptionFieldOpen
-                              ? (onCloseLongEventDescriptionField(),
-                                setEvent({
-                                  eventLongDescription: "",
-                                }))
-                              : onOpenLongEventDescriptionField()
-                          }
-                        >
-                          {isLongEventDescriptionFieldOpen ? (
-                            <DeleteIcon color={"textAccent"} />
-                          ) : (
-                            <AddIcon color={"accentSecondary"} />
+                          onClick={() => (
+                            onCloseEventStartTimeField(),
+                            setEvent({
+                              eventStartTime: "",
+                            })
                           )}
-                          <Text>
-                            {isLongEventDescriptionFieldOpen
-                              ? "Remove "
-                              : "Add "}
-                            long description
-                          </Text>
+                        >
+                          <DeleteIcon color={"textAccent"} />
+                          <Text>Remove</Text>
                         </Button>
-                        {isLongEventDescriptionFieldOpen && (
-                          <FormControl variant="floating" id="longdesc">
-                            <Textarea
-                              autoFocus
-                              value={eventFormData.eventLongDescription}
-                              placeholder=" "
-                              rows={6}
-                              onChange={(event) =>
-                                setEvent({
-                                  eventLongDescription: event.target.value,
-                                })
-                              }
-                            />
-                            <FormLabel>Long description</FormLabel>
-                          </FormControl>
-                        )}
                       </Flex>
-                    </Flex>
-                  </TabPanel>
-                  <TabPanel>
-                    <Flex direction={"column"}>
-                      <Heading as="h3" fontSize={"xx-large"}>
-                        Additional Info
-                      </Heading>
-                      <Flex
-                        paddingTop={"1.5rem"}
-                        maxH={"32rem"}
-                        px={".5rem"}
-                        direction={"column"}
-                        gap={"1.5rem"}
-                        overflow={"scroll"}
-                      >
-                        <Flex gap={"1.5rem"}>
-                          <FormControl
-                            variant="floating"
-                            id="ticketSupply"
-                            isRequired
-                          >
-                            <Input
-                              value={eventFormData.eventStartDate}
-                              placeholder=" "
-                              min={eventFormData.eventEndDate}
-                              type="date"
-                              onChange={(event) =>
-                                setEvent({ eventStartDate: event.target.value })
-                              }
-                            />
-                            <FormLabel>Start Date</FormLabel>
-                          </FormControl>
-                          {!isEventStartTimeFieldOpen && (
-                            <Button
-                              variant={"ghost"}
-                              display={"flex"}
-                              gap={"1rem"}
-                              onClick={onOpenEventStartTimeField}
-                            >
-                              <AddIcon color={"accentSecondary"} />
-                              <Text>Add time</Text>
-                            </Button>
-                          )}
-                        </Flex>
-                        {isEventStartTimeFieldOpen && (
-                          <Flex gap={"1rem"}>
-                            <FormControl variant="floating" id="longdesc">
-                              <Input
-                                autoFocus
-                                value={eventFormData.eventStartTime}
-                                placeholder=" "
-                                type="time"
-                                onChange={(event) =>
-                                  setEvent({
-                                    eventStartTime: event.target.value,
-                                  })
-                                }
-                              />
-                              <FormLabel>Start time</FormLabel>
-                            </FormControl>
-                            <Button
-                              variant={"ghost"}
-                              display={"flex"}
-                              gap={"1rem"}
-                              onClick={() => (
-                                onCloseEventStartTimeField(),
-                                setEvent({
-                                  eventStartTime: "",
-                                })
-                              )}
-                            >
-                              <DeleteIcon color={"textAccent"} />
-                              <Text>Remove</Text>
-                            </Button>
-                          </Flex>
-                        )}
-                        <Button
-                          variant={"ghost"}
-                          display={"flex"}
-                          gap={"1rem"}
-                          onClick={() =>
-                            isEventEndDateFieldOpen
-                              ? (onCloseEventEndDateField(),
-                                onCloseEventEndTimeField(),
-                                setEvent({
-                                  eventEndDate: "",
-                                  eventEndTime: "",
-                                }))
-                              : onOpenEventEndDateField()
-                          }
-                        >
-                          {isEventEndDateFieldOpen ? (
-                            <DeleteIcon color={"textAccent"} />
-                          ) : (
-                            <AddIcon color={"accentSecondary"} />
-                          )}
-                          <Text>
-                            {isEventEndDateFieldOpen ? "Remove " : "Add "}
-                            end date
-                          </Text>
-                        </Button>
-                        {isEventEndDateFieldOpen && (
-                          <Flex gap={"1rem"}>
-                            <FormControl variant="floating" id="longdesc">
-                              <Input
-                                autoFocus
-                                value={eventFormData.eventEndDate}
-                                placeholder=" "
-                                type="date"
-                                min={eventFormData.eventStartDate}
-                                onChange={(event) =>
-                                  setEvent({
-                                    eventEndDate: event.target.value,
-                                  })
-                                }
-                              />
-                              <FormLabel>End date</FormLabel>
-                            </FormControl>
-                            {!isEventEndTimeFieldOpen && (
-                              <Button
-                                variant={"ghost"}
-                                display={"flex"}
-                                gap={"1rem"}
-                                onClick={onOpenEventEndTimeField}
-                              >
-                                <AddIcon color={"accentSecondary"} />
-                                <Text>Add time</Text>
-                              </Button>
-                            )}
-                          </Flex>
-                        )}
-                        {isEventEndTimeFieldOpen && (
-                          <Flex gap={"1rem"}>
-                            <FormControl variant="floating" id="longdesc">
-                              <Input
-                                autoFocus
-                                value={eventFormData.eventEndTime}
-                                placeholder=" "
-                                type="time"
-                                min={eventFormData.eventStartTime}
-                                onChange={(event) =>
-                                  setEvent({
-                                    eventEndTime: event.target.value,
-                                  })
-                                }
-                              />
-                              <FormLabel>End time</FormLabel>
-                            </FormControl>
-                            <Button
-                              variant={"ghost"}
-                              display={"flex"}
-                              gap={"1rem"}
-                              onClick={() => (
-                                onCloseEventEndTimeField(),
-                                setEvent({
-                                  eventEndTime: "",
-                                })
-                              )}
-                            >
-                              <DeleteIcon color={"textAccent"} />
-                              <Text>Remove</Text>
-                            </Button>
-                          </Flex>
-                        )}
-                        <FormControl variant="floating" id="address">
+                    )}
+                    <Button
+                      variant={"ghost"}
+                      display={"flex"}
+                      gap={"1rem"}
+                      onClick={() =>
+                        isEventEndDateFieldOpen
+                          ? (onCloseEventEndDateField(),
+                            onCloseEventEndTimeField(),
+                            setEvent({
+                              eventEndDate: "",
+                              eventEndTime: "",
+                            }))
+                          : onOpenEventEndDateField()
+                      }
+                    >
+                      {isEventEndDateFieldOpen ? (
+                        <DeleteIcon color={"textAccent"} />
+                      ) : (
+                        <AddIcon color={"accentSecondary"} />
+                      )}
+                      <Text>
+                        {isEventEndDateFieldOpen ? "Remove " : "Add "}
+                        end date
+                      </Text>
+                    </Button>
+                    {isEventEndDateFieldOpen && (
+                      <Flex gap={"1rem"}>
+                        <FormControl variant="floating" id="longdesc">
                           <Input
-                            value={eventFormData.eventLocation}
+                            autoFocus
+                            value={eventFormData.eventEndDate}
                             placeholder=" "
+                            type="date"
+                            min={eventFormData.eventStartDate}
                             onChange={(event) =>
-                              setEvent({ eventLocation: event.target.value })
+                              setEvent({
+                                eventEndDate: event.target.value,
+                              })
                             }
                           />
-                          <FormLabel>Address</FormLabel>
+                          <FormLabel>End date</FormLabel>
                         </FormControl>
-                        <Button
-                          variant={"ghost"}
-                          display={"flex"}
-                          gap={"1rem"}
-                          onClick={() =>
-                            isEventLocationInfoFieldOpen
-                              ? (onCloseEventLocationInfoField(),
-                                setEvent({
-                                  eventAdditionalLocationInfo: "",
-                                }))
-                              : onOpenEventLocationInfoField()
-                          }
-                        >
-                          {isEventLocationInfoFieldOpen ? (
-                            <DeleteIcon color={"textAccent"} />
-                          ) : (
-                            <AddIcon color={"accentSecondary"} />
-                          )}
-                          <Text>
-                            {isEventLocationInfoFieldOpen ? "Remove " : "Add "}
-                            additional location info
-                          </Text>
-                        </Button>
-                        {isEventLocationInfoFieldOpen && (
-                          <FormControl
-                            variant="floating"
-                            id="eventAdditionalLocationInfo"
-                          >
-                            <Textarea
-                              value={eventFormData.eventAdditionalLocationInfo}
-                              placeholder=" "
-                              onChange={(event) =>
-                                setEvent({
-                                  eventAdditionalLocationInfo:
-                                    event.target.value,
-                                })
-                              }
-                            />
-                            <FormLabel>Additional location info</FormLabel>
-                          </FormControl>
-                        )}
-                      </Flex>
-                    </Flex>
-                  </TabPanel>
-                  <TabPanel>
-                    <Flex direction={"column"}>
-                      <Heading as="h3" fontSize={"xx-large"}>
-                        Ticket Info
-                      </Heading>
-                      <Flex
-                        paddingTop={"1.5rem"}
-                        direction={"column"}
-                        gap={"1.5rem"}
-                        maxH={"32rem"}
-                        px={".5rem"}
-                        overflow={"scroll"}
-                      >
-                        <FileUploader
-                          placeholder={
-                            <Highlight
-                              query={"upload ticket cover"}
-                              styles={{
-                                background: "accentSecondary",
-                                color: "textContrast",
-                                px: ".5rem",
-                                py: ".5rem",
-                                borderRadius: "sm",
-                              }}
-                            >
-                              Drad and grop or click to upload ticket cover
-                            </Highlight>
-                          }
-                          onChange={(files) =>
-                            setEventTicketPosterImageFile(files[0])
-                          }
-                          config={{
-                            maxFiles: 1,
-                            accept: { "image/*": [], "video/*": [] },
-                          }}
-                        />
-                        <Button
-                          variant={"ghost"}
-                          display={"flex"}
-                          gap={"1rem"}
-                          onClick={() =>
-                            isEventTicketDescriptionFieldOpen
-                              ? (onCloseEventTicketDescriptionField(),
-                                setEvent({
-                                  eventTicketDescription: "",
-                                }))
-                              : onOpenEventTicketDescriptionField()
-                          }
-                        >
-                          {isEventTicketDescriptionFieldOpen ? (
-                            <DeleteIcon color={"textAccent"} />
-                          ) : (
-                            <AddIcon color={"accentSecondary"} />
-                          )}
-                          <Text>
-                            {isEventTicketDescriptionFieldOpen
-                              ? "Remove "
-                              : "Add "}
-                            ticket description
-                          </Text>
-                        </Button>
-                        {isEventTicketDescriptionFieldOpen && (
-                          <FormControl variant="floating" id="ticketDesc">
-                            <Textarea
-                              value={eventFormData.eventTicketDescription}
-                              placeholder=" "
-                              onChange={(event) =>
-                                setEvent({
-                                  eventTicketDescription: event.target.value,
-                                })
-                              }
-                            />
-                            <FormLabel>Ticket description</FormLabel>
-                          </FormControl>
-                        )}
-                        <FormControl variant="floating" id="price">
-                          <InputGroup>
-                            <InputLeftAddon children="$" />
-                            <Input
-                              value={eventFormData.ticketPrice}
-                              type="number"
-                              placeholder=" "
-                              onChange={(event) =>
-                                setEvent({ ticketPrice: event.target.value })
-                              }
-                              textAlign={"center"}
-                            />
-                            <FormLabel left={"3rem !important"}>
-                              Ticket price
-                            </FormLabel>
-                            <InputRightAddon
-                              children={ticketNativeCurrencyPriceLabel}
-                              w={"10rem"}
-                              justifyContent={"flex-end"}
-                              overflow={"hidden"}
-                            />
-                          </InputGroup>
-                        </FormControl>
-                        <FormControl
-                          variant="floating"
-                          id="ticketSupply"
-                          isRequired
-                        >
-                          <Input
-                            value={eventFormData.ticketSupply}
-                            placeholder=" "
-                            type="number"
-                            min={1}
-                            onChange={(event) =>
-                              setEvent({ ticketSupply: +event.target.value })
-                            }
-                          />
-                          <FormLabel>Tickets supply</FormLabel>
-                        </FormControl>
-                      </Flex>
-                    </Flex>
-                  </TabPanel>
-                  <TabPanel>
-                    <Flex direction={"column"}>
-                      <Heading as="h3" fontSize={"xx-large"}>
-                        Info
-                      </Heading>
-                      <Flex
-                        paddingTop={"1.5rem"}
-                        direction={"column"}
-                        gap={"1.5rem"}
-                        maxH={"32rem"}
-                        px={".5rem"}
-                        overflow={"scroll"}
-                      >
-                        <FormControl
-                          variant="floating"
-                          id="beneficiary"
-                          isRequired
-                          display={"flex"}
-                          gap={"1rem"}
-                        >
-                          <Input
-                            value={eventFormData.beneficiary}
-                            placeholder=" "
-                            onChange={(event) =>
-                              setEvent({ beneficiary: event.target.value })
-                            }
-                          />
-                          <FormLabel>Beneficiary wallet address</FormLabel>
+                        {!isEventEndTimeFieldOpen && (
                           <Button
-                            variant={"accent"}
-                            onClick={() =>
-                              isWalletConnected
-                                ? setEvent({
-                                    beneficiary: connectedWalletAddress,
-                                  })
-                                : setWalletConnectModalOpen(true)
-                            }
+                            variant={"ghost"}
+                            display={"flex"}
+                            gap={"1rem"}
+                            onClick={onOpenEventEndTimeField}
                           >
-                            Me
+                            <AddIcon color={"accentSecondary"} />
+                            <Text>Add time</Text>
                           </Button>
-                        </FormControl>
-                        {eventFormData.eventManagers?.map(
-                          (manager, managerIndex) => (
-                            <Flex gap={"1rem"} key={managerIndex}>
-                              <FormControl variant="floating" id="longdesc">
-                                <Input
-                                  autoFocus
-                                  value={
-                                    eventFormData.eventManagers?.[managerIndex]
-                                  }
-                                  placeholder=" "
-                                  onChange={(event) => {
-                                    console.log(managerIndex);
-                                    let eventManagers = [
-                                      ...(eventFormData.eventManagers || []),
-                                    ];
-                                    eventManagers.splice(
-                                      managerIndex,
-                                      1,
-                                      event.target.value
-                                    );
-                                    setEvent({
-                                      eventManagers,
-                                    });
-                                  }}
-                                />
-                                <FormLabel>
-                                  Manager #{managerIndex + 1} wallet address
-                                </FormLabel>
-                              </FormControl>
-                              <Button
-                                variant={"ghost"}
-                                display={"flex"}
-                                gap={"1rem"}
-                                onClick={() => removeEventManager(managerIndex)}
-                              >
-                                <DeleteIcon color={"textAccent"} />
-                              </Button>
-                            </Flex>
-                          )
                         )}
+                      </Flex>
+                    )}
+                    {isEventEndTimeFieldOpen && (
+                      <Flex gap={"1rem"}>
+                        <FormControl variant="floating" id="longdesc">
+                          <Input
+                            autoFocus
+                            value={eventFormData.eventEndTime}
+                            placeholder=" "
+                            type="time"
+                            min={eventFormData.eventStartTime}
+                            onChange={(event) =>
+                              setEvent({
+                                eventEndTime: event.target.value,
+                              })
+                            }
+                          />
+                          <FormLabel>End time</FormLabel>
+                        </FormControl>
                         <Button
                           variant={"ghost"}
                           display={"flex"}
                           gap={"1rem"}
-                          onClick={addEventManager}
+                          onClick={() => (
+                            onCloseEventEndTimeField(),
+                            setEvent({
+                              eventEndTime: "",
+                            })
+                          )}
                         >
-                          <AddIcon color={"accentSecondary"} />
-                          <Text>Add event manager</Text>
+                          <DeleteIcon color={"textAccent"} />
+                          <Text>Remove</Text>
                         </Button>
                       </Flex>
-                    </Flex>
-                  </TabPanel>
-                </TabPanels>
-                <Flex mt={"4rem"} justifyContent={"space-between"}>
-                  <Flex align={"center"}>
-                    <IconButton
-                      disabled={eventFormData.tabIndex == 0}
-                      onClick={onPrevFormTabButtonClick}
-                      icon={<ArrowBackIcon boxSize={"1.5rem"} />}
-                      aria-label="back"
-                    />
-                    <TabList ml={"1rem"}>
-                      <Tab>1</Tab>
-                      <Tab>2</Tab>
-                      <Tab>3</Tab>
-                      <Tab>4</Tab>
-                    </TabList>
+                    )}
+                    <FormControl variant="floating" id="address">
+                      <Input
+                        value={eventFormData.eventLocation}
+                        placeholder=" "
+                        onChange={(event) =>
+                          setEvent({ eventLocation: event.target.value })
+                        }
+                      />
+                      <FormLabel>Address</FormLabel>
+                    </FormControl>
+                    <Button
+                      variant={"ghost"}
+                      display={"flex"}
+                      gap={"1rem"}
+                      onClick={() =>
+                        isEventLocationInfoFieldOpen
+                          ? (onCloseEventLocationInfoField(),
+                            setEvent({
+                              eventAdditionalLocationInfo: "",
+                            }))
+                          : onOpenEventLocationInfoField()
+                      }
+                    >
+                      {isEventLocationInfoFieldOpen ? (
+                        <DeleteIcon color={"textAccent"} />
+                      ) : (
+                        <AddIcon color={"accentSecondary"} />
+                      )}
+                      <Text>
+                        {isEventLocationInfoFieldOpen ? "Remove " : "Add "}
+                        additional location info
+                      </Text>
+                    </Button>
+                    {isEventLocationInfoFieldOpen && (
+                      <FormControl
+                        variant="floating"
+                        id="eventAdditionalLocationInfo"
+                      >
+                        <Textarea
+                          value={eventFormData.eventAdditionalLocationInfo}
+                          placeholder=" "
+                          onChange={(event) =>
+                            setEvent({
+                              eventAdditionalLocationInfo: event.target.value,
+                            })
+                          }
+                        />
+                        <FormLabel>Additional location info</FormLabel>
+                      </FormControl>
+                    )}
                   </Flex>
-                  <Button
-                    variant={"outlineAccent"}
-                    onClick={onNextFormTabButtonClick}
-                  >
-                    {isOnLastFormTab ? "Finish" : "Next"}
-                  </Button>
                 </Flex>
-              </Tabs>
-            </Container>
-          </Flex>
-        ),
-        [EventCreationStages.creatingEvent]: (
-          <>
-            <Flex
-              sx={{
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Spinner />
-              <Text mt="2rem" as="h2">
-                creating the event
-              </Text>
-              <Text mt="1rem" variant="hint">
-                might take a minute
-              </Text>
+              </TabPanel>
+              <TabPanel>
+                <Flex direction={"column"}>
+                  <Heading as="h3" fontSize={"xx-large"}>
+                    Ticket Info
+                  </Heading>
+                  <Flex
+                    paddingTop={"1.5rem"}
+                    direction={"column"}
+                    gap={"1.5rem"}
+                    maxH={"32rem"}
+                    px={".5rem"}
+                    overflow={"scroll"}
+                  >
+                    <FileUploader
+                      placeholder={
+                        <Highlight
+                          query={"upload ticket cover"}
+                          styles={{
+                            background: "accentSecondary",
+                            color: "textContrast",
+                            px: ".5rem",
+                            py: ".5rem",
+                            borderRadius: "sm",
+                          }}
+                        >
+                          Drad and grop or click to upload ticket cover
+                        </Highlight>
+                      }
+                      onChange={(files) =>
+                        setEventTicketPosterImageFile(files[0])
+                      }
+                      config={{
+                        maxFiles: 1,
+                        accept: { "image/*": [], "video/*": [] },
+                      }}
+                    />
+                    <Button
+                      variant={"ghost"}
+                      display={"flex"}
+                      gap={"1rem"}
+                      onClick={() =>
+                        isEventTicketDescriptionFieldOpen
+                          ? (onCloseEventTicketDescriptionField(),
+                            setEvent({
+                              eventTicketDescription: "",
+                            }))
+                          : onOpenEventTicketDescriptionField()
+                      }
+                    >
+                      {isEventTicketDescriptionFieldOpen ? (
+                        <DeleteIcon color={"textAccent"} />
+                      ) : (
+                        <AddIcon color={"accentSecondary"} />
+                      )}
+                      <Text>
+                        {isEventTicketDescriptionFieldOpen ? "Remove " : "Add "}
+                        ticket description
+                      </Text>
+                    </Button>
+                    {isEventTicketDescriptionFieldOpen && (
+                      <FormControl variant="floating" id="ticketDesc">
+                        <Textarea
+                          value={eventFormData.eventTicketDescription}
+                          placeholder=" "
+                          onChange={(event) =>
+                            setEvent({
+                              eventTicketDescription: event.target.value,
+                            })
+                          }
+                        />
+                        <FormLabel>Ticket description</FormLabel>
+                      </FormControl>
+                    )}
+                    <FormControl variant="floating" id="price">
+                      <InputGroup>
+                        <InputLeftAddon children="$" />
+                        <Input
+                          value={eventFormData.ticketPrice}
+                          type="number"
+                          placeholder=" "
+                          onChange={(event) =>
+                            setEvent({ ticketPrice: event.target.value })
+                          }
+                          textAlign={"center"}
+                        />
+                        <FormLabel left={"3rem !important"}>
+                          Ticket price
+                        </FormLabel>
+                        <InputRightAddon
+                          children={ticketNativeCurrencyPriceLabel}
+                          w={"10rem"}
+                          justifyContent={"flex-end"}
+                          overflow={"hidden"}
+                        />
+                      </InputGroup>
+                    </FormControl>
+                    <FormControl
+                      variant="floating"
+                      id="ticketSupply"
+                      isRequired
+                    >
+                      <Input
+                        value={eventFormData.ticketSupply}
+                        placeholder=" "
+                        type="number"
+                        min={1}
+                        onChange={(event) =>
+                          setEvent({ ticketSupply: +event.target.value })
+                        }
+                      />
+                      <FormLabel>Tickets supply</FormLabel>
+                    </FormControl>
+                  </Flex>
+                </Flex>
+              </TabPanel>
+              <TabPanel>
+                <Flex direction={"column"}>
+                  <Heading as="h3" fontSize={"xx-large"}>
+                    Info
+                  </Heading>
+                  <Flex
+                    paddingTop={"1.5rem"}
+                    direction={"column"}
+                    gap={"1.5rem"}
+                    maxH={"32rem"}
+                    px={".5rem"}
+                    overflow={"scroll"}
+                  >
+                    <FormControl
+                      variant="floating"
+                      id="beneficiary"
+                      isRequired
+                      display={"flex"}
+                      gap={"1rem"}
+                    >
+                      <Input
+                        value={eventFormData.beneficiary}
+                        placeholder=" "
+                        onChange={(event) =>
+                          setEvent({ beneficiary: event.target.value })
+                        }
+                      />
+                      <FormLabel>Beneficiary wallet address</FormLabel>
+                      <Button
+                        variant={"accent"}
+                        onClick={() =>
+                          isWalletConnected
+                            ? setEvent({
+                                beneficiary: connectedWalletAddress,
+                              })
+                            : setWalletConnectModalOpen(true)
+                        }
+                      >
+                        Me
+                      </Button>
+                    </FormControl>
+                    {eventFormData.eventManagers?.map(
+                      (manager, managerIndex) => (
+                        <Flex gap={"1rem"} key={managerIndex}>
+                          <FormControl variant="floating" id="longdesc">
+                            <Input
+                              autoFocus
+                              value={
+                                eventFormData.eventManagers?.[managerIndex]
+                              }
+                              placeholder=" "
+                              onChange={(event) => {
+                                console.log(managerIndex);
+                                let eventManagers = [
+                                  ...(eventFormData.eventManagers || []),
+                                ];
+                                eventManagers.splice(
+                                  managerIndex,
+                                  1,
+                                  event.target.value
+                                );
+                                setEvent({
+                                  eventManagers,
+                                });
+                              }}
+                            />
+                            <FormLabel>
+                              Manager #{managerIndex + 1} wallet address
+                            </FormLabel>
+                          </FormControl>
+                          <Button
+                            variant={"ghost"}
+                            display={"flex"}
+                            gap={"1rem"}
+                            onClick={() => removeEventManager(managerIndex)}
+                          >
+                            <DeleteIcon color={"textAccent"} />
+                          </Button>
+                        </Flex>
+                      )
+                    )}
+                    <Button
+                      variant={"ghost"}
+                      display={"flex"}
+                      gap={"1rem"}
+                      onClick={addEventManager}
+                    >
+                      <AddIcon color={"accentSecondary"} />
+                      <Text>Add event manager</Text>
+                    </Button>
+                  </Flex>
+                </Flex>
+              </TabPanel>
+            </TabPanels>
+            <Flex mt={"4rem"} justifyContent={"space-between"}>
+              <Flex align={"center"}>
+                <IconButton
+                  mr={"1rem"}
+                  display={["none", "none", "block"]}
+                  disabled={eventFormData.tabIndex == 0}
+                  onClick={onPrevFormTabButtonClick}
+                  icon={<ArrowBackIcon boxSize={"1.5rem"} />}
+                  aria-label="back"
+                />
+                <TabList>
+                  <Tab>1</Tab>
+                  <Tab>2</Tab>
+                  <Tab>3</Tab>
+                  <Tab>4</Tab>
+                </TabList>
+              </Flex>
+              <Button
+                variant={"outlineAccent"}
+                isLoading={
+                  currentEventCreationStage == EventCreationStages.creatingEvent
+                }
+                onClick={onNextFormTabButtonClick}
+              >
+                {isOnLastFormTab ? "Finish" : "Next"}
+              </Button>
             </Flex>
-          </>
-        ),
-      }[currentEventCreationStage] || <></>}
+          </Tabs>
+        </Container>
+        {/* </Collapse> */}
+      </Flex>
       <AlertDialog
         isOpen={isSimpleDialogOpen}
         leastDestructiveRef={simpleDialogCancelRef}

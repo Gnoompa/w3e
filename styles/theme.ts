@@ -148,7 +148,7 @@ const theme = extendTheme({
         simple: {
           borderRadius: "lg",
           bg: "bgAccent",
-          px: "2rem",
+          px: ["1.5rem", "1.5rem", "2rem"],
           py: "2rem",
         },
         contrast: {
@@ -189,6 +189,7 @@ const theme = extendTheme({
         outline: {
           field: {
             borderColor: "border",
+						height: "50px"
           },
         },
       },

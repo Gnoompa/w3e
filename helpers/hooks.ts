@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { TypedUseSelectorHook } from "react-redux";
 import type { RootState, AppDispatch } from "../app/store";
 
+export const defaultDateFormat = "ddd, MMM DD YYYY";
 export const defaulyIPFSgateway = "https://nftstorage.link/ipfs/";
 
 export function useDebounce<T>(value: T, delay?: number): T {
