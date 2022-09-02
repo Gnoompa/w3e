@@ -29,6 +29,8 @@ export const initialState: State = {
   beneficiary: "",
   eventShortDescription: "",
   eventLongDescription: "",
+  eventLocation: "",
+  eventAdditionalLocationInfo: "",
   ticketPrice: undefined,
   isFreeTicketPrice: false,
   eventManagers: [],

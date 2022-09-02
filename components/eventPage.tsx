@@ -42,9 +42,7 @@ import {
 } from "@chakra-ui/react";
 import { getIPFSUri, useRouterQuery } from "helpers/hooks";
 import dynamic from "next/dynamic";
-import { Portal } from "react-portal";
 import { useRouter } from "next/router";
-import { formatWalletAddress } from "helpers/hooks";
 import { BigNumber, BigNumberish, ethers } from "ethers";
 import {
   chain,
@@ -66,7 +64,13 @@ import {
   useMainContractEvents,
   useTokenMetadataFetch,
 } from "helpers/contract";
-import { CheckIcon, ExternalLinkIcon, LinkIcon } from "@chakra-ui/icons";
+import {
+  ArrowForwardIcon,
+  CheckIcon,
+  ExternalLinkIcon,
+  LinkIcon,
+} from "@chakra-ui/icons";
+import { motion } from "framer-motion";
 
 const QrScanner = dynamic(() => import("./ui/qrScanner"), {
   ssr: false,
@@ -246,6 +250,7 @@ const EventPage = () => {
   }, []);
 
   useEffect(() => {
+    console.log(eventMetadata);
     event && eventMetadata && setCurrentStage(Stage.EventLoaded);
   }, [event, eventMetadata]);
 
@@ -408,6 +413,13 @@ const EventPage = () => {
       });
   };
 
+  const getMetadataAttribute = (
+    { attributes }: EventMetadata,
+    attributeName: string
+  ): string | undefined =>
+    attributes?.filter((attribute) => attribute?.trait_type == attributeName)[0]
+      ?.value;
+
   const onEventLinkCopyButtonClick = () => {
     setCopiedValue(global.location.href);
     onCopy();
@@ -505,368 +517,437 @@ const EventPage = () => {
         `}
       />
       <Flex
+        as={motion.div}
+        initial={{ opacity: 0, y: "-20%" }}
+        animate={
+          currentStage == Stage.EventLoaded
+            ? { y: 0, opacity: 1 }
+            : { y: "-20%", opacity: 0 }
+        }
         sx={{
           flexDirection: "column",
         }}
       >
-        {{
-          [Stage.LoadingEvent]: () => (
-            <Spinner
-              sx={{ margin: "31rem auto", transform: "translateY(-50%)" }}
-            />
-          ),
-          [Stage.VerifyingParticipants]: () => (
-            <Spinner
-              sx={{ margin: "31rem auto", transform: "translateY(-50%)" }}
-            />
-          ),
-          [Stage.EventLoaded]: () => (
-            <Flex direction={"column"} justifyContent={"center"}>
+        <Flex direction={"column"} justifyContent={"center"}>
+          <Container
+            h={"20rem"}
+            pos={"relative"}
+            overflow={"hidden"}
+            zIndex={"base"}
+          >
+            {eventMetadata?.image && (
+              <Flex justify={"center"}>
+                <Box
+                  pos={"fixed"}
+                  mt={"0rem"}
+                  left={0}
+                  w={"100vw"}
+                  h={"20rem"}
+                  zIndex={"base"}
+                  overflow={"hidden"}
+                >
+                  <Image
+                    src={getIPFSUri(eventMetadata?.image)}
+                    w={"100vw"}
+                    filter={"blur(40px)"}
+                  />
+                </Box>
+                <Image
+                  src={getIPFSUri(eventMetadata?.image)}
+                  zIndex={"docked"}
+                  mt={"5rem"}
+                  px={"1rem"}
+                />
+              </Flex>
+            )}
+          </Container>
+          <Container
+            variant={"undersceen"}
+            bg={"accentPrimary"}
+            zIndex={"docked"}
+            px={"2rem"}
+          >
+            {eventMetadata && (
               <Container
-                h={"20rem"}
-                pos={"relative"}
-                overflow={"hidden"}
-                zIndex={"base"}
+                pos={"absolute"}
+                top={"-.5 rem"}
+                left={"2rem"}
+                zIndex={"overlay"}
               >
-                {eventMetadata?.image && (
-                  <Flex justify={"center"}>
-                    <Box
-                      pos={"fixed"}
-                      mt={"0rem"}
-                      left={0}
-                      w={"100vw"}
-                      h={"20rem"}
-                      zIndex={"base"}
-                      overflow={"hidden"}
-                    >
-                      <Image
-                        src={getIPFSUri(eventMetadata?.image)}
-                        w={"100vw"}
-                        filter={"blur(40px)"}
-                      />
-                    </Box>
-                    <Image
-                      src={getIPFSUri(eventMetadata?.image)}
-                      zIndex={"docked"}
-                      mt={"5rem"}
-                      px={"1rem"}
-                    />
-                  </Flex>
-                )}
                 <Flex
                   pos={"absolute"}
-                  maxW={"1440px"}
+                  bottom={"1rem"}
+                  gap={"3rem"}
+                  zIndex={"overlay"}
+                >
+                  <Flex gap={".5rem"} align={"center"}>
+                    <Image src="/icons/calendar.svg"></Image>
+                    <Text
+                      color={"textContrast"}
+                      whiteSpace={"nowrap"}
+                      fontSize={["sm"]}
+                    >
+                      {getMetadataAttribute(eventMetadata, "Event Start Date")}
+                    </Text>
+                    {getMetadataAttribute(eventMetadata, "Event End Date") && (
+                      <Flex gap={".5rem"}>
+                        <ArrowForwardIcon color={"textContrast"} />
+                        <Text
+                          color={"textContrast"}
+                          whiteSpace={"nowrap"}
+                          fontSize={["sm"]}
+                        >
+                          {getMetadataAttribute(
+                            eventMetadata,
+                            "Event End Date"
+                          )}
+                        </Text>
+                      </Flex>
+                    )}
+                  </Flex>
+                  <Flex gap={".5rem"} align={"center"}>
+                    <Image src="/icons/location.svg"></Image>
+                    <Text
+                      color={"textContrast"}
+                      whiteSpace={"nowrap"}
+                      maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
+                      fontSize={["sm"]}
+                      overflow={"hidden"}
+                      textOverflow={"ellipsis"}
+                    >
+                      {[
+                        getMetadataAttribute(eventMetadata, "Location"),
+                        getMetadataAttribute(
+                          eventMetadata,
+                          "Additional Location Info"
+                        ),
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </Text>
+                  </Flex>
+                </Flex>
+                <Flex
+                  pos={"absolute"}
                   bottom={"3rem"}
                   zIndex={"docked"}
                   w={"100%"}
                   left={"50%"}
                   transform={"translateX(-50%)"}
-                  px={"2rem"}
                 >
-                  <Heading color={"textContrast"}>
+                  <Heading
+                    color={"textContrast"}
+                    maxW={"100%"}
+                    whiteSpace={"nowrap"}
+                    overflow={"hidden"}
+                    textOverflow={"ellipsis"}
+                  >
                     {eventMetadata?.name}
                   </Heading>
                 </Flex>
               </Container>
-              <Container
-                variant={"undersceen"}
-                bg={"accentPrimary"}
-                zIndex={"docked"}
-                px={"2rem"}
-              >
-                <Flex
-                  maxW={"1440px"}
-                  margin={"3rem auto"}
-                  direction={"column"}
-                  pos={"relative"}
-                  gap={"2rem"}
-                >
-                  <Flex
-                    pos={"absolute"}
-                    top={"-4.25rem"}
-                    right={0}
-                    gap={"1rem"}
+            )}
+            <Flex
+              maxW={"1440px"}
+              margin={"3rem auto"}
+              direction={"column"}
+              pos={"relative"}
+              gap={"2rem"}
+            >
+              <Flex pos={"absolute"} top={"-4.25rem"} right={0} gap={"1rem"}>
+                {global.navigator.share && (
+                  <Button
+                    onClick={shareEvent}
+                    variant={"secondary"}
+                    bg={"bg"}
+                    leftIcon={<ExternalLinkIcon />}
                   >
-                    {global.navigator.share && (
-                      <Button
-                        onClick={shareEvent}
-                        variant={"secondary"}
-                        bg={"bg"}
-                        leftIcon={<ExternalLinkIcon />}
+                    Share
+                  </Button>
+                )}
+                <IconButton
+                  aria-label="copy event link"
+                  variant={"secondary"}
+                  icon={<LinkIcon />}
+                  bg={"bg"}
+                  onClick={onEventLinkCopyButtonClick}
+                />
+              </Flex>
+              <Container variant="contrastAccent">
+                <Flex align={"center"}>
+                  <Flex
+                    direction={["column", "column", "row"]}
+                    justify={"space-between"}
+                    align={"center"}
+                    gap={"2rem"}
+                    flex={1}
+                  >
+                    <Flex
+                      gap={"2rem"}
+                      direction={["column", "column", "row"]}
+                      align={"center"}
+                      justify={"center"}
+                    >
+                      <Flex
+                        direction={"column"}
+                        justify={"space-between"}
+                        align={["center", "center", "flex-start"]}
+                        gap={".5rem"}
                       >
-                        Share
+                        <Heading color={"textContrast"} fontSize={"md"}>
+                          minting price
+                        </Heading>
+                        <Flex
+                          align={["center", "center", "flex-end"]}
+                          gap={".5rem"}
+                          direction={["column", "column", "row"]}
+                        >
+                          <Text
+                            color={"textAccent"}
+                            fontSize={"3xl"}
+                            fontWeight="bold"
+                          >
+                            {eventTicketPriceLabel}
+                          </Text>
+                          <Text fontSize={"sm"} color={"textContrastSecondary"}>
+                            {eventTicketNativeCurrencyPriceLabel}
+                          </Text>
+                        </Flex>
+                      </Flex>
+                      <Flex gap={"2rem"}>
+                        <Flex
+                          direction={"column"}
+                          justify={"space-between"}
+                          align={["center", "center", "flex-start"]}
+                          gap={".5rem"}
+                        >
+                          <Heading color={"textContrast"} fontSize={"md"}>
+                            Total supply
+                          </Heading>
+                          <Text
+                            color={"textContrast"}
+                            fontSize={"3xl"}
+                            fontWeight="bold"
+                          >
+                            {eventTicketsTotalSupply}
+                          </Text>
+                        </Flex>
+                        <Flex
+                          direction={"column"}
+                          justify={"space-between"}
+                          align={["center", "center", "flex-start"]}
+                          gap={".5rem"}
+                        >
+                          <Heading color={"textContrast"} fontSize={"md"}>
+                            Total minted
+                          </Heading>
+                          <Text
+                            color={"textContrast"}
+                            fontSize={"3xl"}
+                            fontWeight="bold"
+                          >
+                            {eventTicketsMintedAmount}
+                          </Text>
+                        </Flex>
+                      </Flex>
+                    </Flex>
+                    {isConnectedWalletAnEventManager && (
+                      <Button
+                        variant={"accent"}
+                        onClick={onVerifyEventTicketButtonClick}
+                      >
+                        <Flex direction={"column"}>
+                          Validate tickets
+                          <Text
+                            fontSize={"sm"}
+                            fontWeight={"light"}
+                            textTransform={"none"}
+                          >
+                            as a manager
+                          </Text>
+                        </Flex>
                       </Button>
                     )}
-                    <IconButton
-                      aria-label="copy event link"
-                      variant={"secondary"}
-                      icon={<LinkIcon />}
-                      bg={"bg"}
-                      onClick={onEventLinkCopyButtonClick}
-                    />
-                  </Flex>
-                  <Container variant="contrastAccent">
-                    <Flex align={"center"}>
-                      <Flex
-                        direction={["column", "column", "row"]}
-                        justify={"space-between"}
-                        align={"center"}
-                        gap={"2rem"}
-                        flex={1}
+                    {canConnectedWalletBuyTickets ? (
+                      <Button
+                        variant={"accent"}
+                        onClick={() => onBuyEventTicketButtonClick(0)}
+                        isLoading={
+                          isBuyingATicket || isLoadingEventTicketBoughtEvents
+                        }
                       >
+                        buy
+                      </Button>
+                    ) : (
+                      !isConnectedWalletAnEventManager && (
+                        <Flex direction={"column"} gap={".5rem"}>
+                          <Button
+                            variant={"accent"}
+                            onClick={onTicketPreviewModalOpenButtonClick}
+                          >
+                            Show my ticket
+                          </Button>
+                        </Flex>
+                      )
+                    )}
+                  </Flex>
+                  <AlertDialog
+                    isOpen={isSimpleAlertOpen}
+                    leastDestructiveRef={simpleAlertLeastDestructiveRef}
+                    onClose={onSimpleAlertClose}
+                  >
+                    <AlertDialogOverlay>
+                      <AlertDialogContent>
+                        <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                          {simpleAlertData?.title}
+                        </AlertDialogHeader>
+
+                        <AlertDialogBody>
+                          {simpleAlertData?.description}
+                        </AlertDialogBody>
+
+                        <AlertDialogFooter>
+                          <Button
+                            variant={"accent"}
+                            isLoading={isLoadingTicketMessage}
+                            onClick={onTicketSignButtonClick}
+                            ref={simpleAlertLeastDestructiveRef}
+                            ml={3}
+                          >
+                            Sign
+                          </Button>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialogOverlay>
+                  </AlertDialog>
+                  <Modal
+                    isOpen={isTicketPreviewModalOpen}
+                    onClose={onTicketPreviewModalClose}
+                  >
+                    <ModalOverlay />
+                    <ModalContent>
+                      <ModalHeader>My Ticket</ModalHeader>
+                      <ModalCloseButton />
+                      <ModalBody paddingBottom={"3rem"}>
                         <Flex
-                          gap={"2rem"}
-                          direction={["column", "column", "row"]}
+                          flex={1}
+                          direction={"column"}
                           align={"center"}
                           justify={"center"}
+                          gap={"1rem"}
                         >
-                          <Flex
-                            direction={"column"}
-                            justify={"space-between"}
-                            align={["center", "center", "flex-start"]}
-                            gap={".5rem"}
-                          >
-                            <Heading color={"textContrast"} fontSize={"md"}>
-                              minting price
-                            </Heading>
-                            <Flex
-                              align={["center", "center", "flex-end"]}
-                              gap={".5rem"}
-                              direction={["column", "column", "row"]}
-                            >
-                              <Text
-                                color={"textAccent"}
-                                fontSize={"3xl"}
-                                fontWeight="bold"
-                              >
-                                {eventTicketPriceLabel}
-                              </Text>
-                              <Text
-                                fontSize={"sm"}
-                                color={"textContrastSecondary"}
-                              >
-                                {eventTicketNativeCurrencyPriceLabel}
-                              </Text>
-                            </Flex>
-                          </Flex>
-                          <Flex gap={"2rem"}>
-                            <Flex
-                              direction={"column"}
-                              justify={"space-between"}
-                              align={["center", "center", "flex-start"]}
-                              gap={".5rem"}
-                            >
-                              <Heading color={"textContrast"} fontSize={"md"}>
-                                Total supply
-                              </Heading>
-                              <Text
-                                color={"textContrast"}
-                                fontSize={"3xl"}
-                                fontWeight="bold"
-                              >
-                                {eventTicketsTotalSupply}
-                              </Text>
-                            </Flex>
-                            <Flex
-                              direction={"column"}
-                              justify={"space-between"}
-                              align={["center", "center", "flex-start"]}
-                              gap={".5rem"}
-                            >
-                              <Heading color={"textContrast"} fontSize={"md"}>
-                                Total minted
-                              </Heading>
-                              <Text
-                                color={"textContrast"}
-                                fontSize={"3xl"}
-                                fontWeight="bold"
-                              >
-                                {eventTicketsMintedAmount}
-                              </Text>
-                            </Flex>
-                          </Flex>
+                          {ticketPreviewQrData && (
+                            <QRCode
+                              renderAs="canvas"
+                              size={300}
+                              value={ticketPreviewQrData}
+                            />
+                          )}
+                          <Text color={"text"}>
+                            show this to an event manager
+                          </Text>
                         </Flex>
-                        {isConnectedWalletAnEventManager && (
-                          <Button
-                            variant={"accent"}
-                            onClick={onVerifyEventTicketButtonClick}
-                          >
-                            <Flex direction={"column"}>
-                              Validate tickets
-                              <Text
-                                fontSize={"sm"}
-                                fontWeight={"light"}
-                                textTransform={"none"}
-                              >
-                                as a manager
-                              </Text>
-                            </Flex>
-                          </Button>
-                        )}
-                        {canConnectedWalletBuyTickets ? (
-                          <Button
-                            variant={"accent"}
-                            onClick={() => onBuyEventTicketButtonClick(0)}
-                            isLoading={
-                              isBuyingATicket ||
-                              isLoadingEventTicketBoughtEvents
-                            }
-                          >
-                            buy
-                          </Button>
-                        ) : (
-                          !isConnectedWalletAnEventManager && (
-                            <Flex direction={"column"} gap={".5rem"}>
-                              <Button
-                                variant={"accent"}
-                                onClick={onTicketPreviewModalOpenButtonClick}
-                              >
-                                Show my ticket
-                              </Button>
-                            </Flex>
-                          )
-                        )}
-                      </Flex>
-                      <AlertDialog
-                        isOpen={isSimpleAlertOpen}
-                        leastDestructiveRef={simpleAlertLeastDestructiveRef}
-                        onClose={onSimpleAlertClose}
-                      >
-                        <AlertDialogOverlay>
-                          <AlertDialogContent>
-                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                              {simpleAlertData?.title}
-                            </AlertDialogHeader>
-
-                            <AlertDialogBody>
-                              {simpleAlertData?.description}
-                            </AlertDialogBody>
-
-                            <AlertDialogFooter>
-                              <Button
-                                variant={"accent"}
-                                isLoading={isLoadingTicketMessage}
-                                onClick={onTicketSignButtonClick}
-                                ref={simpleAlertLeastDestructiveRef}
-                                ml={3}
-                              >
-                                Sign
-                              </Button>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialogOverlay>
-                      </AlertDialog>
-                      <Modal
-                        isOpen={isTicketPreviewModalOpen}
-                        onClose={onTicketPreviewModalClose}
-                      >
-                        <ModalOverlay />
-                        <ModalContent>
-                          <ModalHeader>My Ticket</ModalHeader>
-                          <ModalCloseButton />
-                          <ModalBody paddingBottom={"3rem"}>
-                            <Flex
-                              flex={1}
-                              direction={"column"}
-                              align={"center"}
-                              justify={"center"}
-                              gap={"1rem"}
-                            >
-                              {ticketPreviewQrData && (
-                                <QRCode
-                                  renderAs="canvas"
-                                  size={300}
-                                  value={ticketPreviewQrData}
-                                />
-                              )}
-                              <Text color={"text"}>
-                                show this to an event manager
-                              </Text>
-                            </Flex>
-                          </ModalBody>
-                        </ModalContent>
-                      </Modal>
-                      <Modal
-                        isOpen={isTicketVerificationModalOpen}
-                        onClose={onTicketVerificationModalClose}
-                      >
-                        <ModalOverlay />
-                        <ModalContent>
-                          <ModalHeader>Verifying Tickets</ModalHeader>
-                          <ModalCloseButton />
-                          <ModalBody>
-                            <Flex
-                              flex={1}
-                              direction={"column"}
-                              align={"center"}
-                              justify={"center"}
-                              gap={"1rem"}
-                            >
-                              <QrScanner
-                                showResult={false}
-                                onResult={onTicketVerificationQrScanned}
-                              />
-                              {isVerifyingATicket ? (
-                                (isTicketVerificationSuccessful ===
-                                  undefined && (
-                                  <Flex align={"center"} gap={"1rem"}>
-                                    <Text fontWeight={"bold"}>
-                                      verifying a ticket
-                                    </Text>
-                                    <Spinner />
-                                  </Flex>
-                                )) ||
-                                (isTicketVerificationSuccessful === true && (
-                                  <Flex align={"center"} gap={"1rem"}>
-                                    <Text fontWeight={"bold"}>
-                                      ticket is valid
-                                    </Text>
-                                    <CheckIcon color={"green"} />
-                                  </Flex>
-                                )) ||
-                                (isTicketVerificationSuccessful === false && (
-                                  <Flex align={"center"} gap={"1rem"}>
-                                    <Text fontWeight={"bold"}>
-                                      ticket is not valid
-                                    </Text>
-                                    <AlertIcon color={"red"} />
-                                  </Flex>
-                                ))
-                              ) : (
-                                <Text color={"text"}>scan ticket QR codes</Text>
-                              )}
-                            </Flex>
-                          </ModalBody>
-                          <ModalFooter>
-                            <Button
-                              variant={"accent"}
-                              onClick={onTicketVerificationModalClose}
-                              m={"0 auto"}
-                            >
-                              Complete Verification
-                            </Button>
-                          </ModalFooter>
-                        </ModalContent>
-                      </Modal>
-                    </Flex>
-                  </Container>
+                      </ModalBody>
+                    </ModalContent>
+                  </Modal>
+                  <Modal
+                    isOpen={isTicketVerificationModalOpen}
+                    onClose={onTicketVerificationModalClose}
+                  >
+                    <ModalOverlay />
+                    <ModalContent>
+                      <ModalHeader>Verifying Tickets</ModalHeader>
+                      <ModalCloseButton />
+                      <ModalBody>
+                        <Flex
+                          flex={1}
+                          direction={"column"}
+                          align={"center"}
+                          justify={"center"}
+                          gap={"1rem"}
+                        >
+                          <QrScanner
+                            showResult={false}
+                            onResult={onTicketVerificationQrScanned}
+                          />
+                          {isVerifyingATicket ? (
+                            (isTicketVerificationSuccessful === undefined && (
+                              <Flex align={"center"} gap={"1rem"}>
+                                <Text fontWeight={"bold"}>
+                                  verifying a ticket
+                                </Text>
+                                <Spinner />
+                              </Flex>
+                            )) ||
+                            (isTicketVerificationSuccessful === true && (
+                              <Flex align={"center"} gap={"1rem"}>
+                                <Text fontWeight={"bold"}>ticket is valid</Text>
+                                <CheckIcon color={"green"} />
+                              </Flex>
+                            )) ||
+                            (isTicketVerificationSuccessful === false && (
+                              <Flex align={"center"} gap={"1rem"}>
+                                <Text fontWeight={"bold"}>
+                                  ticket is not valid
+                                </Text>
+                                <AlertIcon color={"red"} />
+                              </Flex>
+                            ))
+                          ) : (
+                            <Text color={"text"}>scan ticket QR codes</Text>
+                          )}
+                        </Flex>
+                      </ModalBody>
+                      <ModalFooter>
+                        <Button
+                          variant={"accent"}
+                          onClick={onTicketVerificationModalClose}
+                          m={"0 auto"}
+                        >
+                          Complete Verification
+                        </Button>
+                      </ModalFooter>
+                    </ModalContent>
+                  </Modal>
+                </Flex>
+              </Container>
+              <Flex direction={"column"} px={"1rem"}>
+                <Heading
+                  fontSize={"md"}
+                  color={"textContrastSecondary"}
+                  fontWeight={"md"}
+                >
+                  Short Description
+                </Heading>
+                <Text color={"textContrast"} mt={".5rem"}>
+                  {eventMetadata?.description || "-"}
+                </Text>
+              </Flex>
+              {eventMetadata &&
+                getMetadataAttribute(
+                  eventMetadata,
+                  "Additional Location Info"
+                ) && (
                   <Flex direction={"column"} px={"1rem"}>
                     <Heading
                       fontSize={"md"}
                       color={"textContrastSecondary"}
                       fontWeight={"md"}
                     >
-                      Description
+                      Long Description
                     </Heading>
                     <Text color={"textContrast"} mt={".5rem"}>
-                      {eventMetadata?.description || "-"}
+                      {/* todo make enums for attribute names */}
+                      {getMetadataAttribute(
+                        eventMetadata,
+                        "Additional Location Info"
+                      )}
                     </Text>
                   </Flex>
-                </Flex>
-              </Container>
+                )}
             </Flex>
-          ),
-        }[currentStage]()}
+          </Container>
+        </Flex>
       </Flex>
     </Container>
   );
