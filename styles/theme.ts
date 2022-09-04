@@ -17,13 +17,13 @@ const theme = extendTheme({
     textSecondary: "#3F3F3F",
     textContrast: "#fff",
     textContrastSecondary: "#747474",
-		textContrastAccent: "#BCBCBC",
+    textContrastAccent: "#BCBCBC",
     accentPrimary: "#202020",
     accentPrimaryContrast: "#2E2E2E",
     accentPrimaryFaded: "#0000000F",
     accentSecondary: "#3396FE",
     border: "#C4C4C4",
-		warn: "#FFB21C"
+    warn: "#FFB21C",
   },
   radii: {
     sm: "8px",
@@ -40,7 +40,7 @@ const theme = extendTheme({
         py: "1.5em",
         textTransform: "capitalize",
         fontWeight: "bold",
-				cursor: "pointer"
+        cursor: "pointer",
       },
       sizes: {
         sm: {
@@ -98,7 +98,7 @@ const theme = extendTheme({
     Link: {
       baseStyle: {
         color: "textSecondary",
-				fontWeight: "medium"
+        fontWeight: "medium",
       },
     },
     Input: {
@@ -225,6 +225,35 @@ const theme = extendTheme({
           padding: "0",
         },
       },
+      variants: {
+        switch: {
+          tablist: {
+            bg: "accentPrimaryContrast",
+						borderRadius: "md",
+						px: "0",
+						py: ".5rem",
+						".switchTabIndicator": {
+							position: "absolute",
+							bg: "accentPrimary",
+							height: "calc(100% - .5rem)",
+							top: ".25rem",
+							borderRadius: "md"
+						}
+          },
+          tab: {
+						px: "2rem",
+            color: "textContrast",
+            bg: "transparent",
+						zIndex: "overlay",
+						mr: 0,
+						fontWeight: "bold",
+            _selected: {
+              color: "textContrast",
+              bg: "transparent",
+            },
+          },
+        },
+      },
     },
     Heading: {
       baseStyle: {
@@ -298,18 +327,18 @@ const theme = extendTheme({
         },
       },
     },
-		Menu: {
-			baseStyle: {
-				list: {
-					p: ".5rem"
-				},
-				item: {
-					_focus: {
-						borderRadius: "sm",
-					},
-				}
-			}
-		}
+    Menu: {
+      baseStyle: {
+        list: {
+          p: ".5rem",
+        },
+        item: {
+          _focus: {
+            borderRadius: "sm",
+          },
+        },
+      },
+    },
   },
 });
 

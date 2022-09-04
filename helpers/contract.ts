@@ -333,32 +333,49 @@ export const getNativeCurrencyToUsdPrice = (
   };
 
 type useTokenMetadataFetchProps = {
-  did: string | undefined;
+  dids: string[] | undefined;
   gateway?: string;
   enabled?: boolean;
 };
 
 export const useTokenMetadataFetch = ({
-  did,
+  dids,
   gateway = defaulyIPFSgateway,
   enabled = true,
 }: useTokenMetadataFetchProps) => {
-  const [data, setData] = useState<object>();
+  const [data, setData] = useState<object[]>();
   const [isLoading, setIsLoading] = useState(false);
 
   const refetch = () => {
     setIsLoading(true);
 
-    return fetch(getIPFSUri(did as string) as string)
-      .then((response) => response.text())
-      .then((json) => setData(JSON.parse(json)))
-      .catch(() => undefined)
-      .finally(() => setIsLoading(false));
+    return (
+      dids &&
+      Promise.all(
+        dids?.map((did) => fetch(getIPFSUri(did as string) as string))
+      )
+        .then((responses) => responses.map((response) => response?.text()))
+        .then((jsons) =>
+          Promise.all(jsons).then((jsonTexts) =>
+            setData(
+              jsonTexts.map((json) => {
+                try {
+                  return JSON.parse(json);
+                } catch (e) {
+                  return undefined;
+                }
+              })
+            )
+          )
+        )
+        .catch(() => undefined)
+        .finally(() => setIsLoading(false))
+    );
   };
 
   useEffect(() => {
-    enabled && did && gateway && refetch();
-  }, [did, gateway, enabled]);
+    !isLoading && enabled && dids && gateway && refetch();
+  }, [dids, gateway, enabled]);
 
   return {
     data,

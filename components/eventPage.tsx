@@ -41,7 +41,12 @@ import {
   AlertIcon,
   Link,
 } from "@chakra-ui/react";
-import { getIPFSUri, SocialMediaIds, useRouterQuery } from "helpers/hooks";
+import {
+  getIPFSUri,
+  getMetadataAttribute,
+  SocialMediaIds,
+  useRouterQuery,
+} from "helpers/hooks";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { BigNumber, BigNumberish, ethers } from "ethers";
@@ -158,9 +163,10 @@ const EventPage = () => {
       args: [[eventId]],
     },
   ]);
-  const { data: eventMetadata } = useTokenMetadataFetch({
-    did: eventMetadataUri?.[0][0],
-  }) as { data: EventMetadata | undefined };
+  const { data: eventMetadatas } = useTokenMetadataFetch({
+    dids: eventMetadataUri?.[0],
+  }) as { data: EventMetadata[] | undefined };
+  const [eventMetadata, setEventMetadata] = useState<EventMetadata>();
   const { data: events } = getEvents([{ args: [eventId] }]);
   const { data: eventManagers } = getEventManagers([{ args: [eventId] }]);
   const { data: eventTickets } = getEventTickets([{ args: [[eventId]] }]);
@@ -255,8 +261,10 @@ const EventPage = () => {
   }, []);
 
   useEffect(() => {
-    event && eventMetadata && setCurrentStage(Stage.EventLoaded);
-  }, [event, eventMetadata]);
+    event &&
+      eventMetadatas &&
+      (setEventMetadata(eventMetadatas[0]), setCurrentStage(Stage.EventLoaded));
+  }, [eventMetadataUri, event, eventMetadatas]);
 
   useEffect(() => {
     events && setEvent(events[0]);
@@ -422,16 +430,6 @@ const EventPage = () => {
       });
   };
 
-  const getMetadataAttribute = (
-    { attributes }: EventMetadata,
-    attributeName: string
-  ): string | undefined =>
-    attributes?.filter((attribute) =>
-      [attribute?.trait_type, attribute?.non_standard_trait_type].includes(
-        attributeName
-      )
-    )[0]?.value;
-
   const onEventLinkCopyButtonClick = () => {
     setCopiedValue(global.location.href);
     onCopy();
@@ -520,7 +518,7 @@ const EventPage = () => {
   };
 
   return (
-    <Container mt={"-2.5rem"} variant={"fullscreen"}>
+    <Container mt={"-2.5rem"} variant={"fullscreen"} minH={"100vh"}>
       <Global
         styles={css`
           body {
