@@ -338,12 +338,12 @@ type useTokenMetadataFetchProps = {
   enabled?: boolean;
 };
 
-export const useTokenMetadataFetch = ({
+export const useTokenMetadataFetch = <T = object>({
   dids,
   gateway = defaulyIPFSgateway,
   enabled = true,
 }: useTokenMetadataFetchProps) => {
-  const [data, setData] = useState<object[]>();
+  const [data, setData] = useState<T[]>();
   const [isLoading, setIsLoading] = useState(false);
 
   const refetch = () => {
@@ -364,7 +364,7 @@ export const useTokenMetadataFetch = ({
                 } catch (e) {
                   return undefined;
                 }
-              })
+              }) as T[]
             )
           )
         )

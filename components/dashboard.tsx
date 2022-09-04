@@ -119,17 +119,21 @@ const Dashboard = () => {
     BigNumberish[]
   >([]);
 
-  const { data: eventMetadataUris, refetch: refetchEventMetadataUris } =
-    getTokenMetadataUris([
-      {
-        args: [eventIds],
-        enabled: false,
-      },
-    ]);
+  const {
+    data: eventMetadataUris,
+    refetch: refetchEventMetadataUris,
+    isLoading: isLoadingEventMetadataUris,
+  } = getTokenMetadataUris([
+    {
+      args: [eventIds],
+      enabled: false,
+    },
+  ]);
 
   const {
     data: ownedTicketEventMetadataUris,
     refetch: refetchOwnedTicketEventMetadataUris,
+    isLoading: isLoadingOwnedTicketEventMetadataUris,
   } = getTokenMetadataUris([
     {
       args: [ownedTicketEventIds],
@@ -137,13 +141,26 @@ const Dashboard = () => {
     },
   ]);
 
-  const { data: eventMetadatas } = useTokenMetadataFetch({
-    dids: eventMetadataUris?.[0],
-  }) as { data: EventMetadata[] | undefined };
+  const { data: eventMetadatas, isLoading: isLoadingEventMetadatas } =
+    useTokenMetadataFetch<EventMetadata>({
+      dids: eventMetadataUris?.[0],
+    });
 
-  const { data: ownedTicketEventMetadatas } = useTokenMetadataFetch({
+  const {
+    data: ownedTicketEventMetadatas,
+    isLoading: isLoadingOwnedTicketEventMetadatas,
+  } = useTokenMetadataFetch<EventMetadata>({
     dids: ownedTicketEventMetadataUris?.[0],
-  }) as { data: EventMetadata[] | undefined };
+  });
+
+  const isLoadingOwnedTicketEvents =
+    isLoadingEventTicketBoughtEvents ||
+    isLoadingOwnedTicketEventMetadataUris ||
+    isLoadingOwnedTicketEventMetadatas;
+  const isLoadingEvents =
+    isLoadingEventCreatedEvents ||
+    isLoadingEventMetadataUris ||
+    isLoadingEventMetadatas;
 
   useEffect(() => {
     eventCreatedEvents &&
@@ -207,8 +224,10 @@ const Dashboard = () => {
               alignItems={"center"}
               justifyContent={"center"}
             >
-              {!eventMetadatas?.length ? (
+              {isLoadingEvents ? (
                 <Spinner color="textContrast" alignSelf={"center"} />
+              ) : !eventCreatedEvents?.[0].length ? (
+                <Text color="textContrastSecondary">no events created yet</Text>
               ) : (
                 <Flex
                   maxH={"20rem"}
@@ -219,53 +238,56 @@ const Dashboard = () => {
                   gap={"1rem"}
                   px={"2rem"}
                 >
-                  {eventCreatedEvents?.[0].map(
-                    (event, index) =>
-                      eventMetadatas[index] && (
-                        <Container variant={"contrastAccent"} key={index}>
-                          <Flex align={"center"} justify={"space-between"}>
-                            <Flex gap={"5rem"}>
-                              <Text
-                                color={"textContrast"}
-                                fontWeight="bold"
-                                fontSize={"lg"}
-                              >
-                                {eventMetadatas[index].name}
-                              </Text>
-                              <Text
-                                color={"textContrast"}
-                                fontWeight="medium"
-                                fontSize={"lg"}
-                                maxW={"15rem"}
-                                overflow={"hidden"}
-                                textOverflow={"ellipsis"}
-                              >
-                                {eventMetadatas[index].description}
-                              </Text>
-                              <Text
-                                color={"textContrast"}
-                                fontWeight="medium"
-                                fontSize={"lg"}
-                                maxW={"15rem"}
-                                overflow={"hidden"}
-                                textOverflow={"ellipsis"}
-                              >
-                                {getMetadataAttribute(
-                                  eventMetadatas[index],
-                                  "Event Start Date"
-                                )}
-                              </Text>
+                  {eventMetadatas &&
+                    eventCreatedEvents?.[0].map(
+                      (event, index) =>
+                        eventMetadatas[index] && (
+                          <Container variant={"contrastAccent"} key={index}>
+                            <Flex align={"center"} justify={"space-between"}>
+                              <Flex gap={"5rem"}>
+                                <Text
+                                  color={"textContrast"}
+                                  fontWeight="bold"
+                                  fontSize={"lg"}
+                                >
+                                  {eventMetadatas[index].name}
+                                </Text>
+                                <Text
+                                  color={"textContrast"}
+                                  fontWeight="medium"
+                                  fontSize={"lg"}
+                                  maxW={"15rem"}
+                                  overflow={"hidden"}
+                                  textOverflow={"ellipsis"}
+                                >
+                                  {eventMetadatas[index].description}
+                                </Text>
+                                <Text
+                                  color={"textContrast"}
+                                  fontWeight="medium"
+                                  fontSize={"lg"}
+                                  maxW={"15rem"}
+                                  overflow={"hidden"}
+                                  textOverflow={"ellipsis"}
+                                >
+                                  {getMetadataAttribute(
+                                    eventMetadatas[index],
+                                    "Event Start Date"
+                                  )}
+                                </Text>
+                              </Flex>
+                              <IconButton
+                                variant={"unstyled"}
+                                onClick={() => goToEventPage(eventIds[index])}
+                                aria-label="go to event page"
+                                icon={
+                                  <ArrowForwardIcon color={"textContrast"} />
+                                }
+                              />
                             </Flex>
-                            <IconButton
-                              variant={"unstyled"}
-                              onClick={() => goToEventPage(eventIds[index])}
-                              aria-label="go to event page"
-                              icon={<ArrowForwardIcon color={"textContrast"} />}
-                            />
-                          </Flex>
-                        </Container>
-                      )
-                  )}
+                          </Container>
+                        )
+                    )}
                 </Flex>
               )}
             </TabPanel>
@@ -275,8 +297,10 @@ const Dashboard = () => {
               alignItems={"center"}
               justifyContent={"center"}
             >
-              {!ownedTicketEventMetadatas?.length ? (
+              {isLoadingOwnedTicketEvents ? (
                 <Spinner color="textContrast" alignSelf={"center"} />
+              ) : !eventTicketBoughtEvents?.[0].length ? (
+                <Text color="textContrastSecondary">no tickets bought yet</Text>
               ) : (
                 <Flex
                   maxH={"20rem"}
