@@ -25,6 +25,12 @@ const EventExplorer = dynamic(() => import("./eventExplorer"), {
   ),
 });
 
+const Dashboard = dynamic(() => import("./dashboard"), {
+  loading: () => (
+    <Spinner sx={{ margin: "20rem auto", transform: "translateY(-50%)" }} />
+  ),
+});
+
 const Router: React.FC = () => {
   const router = useRouter();
   const [routePath, setRoutePath] = useState<Routes>();
@@ -34,7 +40,7 @@ const Router: React.FC = () => {
   }, [router.asPath]);
 
   useEffect(() => {
-    console.log(routePath)
+    console.log(routePath);
   }, [routePath]);
 
   const RouteToComponentMap = {
@@ -42,6 +48,8 @@ const Router: React.FC = () => {
     [Routes.EventForm]: () => <EventForm />,
     [Routes.EventPage]: () => <EventPage />,
     [Routes.EventExplorer]: () => <EventExplorer />,
+    [Routes.FAQ]: () => <StartPage />,
+    [Routes.Dashboard]: () => <Dashboard />,
   };
 
   return routePath ? (

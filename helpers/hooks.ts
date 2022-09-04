@@ -7,6 +7,12 @@ import type { RootState, AppDispatch } from "../app/store";
 export const defaultDateFormat = "ddd, MMM DD YYYY";
 export const defaulyIPFSgateway = "https://nftstorage.link/ipfs/";
 
+export enum SocialMediaIds {
+  Twitter = "twitter",
+  Facebook = "facebook",
+  Instagram = "instagram",
+}
+
 export function useDebounce<T>(value: T, delay?: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -53,6 +59,16 @@ export function getIPFSUri(
 ): string | undefined {
   return did?.replace("ipfs://", gateway);
 }
+
+export const getMetadataAttribute = (
+  { attributes }: EventMetadata,
+  attributeName: string
+): string | undefined =>
+  attributes?.filter((attribute) =>
+    [attribute?.trait_type, attribute?.non_standard_trait_type].includes(
+      attributeName
+    )
+  )[0]?.value;
 
 export const useAppDispatch: () => AppDispatch = useDispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

@@ -45,7 +45,11 @@ export const FileUploader = (props: FileUploaderProps) => {
 
   return (
     <Flex sx={{ flexDirection: "column" }} gap={".5rem"}>
-      <Container variant="fileUploader" {...getRootProps()}>
+      <Container
+        variant="fileUploader"
+        {...getRootProps()}
+        bg={files?.length ? "bg" : "bgAccent"}
+      >
         <input {...getInputProps()} />
         {preview ? (
           <Image
@@ -66,6 +70,7 @@ export const FileUploader = (props: FileUploaderProps) => {
               props.placeholder && (
                 <Text
                   color={"textContrastSecondary"}
+                  mt={["-2rem", 0]}
                   textAlign={["center", "center", "center", "initial"]}
                   lineHeight={"2.5rem"}
                 >
@@ -75,6 +80,16 @@ export const FileUploader = (props: FileUploaderProps) => {
             )}
           </Flex>
         )}
+        <Text
+          pos={"absolute"}
+          bottom=".5rem"
+          fontSize={"sm"}
+          opacity={".7"}
+          color={"textContrastSecondary"}
+          textAlign={["center", "center", "center", "initial"]}
+        >
+          PNG or JPEG. Max size 8mb
+        </Text>
       </Container>
       {files && !!files.length && (
         <Button
