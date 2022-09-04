@@ -1,6 +1,21 @@
 import React from "react";
-import { Flex, Box, Image, Text, Container, Heading } from "@chakra-ui/react";
+import {
+  Flex,
+  Box,
+  Image,
+  Text,
+  Container,
+  Heading,
+  IconButton,
+  Link,
+} from "@chakra-ui/react";
 import { ArrowForwardIcon } from "@chakra-ui/icons";
+import { SocialMediaIds } from "helpers/hooks";
+import TwitterIcon from "../public/icons/twitter";
+import FacebookIcon from "../public/icons/facebook";
+import InstagramIcon from "../public/icons/insta";
+import { fadeRightSlideAnimation } from "styles/theme";
+import { motion } from "framer-motion";
 
 export type EventProps = {
   name?: string | JSX.Element;
@@ -11,6 +26,9 @@ export type EventProps = {
   date?: (string | JSX.Element)[];
   eventTicketPriceLabel?: string | JSX.Element;
   eventTicketsTotalSupply?: string | JSX.Element;
+  mediaLinks?: { [key in SocialMediaIds]?: string };
+  isUnlimitedTicketSupply?: boolean;
+  isFreeTicketPrice?: boolean;
 };
 
 const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
@@ -86,6 +104,41 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
           </Text>
           <Image src={"/icons/tag.svg"} />
         </Box>
+        {eventData.mediaLinks && (
+          <Flex
+            pos={"absolute"}
+            top={"2rem"}
+            right={"2rem"}
+            zIndex={"overlay"}
+            direction={"column"}
+            gap={".5rem"}
+          >
+            {Object.keys(eventData.mediaLinks).map(
+              (mediaLinkId) =>
+                eventData.mediaLinks?.[mediaLinkId as SocialMediaIds] && (
+                  <Link
+                    href={eventData.mediaLinks[mediaLinkId]}
+                    target={"_blank"}
+                  >
+                    <IconButton
+                      variant={"icon"}
+                      as={motion.div}
+                      aria-label={mediaLinkId}
+                      initial={fadeRightSlideAnimation["false"]}
+                      animate={fadeRightSlideAnimation["true"]}
+                      icon={
+                        {
+                          [SocialMediaIds.Twitter]: <TwitterIcon />,
+                          [SocialMediaIds.Instagram]: <InstagramIcon />,
+                          [SocialMediaIds.Facebook]: <FacebookIcon />,
+                        }[mediaLinkId]
+                      }
+                    />
+                  </Link>
+                )
+            )}
+          </Flex>
+        )}
       </Container>
       <Container
         variant={"undersceen"}
@@ -185,7 +238,9 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
                       fontSize={"3xl"}
                       fontWeight="bold"
                     >
-                      {eventData?.eventTicketPriceLabel || "-"}
+                      {eventData?.isFreeTicketPrice
+                        ? "FREE"
+                        : eventData?.eventTicketPriceLabel || "-"}
                     </Text>
                   </Flex>
                 </Flex>
@@ -202,7 +257,9 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
                     fontSize={"3xl"}
                     fontWeight="bold"
                   >
-                    {eventData?.eventTicketsTotalSupply || "-"}
+                    {eventData.isUnlimitedTicketSupply
+                      ? "∞"
+                      : eventData?.eventTicketsTotalSupply || "-"}
                   </Text>
                 </Flex>
               </Flex>
@@ -220,7 +277,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
               {eventData?.shortDescription || "-"}
             </Text>
           </Flex>
-          <Flex direction={"column"} px={"1rem"}>
+          {/* <Flex direction={"column"} px={"1rem"}>
             <Heading
               fontSize={"md"}
               color={"textContrastSecondary"}
@@ -231,7 +288,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
             <Text color={"textContrast"} mt={".5rem"}>
               {eventData?.longDescription || "-"}
             </Text>
-          </Flex>
+          </Flex> */}
         </Flex>
       </Container>
     </Container>

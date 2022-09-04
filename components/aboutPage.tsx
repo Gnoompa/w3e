@@ -4,10 +4,10 @@ import { Flex, Box, Container, Heading, Image, Text } from "@chakra-ui/react";
 const AboutPage: NextPage = () => {
   return (
     <Flex mt={"5rem"}>
-      <Flex direction={"column"} flex={1} px={"2rem"}>
-        <Container variant={"contrast"} maxWidth={"1296px"}>
+      <Flex direction={"column"} flex={1}>
+        <Container variant={"contrast"} maxWidth={"1336px"}>
           <Heading color={"textContrast"}>About Us</Heading>
-          <Flex mt="1.5rem" gap={"2rem"} direction={"column"}>
+          <Flex mt="4rem" gap={"2rem"} direction={"column"}>
             <Container variant={"contrastAccent"}>
               <Flex
                 direction={["column", "column", "column", "row"]}

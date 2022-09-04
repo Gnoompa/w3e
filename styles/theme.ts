@@ -17,11 +17,13 @@ const theme = extendTheme({
     textSecondary: "#3F3F3F",
     textContrast: "#fff",
     textContrastSecondary: "#747474",
+		textContrastAccent: "#BCBCBC",
     accentPrimary: "#202020",
     accentPrimaryContrast: "#2E2E2E",
     accentPrimaryFaded: "#0000000F",
     accentSecondary: "#3396FE",
     border: "#C4C4C4",
+		warn: "#FFB21C"
   },
   radii: {
     sm: "8px",
@@ -38,6 +40,7 @@ const theme = extendTheme({
         py: "1.5em",
         textTransform: "capitalize",
         fontWeight: "bold",
+				cursor: "pointer"
       },
       sizes: {
         sm: {
@@ -81,11 +84,21 @@ const theme = extendTheme({
           py: 0,
           px: "1rem",
         }),
+        icon: {
+          bg: "bg",
+          borderRadius: "sm",
+        },
+      },
+    },
+    CloseButton: {
+      baseStyle: {
+        color: "accentPrimaryContrast",
       },
     },
     Link: {
       baseStyle: {
         color: "textSecondary",
+				fontWeight: "medium"
       },
     },
     Input: {
@@ -189,7 +202,7 @@ const theme = extendTheme({
         outline: {
           field: {
             borderColor: "border",
-						height: "50px"
+            height: "50px",
           },
         },
       },
@@ -222,7 +235,7 @@ const theme = extendTheme({
           color: "textContrast",
         },
         contrastFaded: {
-          color: "textContrastSecondary",
+          color: "textContrastAccent",
         },
       },
     },
@@ -246,7 +259,13 @@ const theme = extendTheme({
             fontSize: "sm",
           },
           container: {
+            textarea: {
+              transition: "margin-top .5s",
+            },
             _focusWithin: {
+              textarea: {
+                mt: "1rem",
+              },
               label: {
                 transform: "scale(0.85) translateY(-26px)",
               },
@@ -255,11 +274,15 @@ const theme = extendTheme({
               {
                 transform: "scale(0.85) translateY(-26px)",
               },
+            "textarea:not(:placeholder-shown)": {
+              mt: "1rem",
+            },
             label: {
               top: 0,
               left: 0,
+              mt: 0,
               zIndex: 2,
-							fontSize: ["sm", "sm", "sm", "md"],
+              fontSize: ["sm", "sm", "sm", "md"],
               position: "absolute",
               backgroundColor: "white",
               pointerEvents: "none",
@@ -275,7 +298,29 @@ const theme = extendTheme({
         },
       },
     },
+		Menu: {
+			baseStyle: {
+				list: {
+					p: ".5rem"
+				},
+				item: {
+					_focus: {
+						borderRadius: "sm",
+					},
+				}
+			}
+		}
   },
 });
+
+export const fadeTopSlideAnimation = {
+  true: { opacity: 1, y: 0 },
+  false: { opacity: 0, y: "-20px" },
+};
+
+export const fadeRightSlideAnimation = {
+  true: { opacity: 1, x: 0 },
+  false: { opacity: 0, x: "20px" },
+};
 
 export default theme;

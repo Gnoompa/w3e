@@ -39,8 +39,9 @@ import {
   Highlight,
   Icon,
   AlertIcon,
+  Link,
 } from "@chakra-ui/react";
-import { getIPFSUri, useRouterQuery } from "helpers/hooks";
+import { getIPFSUri, SocialMediaIds, useRouterQuery } from "helpers/hooks";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { BigNumber, BigNumberish, ethers } from "ethers";
@@ -71,6 +72,10 @@ import {
   LinkIcon,
 } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
+import { fadeRightSlideAnimation } from "styles/theme";
+import TwitterIcon from "../public/icons/twitter";
+import FacebookIcon from "../public/icons/facebook";
+import InstagramIcon from "../public/icons/insta";
 
 const QrScanner = dynamic(() => import("./ui/qrScanner"), {
   ssr: false,
@@ -250,7 +255,6 @@ const EventPage = () => {
   }, []);
 
   useEffect(() => {
-    console.log(eventMetadata);
     event && eventMetadata && setCurrentStage(Stage.EventLoaded);
   }, [event, eventMetadata]);
 
@@ -261,9 +265,11 @@ const EventPage = () => {
   useEffect(() => {
     eventTickets &&
       setEventTicketPriceLabel(
-        `$${(+ethers.utils.formatEther(
-          eventTickets[0][0][0].price.toString()
-        )).toFixed(2)}`
+        BigNumber.from(eventTickets[0][0][0].price).eq(0)
+          ? "FREE"
+          : `$${(+ethers.utils.formatEther(
+              eventTickets[0][0][0].price.toString()
+            )).toFixed(2)}`
       );
   }, [eventTickets]);
 
@@ -271,9 +277,11 @@ const EventPage = () => {
     eventTickets &&
       (setEventTicketStartingPrice(eventTickets[0][0][0].price),
       setEventTicketsTotalSupply(
-        eventTickets[0][0]
-          .map((ticketTier) => +ticketTier.supply)
-          .reduce((a, b) => a + b)
+        BigNumber.from(eventTickets[0][0][0].price).eq(0)
+          ? "∞"
+          : eventTickets[0][0]
+              .map((ticketTier) => +ticketTier.supply)
+              .reduce((a, b) => a + b)
       ));
   }, [eventTickets]);
 
@@ -284,6 +292,7 @@ const EventPage = () => {
 
   useEffect(() => {
     eventTicketStartingPrice &&
+      !BigNumber.from(eventTicketStartingPrice).eq(0) &&
       nativeCurrencyToUsdPrice &&
       setEventTicketNativeCurrencyPriceLabel(
         `~${(+ethers.utils.formatUnits(
@@ -417,8 +426,11 @@ const EventPage = () => {
     { attributes }: EventMetadata,
     attributeName: string
   ): string | undefined =>
-    attributes?.filter((attribute) => attribute?.trait_type == attributeName)[0]
-      ?.value;
+    attributes?.filter((attribute) =>
+      [attribute?.trait_type, attribute?.non_standard_trait_type].includes(
+        attributeName
+      )
+    )[0]?.value;
 
   const onEventLinkCopyButtonClick = () => {
     setCopiedValue(global.location.href);
@@ -568,84 +580,139 @@ const EventPage = () => {
             px={"2rem"}
           >
             {eventMetadata && (
-              <Container
-                pos={"absolute"}
-                top={"-.5 rem"}
-                left={"2rem"}
-                zIndex={"overlay"}
-              >
-                <Flex
+              <>
+                <Container
                   pos={"absolute"}
-                  bottom={"1rem"}
-                  gap={"3rem"}
+                  top={"-.5 rem"}
+                  left={"2rem"}
                   zIndex={"overlay"}
                 >
-                  <Flex gap={".5rem"} align={"center"}>
-                    <Image src="/icons/calendar.svg"></Image>
-                    <Text
-                      color={"textContrast"}
-                      whiteSpace={"nowrap"}
-                      fontSize={["sm"]}
-                    >
-                      {getMetadataAttribute(eventMetadata, "Event Start Date")}
-                    </Text>
-                    {getMetadataAttribute(eventMetadata, "Event End Date") && (
-                      <Flex gap={".5rem"}>
-                        <ArrowForwardIcon color={"textContrast"} />
-                        <Text
-                          color={"textContrast"}
-                          whiteSpace={"nowrap"}
-                          fontSize={["sm"]}
-                        >
-                          {getMetadataAttribute(
+                  <Flex
+                    pos={"absolute"}
+                    bottom={"1rem"}
+                    gap={"3rem"}
+                    zIndex={"overlay"}
+                  >
+                    <Flex gap={".5rem"} align={"center"}>
+                      <Image src="/icons/calendar.svg"></Image>
+                      <Text
+                        color={"textContrast"}
+                        whiteSpace={"nowrap"}
+                        fontSize={["sm"]}
+                      >
+                        {getMetadataAttribute(
+                          eventMetadata,
+                          "Event Start Date"
+                        )}
+                      </Text>
+                      {getMetadataAttribute(
+                        eventMetadata,
+                        "Event End Date"
+                      ) && (
+                        <Flex gap={".5rem"}>
+                          <ArrowForwardIcon color={"textContrast"} />
+                          <Text
+                            color={"textContrast"}
+                            whiteSpace={"nowrap"}
+                            fontSize={["sm"]}
+                          >
+                            {getMetadataAttribute(
+                              eventMetadata,
+                              "Event End Date"
+                            )}
+                          </Text>
+                        </Flex>
+                      )}
+                    </Flex>
+                    <Flex gap={".5rem"} align={"center"}>
+                      <Image src="/icons/location.svg"></Image>
+                      <Text
+                        color={"textContrast"}
+                        whiteSpace={"nowrap"}
+                        maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
+                        fontSize={["sm"]}
+                        overflow={"hidden"}
+                        textOverflow={"ellipsis"}
+                      >
+                        {[
+                          getMetadataAttribute(eventMetadata, "Location"),
+                          getMetadataAttribute(
                             eventMetadata,
-                            "Event End Date"
-                          )}
-                        </Text>
-                      </Flex>
-                    )}
+                            "Additional Location Info"
+                          ),
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </Text>
+                    </Flex>
                   </Flex>
-                  <Flex gap={".5rem"} align={"center"}>
-                    <Image src="/icons/location.svg"></Image>
-                    <Text
+                  <Flex
+                    pos={"absolute"}
+                    bottom={"3rem"}
+                    zIndex={"docked"}
+                    w={"100%"}
+                    left={"50%"}
+                    transform={"translateX(-50%)"}
+                  >
+                    <Heading
                       color={"textContrast"}
+                      maxW={"100%"}
                       whiteSpace={"nowrap"}
-                      maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
-                      fontSize={["sm"]}
                       overflow={"hidden"}
                       textOverflow={"ellipsis"}
                     >
-                      {[
-                        getMetadataAttribute(eventMetadata, "Location"),
-                        getMetadataAttribute(
-                          eventMetadata,
-                          "Additional Location Info"
-                        ),
-                      ]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </Text>
+                      {eventMetadata?.name}
+                    </Heading>
                   </Flex>
-                </Flex>
-                <Flex
-                  pos={"absolute"}
-                  bottom={"3rem"}
-                  zIndex={"docked"}
-                  w={"100%"}
-                  left={"50%"}
-                  transform={"translateX(-50%)"}
-                >
-                  <Heading
-                    color={"textContrast"}
-                    maxW={"100%"}
-                    whiteSpace={"nowrap"}
-                    overflow={"hidden"}
-                    textOverflow={"ellipsis"}
+                </Container>
+                {getMetadataAttribute(eventMetadata, "media") && (
+                  <Flex
+                    pos={"absolute"}
+                    top={"2rem"}
+                    right={"2rem"}
+                    zIndex={"overlay"}
+                    direction={"column"}
+                    gap={".5rem"}
                   >
-                    {eventMetadata?.name}
-                  </Heading>
-                </Flex>
-              </Container>
+                    {Object.keys(
+                      // @ts-ignore
+                      getMetadataAttribute(eventMetadata, "media")
+                    ).map(
+                      (mediaLinkId) =>
+                        getMetadataAttribute(eventMetadata, "media")?.[
+                          // @ts-ignore
+                          mediaLinkId as SocialMediaIds
+                        ] && (
+                          // @ts-ignore
+                          <Link
+                            href={
+                              // @ts-ignore
+                              getMetadataAttribute(eventMetadata, "media")[
+                                mediaLinkId as keyof SocialMediaIds
+                              ] as string
+                            }
+                            target={"_blank"}
+                          >
+                            <IconButton
+                              variant={"icon"}
+                              as={motion.div}
+                              aria-label={mediaLinkId}
+                              initial={fadeRightSlideAnimation["false"]}
+                              animate={fadeRightSlideAnimation["true"]}
+                              icon={
+                                {
+                                  [SocialMediaIds.Twitter]: <TwitterIcon />,
+                                  [SocialMediaIds.Instagram]: <InstagramIcon />,
+                                  [SocialMediaIds.Facebook]: <FacebookIcon />,
+                                }[mediaLinkId]
+                              }
+                            />
+                          </Link>
+                        )
+                    )}
+                  </Flex>
+                )}
+              </>
             )}
             <Flex
               maxW={"1440px"}

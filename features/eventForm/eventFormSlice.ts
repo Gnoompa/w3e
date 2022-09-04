@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
+import { SocialMediaIds } from "helpers/hooks";
 
 export interface State {
   eventTitle: string;
@@ -15,25 +16,32 @@ export interface State {
   isInSubscriptionMode?: boolean;
   isIndefiniteSubscription?: boolean;
   subscriptionDuration?: number;
-  isUnlimitedTicketSupply?: boolean;
-  isFreeTicketPrice?: boolean;
+  isUnlimitedTicketSupply: boolean;
+  isFreeTicketPrice: boolean;
   ticketSupply?: number;
   ticketPrice?: string;
   beneficiary: string;
-  eventManagers?: (string | undefined)[];
+  eventManagers: (string | undefined)[];
+  eventMediaLinks: { [key in SocialMediaIds]?: string };
   tabIndex: number;
 }
 
 export const initialState: State = {
   eventTitle: "",
   beneficiary: "",
+  eventStartDate: "",
+  eventStartTime: "",
+  eventEndDate: "",
+  eventEndTime: "",
   eventShortDescription: "",
   eventLongDescription: "",
   eventLocation: "",
   eventAdditionalLocationInfo: "",
   ticketPrice: undefined,
+  isUnlimitedTicketSupply: false,
   isFreeTicketPrice: false,
   eventManagers: [],
+  eventMediaLinks: {},
   tabIndex: 0,
 };
 

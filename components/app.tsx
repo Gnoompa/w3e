@@ -1,5 +1,4 @@
 import { context, contextInitialValue } from "./context";
-import { ConnectKitButton } from "connectkit";
 import {
   Box,
   Button,
@@ -14,12 +13,22 @@ import {
   MenuList,
   Text,
   useBreakpoint,
+  Portal,
   useBreakpointValue,
+  forwardRef,
+  Badge,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { Routes } from "helpers/routes";
-import { ExternalLinkIcon, HamburgerIcon } from "@chakra-ui/icons";
+import {
+  ArrowDownIcon,
+  ChevronDownIcon,
+  ExternalLinkIcon,
+  HamburgerIcon,
+} from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
+import TwitterIcon from "../public/icons/twitter";
+import ConnectWallet from "./connectWallet";
 
 const App: React.FC = (props) => {
   const MenuBreakpointValue = () =>
@@ -36,38 +45,72 @@ const App: React.FC = (props) => {
             <MenuList>
               <MenuItem>
                 <NextLink href={Routes.EventForm} passHref>
-                  <Link>Create event</Link>
+                  <Link>Events</Link>
                 </NextLink>
               </MenuItem>
               <MenuItem>
-                <NextLink href={Routes.EventExplorer} passHref>
-                  <Link>Explore events</Link>
-                </NextLink>
-              </MenuItem>
-              <MenuItem>
-                <Flex align={"center"} gap={".5rem"}>
-                  <NextLink href={Routes.About} passHref>
-                    <Link target={"_blank"}>About</Link>
-                  </NextLink>
-                  <ExternalLinkIcon />
+                <Flex align={"center"} gap=".5rem">
+                  <Link>Subscriptions</Link>
+                  <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
+                    soon
+                  </Badge>
                 </Flex>
+              </MenuItem>
+              <MenuItem>
+                <Flex align={"center"} gap=".5rem">
+                  <Link>Event Explorer</Link>
+                  <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
+                    soon
+                  </Badge>
+                </Flex>
+              </MenuItem>
+              <MenuItem>
+                <NextLink href={Routes.FAQ} passHref>
+                  <Link>FAQ</Link>
+                </NextLink>
               </MenuItem>
             </MenuList>
           </Menu>
         ),
         lg: (
-          <Flex gap={10}>
-            <NextLink href={Routes.EventForm} passHref>
-              <Link>Create event</Link>
-            </NextLink>
-            <Link href={Routes.EventExplorer}>Explore events</Link>
-            <Link href={Routes.About} target={"_blank"}>
-              <Flex align={"center"} gap={".5rem"}>
-                <NextLink href={Routes.About} passHref>
-                  <Link target={"_blank"}>About</Link>
-                </NextLink>
-                <ExternalLinkIcon />
-              </Flex>
+          <Flex gap={9}>
+            <Menu>
+              <MenuButton>
+                <Flex align={"center"} gap={".5rem"} fontWeight="medium">
+                  Products
+                  <ChevronDownIcon />
+                </Flex>
+              </MenuButton>
+              <MenuList>
+                <MenuItem>
+                  <NextLink href={Routes.EventForm} passHref>
+                    <Link>Events</Link>
+                  </NextLink>
+                </MenuItem>
+                <MenuItem>
+                  <Flex align={"center"} gap=".5rem">
+                    <Link>Subscriptions</Link>
+                    <Badge
+                      variant={"solid"}
+                      color={"warn"}
+                      bg={"accentPrimary"}
+                    >
+                      soon
+                    </Badge>
+                  </Flex>
+                </MenuItem>
+              </MenuList>
+            </Menu>
+            <Flex align={"center"} gap=".5rem">
+              <Link>Explore events</Link>
+              <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
+                soon
+              </Badge>
+            </Flex>
+            <Link href={Routes.FAQ}>
+              <NextLink href={Routes.FAQ} passHref>
+                <Link>FAQ</Link>
+              </NextLink>
             </Link>
           </Flex>
         ),
@@ -76,7 +119,7 @@ const App: React.FC = (props) => {
     );
 
   return (
-    <Flex direction={"column"} align={"center"} pb={"2rem"}>
+    <Flex direction={"column"} align={"center"}>
       <Container
         variant={"mainNav"}
         position={"fixed"}
@@ -100,28 +143,17 @@ const App: React.FC = (props) => {
             display={["none", "none", "initial"]}
           >
             <Link href="/" float={"left"}>
-              <Heading>Web3Events</Heading>
+              <Flex align={"center"} gap={"1rem"}>
+                <Heading as={"h1"}>Web3Events</Heading>
+                <Badge variant={"solid"} color={"contrastPrimary"} bg={"bg"}>
+                  alpha
+                </Badge>
+              </Flex>
             </Link>
           </Flex>
-          <MenuBreakpointValue></MenuBreakpointValue>
+          <MenuBreakpointValue />
           <Flex flexGrow={1} flexBasis={0} justifyContent={"flex-end"}>
-            <ConnectKitButton.Custom>
-              {({ isConnected, show, truncatedAddress, ensName }) => {
-                return (
-                  <Button
-                    variant={"walletConnect"}
-                    flex={1}
-                    maxW={"fit-content"}
-                    justifySelf={"flex-end"}
-                    onClick={show}
-                  >
-                    {isConnected
-                      ? ensName ?? truncatedAddress
-                      : "Connect Wallet"}
-                  </Button>
-                );
-              }}
-            </ConnectKitButton.Custom>
+            <ConnectWallet />
           </Flex>
         </Flex>
       </Container>
@@ -130,6 +162,22 @@ const App: React.FC = (props) => {
           {props.children}
         </context.Provider>
       </Flex>
+      <Container mt="2rem" bg="accentPrimary" h={"10rem"} p="3rem 5rem">
+        <Flex flexDir={["column", "row"]} align="center" gap={"2rem"} justify={"space-between"}>
+          <Heading fontSize={"xx-large"} color={"textContrast"}>
+            Web3Events
+          </Heading>
+          <Flex>
+            <Link href={"https://twitter.com/Web3Eventsai"} target={"_blank"}>
+              <IconButton
+                variant={"icon"}
+                aria-label={"twitter"}
+                icon={<TwitterIcon />}
+              />
+            </Link>
+          </Flex>
+        </Flex>
+      </Container>
     </Flex>
   );
 };

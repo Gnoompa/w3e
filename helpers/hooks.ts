@@ -7,6 +7,12 @@ import type { RootState, AppDispatch } from "../app/store";
 export const defaultDateFormat = "ddd, MMM DD YYYY";
 export const defaulyIPFSgateway = "https://nftstorage.link/ipfs/";
 
+export enum SocialMediaIds {
+  Twitter = "twitter",
+  Facebook = "facebook",
+  Instagram = "instagram",
+}
+
 export function useDebounce<T>(value: T, delay?: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
