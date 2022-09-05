@@ -38,6 +38,7 @@ const App: React.FC = (props) => {
           <Menu>
             <MenuButton
               as={IconButton}
+              bg={"transparent"}
               aria-label="Menu"
               fontSize={"3xl"}
               icon={<HamburgerIcon />}
@@ -119,7 +120,7 @@ const App: React.FC = (props) => {
     );
 
   return (
-    <Flex direction={"column"} align={"center"}>
+    <Flex direction={"column"} align={"center"} minH={"calc(100vh)"}>
       <Container
         variant={"mainNav"}
         position={"fixed"}
@@ -143,7 +144,7 @@ const App: React.FC = (props) => {
             display={["none", "none", "initial"]}
           >
             <Link href="/" float={"left"}>
-              <Flex align={"center"} gap={"1rem"}>
+              <Flex align={"center"} gap={".5rem"}>
                 <Heading as={"h1"}>Web3Events</Heading>
                 <Badge variant={"solid"} color={"contrastPrimary"} bg={"bg"}>
                   alpha
@@ -157,13 +158,18 @@ const App: React.FC = (props) => {
           </Flex>
         </Flex>
       </Container>
-      <Flex pt={"7.5rem"}>
+      <Flex pt={"7.5rem"} minH={["inherit", "inherit", "inherit", "100vh"]}>
         <context.Provider value={contextInitialValue}>
           {props.children}
         </context.Provider>
       </Flex>
       <Container mt="2rem" bg="accentPrimary" h={"10rem"} p="3rem 5rem">
-        <Flex flexDir={["column", "row"]} align="center" gap={"2rem"} justify={"space-between"}>
+        <Flex
+          flexDir={["column", "row"]}
+          align="center"
+          gap={"2rem"}
+          justify={"space-between"}
+        >
           <Heading fontSize={"xx-large"} color={"textContrast"}>
             Web3Events
           </Heading>

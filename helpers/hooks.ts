@@ -1,5 +1,5 @@
 import { NextRouter, Router } from "next/router";
-import { MouseEventHandler, useEffect, useState } from "react";
+import { MouseEventHandler, Ref, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { TypedUseSelectorHook } from "react-redux";
 import type { RootState, AppDispatch } from "../app/store";
@@ -25,6 +25,19 @@ export function useDebounce<T>(value: T, delay?: number): T {
   }, [value, delay]);
 
   return debouncedValue;
+}
+
+export function useScrollShadow(element: HTMLElement | null): boolean {
+  const [shouldShowShadow, setShouldShowShadow] = useState(
+    !!element?.scrollTop
+  );
+
+  useEffect(() => {
+    element &&
+      (element.onscroll = () => setShouldShowShadow(!!element.scrollTop));
+  }, [element]);
+
+  return shouldShowShadow;
 }
 
 export function useRouterQuery<T = Record<string, any>>(router: NextRouter): T {

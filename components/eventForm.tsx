@@ -51,6 +51,7 @@ import {
   PopoverBody,
   Slide,
   Icon,
+  position,
 } from "@chakra-ui/react";
 import FileUploader from "./ui/fileUploader";
 import {
@@ -59,6 +60,7 @@ import {
   useAppSelector,
   defaultDateFormat,
   SocialMediaIds,
+  useScrollShadow,
 } from "helpers/hooks";
 import { BigNumber, BigNumberish, ethers, FixedNumber } from "ethers";
 import dynamic from "next/dynamic";
@@ -223,6 +225,10 @@ const EventForm = () => {
     actions: { label: string | JSX.Element; action: () => any }[];
   }>();
   const simpleDialogCancelRef = useRef() as RefObject<HTMLButtonElement>;
+  const activeEventFormTabRef = useRef() as RefObject<HTMLElement>;
+  const shouldShowActiveEventFormTabShadow = useScrollShadow(
+    activeEventFormTabRef.current
+  );
   const hasPersistedFormDataChangedFromInitial =
     JSON.stringify(eventFormData) != JSON.stringify(eventFormInitialState);
   const [eventPreviewData, setEventPreviewData] = useState<EventPreviewProps>();
@@ -235,6 +241,9 @@ const EventForm = () => {
     init();
   }, []);
 
+  useEffect(() => {
+    console.log(shouldShowActiveEventFormTabShadow);
+  }, [shouldShowActiveEventFormTabShadow]);
   useEffect(() => {
     setEventPreviewData({
       ...eventPreviewData,
@@ -580,10 +589,21 @@ const EventForm = () => {
                 as={motion.div}
                 animate={tabPanelAnimation[`${eventFormData.tabIndex == 0}`]}
               >
-                <Heading as="h3" fontSize={"xx-large"}>
+                <Heading
+                  as="h3"
+                  fontSize={"xx-large"}
+                  boxShadow={
+                    shouldShowActiveEventFormTabShadow
+                      ? "0 15px 15px -17px grey"
+                      : "none"
+                  }
+                  position={"relative"}
+                  zIndex="banner"
+                >
                   Main info
                 </Heading>
                 <Flex
+                  ref={activeEventFormTabRef}
                   direction={"column"}
                   maxH={"32rem"}
                   px={".5rem"}
@@ -601,7 +621,7 @@ const EventForm = () => {
                       />
                       <FormLabel>Event title</FormLabel>
                     </FormControl>
-                    <FormControl variant="floating" id="type">
+                    <FormControl variant="floating" id="type" isRequired>
                       <Select defaultValue={"offline"} isRequired>
                         <option value={"offline"}>Offline</option>
                         <option value={"online"}>Online</option>
@@ -656,14 +676,13 @@ const EventForm = () => {
                           <AddIcon color={"accentSecondary"} />
                           <Text>Add long description</Text>
                         </Button>
-                        <Popover>
+                        <Popover trigger="hover">
                           <PopoverTrigger>
                             <QuestionIcon color={"accentPrimaryContrast"} />
                           </PopoverTrigger>
                           <PopoverContent>
                             <PopoverArrow />
-                            <PopoverCloseButton />
-                            <PopoverBody paddingTop={"1.5rem"}>
+                            <PopoverBody>
                               Long description, if present, is shown on events’
                               details page and short description on events
                               listing page. Otherwise short description is used
@@ -874,14 +893,13 @@ const EventForm = () => {
                           <AddIcon color={"accentSecondary"} />
                           <Text>Add additional location info</Text>
                         </Button>
-                        <Popover>
+                        <Popover trigger="hover">
                           <PopoverTrigger>
                             <QuestionIcon color={"accentPrimaryContrast"} />
                           </PopoverTrigger>
                           <PopoverContent>
                             <PopoverArrow />
-                            <PopoverCloseButton />
-                            <PopoverBody paddingTop={"1.5rem"}>
+                            <PopoverBody>
                               Add more info about location, like floor or
                               building number
                             </PopoverBody>
@@ -936,7 +954,7 @@ const EventForm = () => {
                     px={".5rem"}
                     overflowY={"scroll"}
                   >
-                    <Popover>
+                    <Popover trigger="hover">
                       <PopoverTrigger>
                         <QuestionIcon
                           color={"accentPrimaryContrast"}
@@ -948,8 +966,7 @@ const EventForm = () => {
                       </PopoverTrigger>
                       <PopoverContent>
                         <PopoverArrow />
-                        <PopoverCloseButton />
-                        <PopoverBody paddingTop={"1.5rem"}>
+                        <PopoverBody>
                           While it’s possible to attach imagery of any size
                           proportions, we recommend upholding vertical A4(1:√2)
                           proportions
@@ -990,14 +1007,13 @@ const EventForm = () => {
                           <AddIcon color={"accentSecondary"} />
                           <Text>Add ticket description</Text>
                         </Button>
-                        <Popover>
+                        <Popover trigger="hover">
                           <PopoverTrigger>
                             <QuestionIcon color={"accentPrimaryContrast"} />
                           </PopoverTrigger>
                           <PopoverContent>
                             <PopoverArrow />
-                            <PopoverCloseButton />
-                            <PopoverBody paddingTop={"1.5rem"}>
+                            <PopoverBody>
                               This information is going to be shown on NFT
                               marketplaces/aggregators when collection is going
                               to be deployed under NFT description section. If
@@ -1034,7 +1050,7 @@ const EventForm = () => {
                       </Flex>
                     )}
                     <Flex gap={"1rem"} justifyContent={"space-between"}>
-                      <FormControl variant="floating" id="price">
+                      <FormControl variant="floating" id="price" isRequired>
                         <InputGroup>
                           <InputLeftAddon children="$" />
                           <Input

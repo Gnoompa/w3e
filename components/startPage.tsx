@@ -10,6 +10,7 @@ import {
   useToken,
   Container,
   Box,
+  Icon,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { Routes } from "helpers/routes";
@@ -19,26 +20,115 @@ import NextLink from "next/link";
 import { ArrowDownIcon } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
 import AboutPage from "./aboutPage";
+import { useEffect, useRef, useState } from "react";
+import StartPageGraphicsPlaceholder from "public/startScreenGraphics/startPageGraphicsPlaceholder";
 
 const StartPage: NextPage = () => {
   const router = useRouter();
   const theme = useTheme();
+  const aboutPageRef = useRef<HTMLElement>();
+  const [initGraphics, setInitGraphics] = useState(false);
+
+  useEffect(() => {
+    Promise.all([fetch("/ticket.png")]).finally(
+      () => console.log(234) || setInitGraphics(true)
+    );
+  }, []);
 
   return (
     <Container
       display={"flex"}
       flexDir={"column"}
       variant="padded"
-      mt={["5rem", 0]}
-      minH={"calc(100vh - 15rem)"}
+      mt={0}
       alignItems={"center"}
     >
       <Flex position={"relative"}>
-        <Image
+        <Flex
+          margin={"0 auto"}
           maxH={"max(35rem, calc(100vh - 15rem))"}
-          src="/startPageGraphics.png"
+          maxW="1336px"
           filter={["blur(40px)", "none"]}
-        ></Image>
+          pos={"relative"}
+        >
+          <Box
+            w="1336px"
+            h="780px"
+            style={{
+              maxHeight: "max(35rem, calc(100vh - 15rem))",
+            }}
+            maxW={["100vw", "fit-content"]}
+            overflow="hidden"
+            borderRadius={"lg"}
+            position={"relative"}
+          >
+            <StartPageGraphicsPlaceholder
+              style={{
+                maxHeight: "max(35rem, calc(100vh - 15rem))",
+                maxWidth: "fit-content",
+              }}
+            ></StartPageGraphicsPlaceholder>
+            <motion.div
+              style={{
+                position: "absolute",
+                top: 0,
+                right: "-300px",
+                maxWidth: "20%",
+              }}
+              animate={
+                initGraphics ? { right: 0 } : { y: "-100%", right: -300 }
+              }
+            >
+              <Image src="/startScreenGraphics/pic1.png" />
+            </motion.div>
+            <motion.div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                right: "-300px",
+                maxWidth: "20%",
+              }}
+              animate={initGraphics ? { right: 0 } : { y: "100%", right: -300 }}
+            >
+              <Image src="/startScreenGraphics/pic2.png" />
+            </motion.div>
+            <motion.div
+              style={{
+                position: "absolute",
+                bottom: "-150px",
+                left: "50%",
+                maxWidth: "20%",
+              }}
+              animate={
+                initGraphics ? { x: "-50%", bottom: 0 } : { bottom: -150 }
+              }
+            >
+              <Image src="/startScreenGraphics/pic3.png" />
+            </motion.div>
+            <motion.div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: "-300px",
+                maxWidth: "20%",
+              }}
+              animate={initGraphics ? { left: 0 } : { y: "-100%", left: -300 }}
+            >
+              <Image src="/startScreenGraphics/pic4.png" />
+            </motion.div>
+            <motion.div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: "-300px",
+                maxWidth: "20%",
+              }}
+              animate={initGraphics ? { left: 0 } : { y: "100%", left: -300 }}
+            >
+              <Image src="/startScreenGraphics/pic5.png" />
+            </motion.div>
+          </Box>
+        </Flex>
         <Flex direction={"column"} align={"center"}>
           <Flex
             direction={"column"}
@@ -119,15 +209,19 @@ const StartPage: NextPage = () => {
         </Flex>
       </Flex>
       <Flex
+        onClick={(event) =>
+          event.target?.scrollIntoView({ behavior: "smooth" })
+        }
         align={"center"}
         justify="center"
-        mt={["19rem", "2.75rem"]}
+        mt={"2.75rem"}
         bg="bg"
         border="2px solid"
         borderColor="textContrastSecondary"
         borderRadius="lg"
         w="2.5rem"
         h="3.5rem"
+        style={{ cursor: "pointer" }}
       >
         <motion.div
           animate={{ y: [-5, 5, -5] }}
@@ -146,7 +240,7 @@ const StartPage: NextPage = () => {
           />
         </motion.div>
       </Flex>
-      <AboutPage />
+      <AboutPage ref={aboutPageRef} />
     </Container>
   );
 };
