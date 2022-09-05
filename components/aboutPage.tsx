@@ -1,9 +1,9 @@
-import { NextPage } from "next";
 import { Flex, Box, Container, Heading, Image, Text } from "@chakra-ui/react";
+import { forwardRef } from "react";
 
-const AboutPage: NextPage = () => {
+const AboutPage = forwardRef((props, ref) => {
   return (
-    <Flex mt={"5rem"}>
+    <Flex mt={"5rem"} {...props} ref={ref}>
       <Flex direction={"column"} flex={1}>
         <Container variant={"contrast"} maxWidth={"1336px"}>
           <Heading color={"textContrast"}>About Us</Heading>
@@ -238,6 +238,6 @@ const AboutPage: NextPage = () => {
       </Flex>
     </Flex>
   );
-};
+});
 
 export default AboutPage;

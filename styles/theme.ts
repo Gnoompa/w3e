@@ -144,9 +144,10 @@ const theme = extendTheme({
       },
       variants: {
         mainNav: {
+          backdropFilter: "blur(10px)",
           borderBottom: "1px solid",
           borderColor: "border",
-          bg: "bg",
+          bg: "#f1f1f1d1",
           zIndex: "overlay",
         },
         padded: {
@@ -229,24 +230,24 @@ const theme = extendTheme({
         switch: {
           tablist: {
             bg: "accentPrimaryContrast",
-						borderRadius: "md",
-						px: "0",
-						py: ".5rem",
-						".switchTabIndicator": {
-							position: "absolute",
-							bg: "accentPrimary",
-							height: "calc(100% - .5rem)",
-							top: ".25rem",
-							borderRadius: "md"
-						}
+            borderRadius: "md",
+            px: "0",
+            py: ".5rem",
+            ".switchTabIndicator": {
+              position: "absolute",
+              bg: "accentPrimary",
+              height: "calc(100% - .5rem)",
+              top: ".25rem",
+              borderRadius: "md",
+            },
           },
           tab: {
-						px: "2rem",
+            px: "2rem",
             color: "textContrast",
             bg: "transparent",
-						zIndex: "overlay",
-						mr: 0,
-						fontWeight: "bold",
+            zIndex: "overlay",
+            mr: 0,
+            fontWeight: "bold",
             _selected: {
               color: "textContrast",
               bg: "transparent",
@@ -324,6 +325,14 @@ const theme = extendTheme({
               },
             },
           },
+        },
+      },
+    },
+    Badge: {
+      variants: {
+        solid: {
+          py: ".15rem",
+          px: ".5rem",
         },
       },
     },
