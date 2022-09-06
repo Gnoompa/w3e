@@ -583,8 +583,9 @@ const EventPage = () => {
               <>
                 <Container
                   pos={"absolute"}
-                  top={"-.5 rem"}
-                  left={"2rem"}
+                  maxWidth={"min(1440px, calc(100vw - 4rem))"}
+                  left="50%"
+                  transform={"translateX(-50%)"}
                   zIndex={"overlay"}
                 >
                   <Flex
