@@ -27,13 +27,6 @@ const StartPage: NextPage = () => {
   const router = useRouter();
   const theme = useTheme();
   const aboutPageRef = useRef<HTMLElement>();
-  const [initGraphics, setInitGraphics] = useState(false);
-
-  useEffect(() => {
-    Promise.all([fetch("/ticket.png")]).finally(
-      () => console.log(234) || setInitGraphics(true)
-    );
-  }, []);
 
   return (
     <Container
@@ -56,8 +49,8 @@ const StartPage: NextPage = () => {
             h="780px"
             style={{
               maxHeight: "max(35rem, calc(100vh - 15rem))",
+              maxWidth: "calc(100vw - 2rem)",
             }}
-            maxW={["100vw", "fit-content"]}
             overflow="hidden"
             borderRadius={"lg"}
             position={"relative"}
@@ -65,68 +58,10 @@ const StartPage: NextPage = () => {
             <StartPageGraphicsPlaceholder
               style={{
                 maxHeight: "max(35rem, calc(100vh - 15rem))",
-                maxWidth: "fit-content",
+                maxWidth: "calc(100vw - 2rem)",
+                margin: "0 auto"
               }}
             ></StartPageGraphicsPlaceholder>
-            <motion.div
-              style={{
-                position: "absolute",
-                top: 0,
-                right: "-300px",
-                maxWidth: "20%",
-              }}
-              animate={
-                initGraphics ? { right: 0 } : { y: "-100%", right: -300 }
-              }
-            >
-              <Image src="/startScreenGraphics/pic1.png" />
-            </motion.div>
-            <motion.div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                right: "-300px",
-                maxWidth: "20%",
-              }}
-              animate={initGraphics ? { right: 0 } : { y: "100%", right: -300 }}
-            >
-              <Image src="/startScreenGraphics/pic2.png" />
-            </motion.div>
-            <motion.div
-              style={{
-                position: "absolute",
-                bottom: "-150px",
-                left: "50%",
-                maxWidth: "20%",
-              }}
-              animate={
-                initGraphics ? { x: "-50%", bottom: 0 } : { bottom: -150 }
-              }
-            >
-              <Image src="/startScreenGraphics/pic3.png" />
-            </motion.div>
-            <motion.div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: "-300px",
-                maxWidth: "20%",
-              }}
-              animate={initGraphics ? { left: 0 } : { y: "-100%", left: -300 }}
-            >
-              <Image src="/startScreenGraphics/pic4.png" />
-            </motion.div>
-            <motion.div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: "-300px",
-                maxWidth: "20%",
-              }}
-              animate={initGraphics ? { left: 0 } : { y: "100%", left: -300 }}
-            >
-              <Image src="/startScreenGraphics/pic5.png" />
-            </motion.div>
           </Box>
         </Flex>
         <Flex direction={"column"} align={"center"}>

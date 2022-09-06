@@ -82,6 +82,7 @@ import {
   LinkIcon,
 } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
+import { fadeTopSlideAnimation } from "styles/theme";
 
 const Dashboard = () => {
   const provider = useProvider();
@@ -198,7 +199,13 @@ const Dashboard = () => {
       minHeight={"calc(100vh - 15rem)"}
     >
       <Container variant={"contrast"} w={"100%"} minH={"35rem"}>
-        <Flex justify={"space-between"} mt="1rem" align={"center"}>
+        <Flex
+          direction={["column", "column", "row"]}
+          gap="2rem"
+          justify={"space-between"}
+          mt="1rem"
+          align={"center"}
+        >
           <Heading color={"textContrast"} fontSize="5xl">
             Dashboard
           </Heading>
@@ -219,7 +226,9 @@ const Dashboard = () => {
         <Tabs index={mainTabIndex} mt={"4rem"}>
           <TabPanels>
             <TabPanel
-              as={Flex}
+              as={motion.div}
+              animate={fadeTopSlideAnimation[`${mainTabIndex == 0}`]}
+              display={"flex"}
               w={"100%"}
               alignItems={"center"}
               justifyContent={"center"}
@@ -292,7 +301,9 @@ const Dashboard = () => {
               )}
             </TabPanel>
             <TabPanel
-              as={Flex}
+              as={motion.div}
+              animate={fadeTopSlideAnimation[`${mainTabIndex == 1}`]}
+              display={"flex"}
               w={"100%"}
               alignItems={"center"}
               justifyContent={"center"}
