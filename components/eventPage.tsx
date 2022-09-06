@@ -81,6 +81,8 @@ import { fadeRightSlideAnimation } from "styles/theme";
 import TwitterIcon from "../public/icons/twitter";
 import FacebookIcon from "../public/icons/facebook";
 import InstagramIcon from "../public/icons/insta";
+import TelegramIcon from "../public/icons/tg";
+import SiteIcon from "../public/icons/site";
 
 const QrScanner = dynamic(() => import("./ui/qrScanner"), {
   ssr: false,
@@ -702,6 +704,12 @@ const EventPage = () => {
                                   [SocialMediaIds.Twitter]: <TwitterIcon />,
                                   [SocialMediaIds.Instagram]: <InstagramIcon />,
                                   [SocialMediaIds.Facebook]: <FacebookIcon />,
+                                  [SocialMediaIds.Telegram]: (
+                                    <TelegramIcon width="1.25rem" />
+                                  ),
+                                  [SocialMediaIds.Site]: (
+                                    <SiteIcon width="1.25rem" />
+                                  ),
                                 }[mediaLinkId]
                               }
                             />

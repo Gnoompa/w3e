@@ -99,6 +99,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import TwitterIcon from "../public/icons/twitter";
 import FacebookIcon from "../public/icons/facebook";
 import InstagramIcon from "../public/icons/insta";
+import TelegramIcon from "../public/icons/tg";
+import SiteIcon from "../public/icons/site";
 
 const EventTicketImage = dynamic(() => import("./eventTicket"), {
   ssr: false,
@@ -1050,7 +1052,12 @@ const EventForm = () => {
                       </Flex>
                     )}
                     <Flex gap={"1rem"} justifyContent={"space-between"}>
-                      <FormControl variant="floating" id="price" isRequired>
+                      <FormControl
+                        variant="floating"
+                        id="price"
+                        isRequired
+                        flex={0.6}
+                      >
                         <InputGroup>
                           <InputLeftAddon children="$" />
                           <Input
@@ -1075,7 +1082,7 @@ const EventForm = () => {
                       <FormControl
                         display="flex"
                         alignItems="center"
-                        flex={1}
+                        flex={0.4}
                         mt="-1.25rem"
                       >
                         <FormLabel htmlFor="freeTickets" mb="0">
@@ -1097,6 +1104,7 @@ const EventForm = () => {
                     </Flex>
                     <Flex gap={"1rem"} justifyContent={"space-between"}>
                       <FormControl
+                        flex={0.6}
                         isDisabled={eventFormData.isUnlimitedTicketSupply}
                         variant="floating"
                         id="ticketSupply"
@@ -1113,7 +1121,11 @@ const EventForm = () => {
                         />
                         <FormLabel>Tickets supply</FormLabel>
                       </FormControl>
-                      <FormControl display="flex" alignItems="center" flex={1}>
+                      <FormControl
+                        display="flex"
+                        alignItems="center"
+                        flex={0.4}
+                      >
                         <FormLabel htmlFor="unlimitedTicketSupply" mb="0">
                           unlimited
                         </FormLabel>
@@ -1231,7 +1243,7 @@ const EventForm = () => {
               >
                 <Flex direction={"column"}>
                   <Heading as="h3" fontSize={"xx-large"}>
-                    Media
+                    Social
                   </Heading>
                   <Flex
                     paddingTop={"1.5rem"}
@@ -1241,6 +1253,32 @@ const EventForm = () => {
                     px={".5rem"}
                     overflowY={"scroll"}
                   >
+                    <Flex gap={"1rem"} align={"center"}>
+                      <Container variant={"icon"} flex={0}>
+                        <TelegramIcon width={16} />
+                      </Container>
+                      <Input
+                        value={
+                          eventFormData?.eventMediaLinks.hasOwnProperty(
+                            SocialMediaIds.Telegram
+                          )
+                            ? eventFormData?.eventMediaLinks?.[
+                                SocialMediaIds.Telegram
+                              ]
+                            : ""
+                        }
+                        flex={1}
+                        onChange={(event) =>
+                          setEvent({
+                            eventMediaLinks: {
+                              ...eventFormData.eventMediaLinks,
+                              [SocialMediaIds.Telegram]: event.target.value,
+                            },
+                          })
+                        }
+                        placeholder="f.e https://t.me/web3events_eng"
+                      />
+                    </Flex>
                     <Flex gap={"1rem"} align={"center"}>
                       <Container variant={"icon"} flex={0}>
                         <TwitterIcon />
@@ -1317,6 +1355,32 @@ const EventForm = () => {
                           })
                         }
                         placeholder="f.e https://facebook.com/VitalikButerinCa"
+                      />
+                    </Flex>
+                    <Flex gap={"1rem"} align={"center"}>
+                      <Container variant={"icon"} flex={0}>
+                        <SiteIcon width={16} />
+                      </Container>
+                      <Input
+                        value={
+                          eventFormData?.eventMediaLinks.hasOwnProperty(
+                            SocialMediaIds.Site
+                          )
+                            ? eventFormData?.eventMediaLinks?.[
+                                SocialMediaIds.Site
+                              ]
+                            : ""
+                        }
+                        flex={1}
+                        onChange={(event) =>
+                          setEvent({
+                            eventMediaLinks: {
+                              ...eventFormData.eventMediaLinks,
+                              [SocialMediaIds.Site]: event.target.value,
+                            },
+                          })
+                        }
+                        placeholder="f.e https://web3events.ai/"
                       />
                     </Flex>
                   </Flex>

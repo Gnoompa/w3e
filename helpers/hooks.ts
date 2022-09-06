@@ -11,6 +11,8 @@ export enum SocialMediaIds {
   Twitter = "twitter",
   Facebook = "facebook",
   Instagram = "instagram",
+  Telegram = "telegram",
+  Site = "site",
 }
 
 export function useDebounce<T>(value: T, delay?: number): T {

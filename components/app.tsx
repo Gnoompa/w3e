@@ -28,6 +28,8 @@ import {
 } from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
 import TwitterIcon from "../public/icons/twitter";
+import LensterIcon from "../public/icons/lenster";
+import TelegramIcon from "../public/icons/tg";
 import ConnectWallet from "./connectWallet";
 
 const App: React.FC = (props) => {
@@ -173,12 +175,29 @@ const App: React.FC = (props) => {
           <Heading fontSize={"xx-large"} color={"textContrast"}>
             Web3Events
           </Heading>
-          <Flex>
+          <Flex gap={"1rem"}>
             <Link href={"https://twitter.com/Web3Eventsai"} target={"_blank"}>
               <IconButton
                 variant={"icon"}
                 aria-label={"twitter"}
                 icon={<TwitterIcon />}
+              />
+            </Link>
+            <Link
+              href={"https://lenster.xyz/u/web3events.lens"}
+              target={"_blank"}
+            >
+              <IconButton
+                variant={"icon"}
+                aria-label={"lenster"}
+                icon={<LensterIcon width="1.5rem" />}
+              />
+            </Link>
+            <Link href={"https://t.me/web3events_eng"} target={"_blank"}>
+              <IconButton
+                variant={"icon"}
+                aria-label={"telegram"}
+                icon={<TelegramIcon width="1.5rem" />}
               />
             </Link>
           </Flex>

@@ -14,6 +14,8 @@ import { SocialMediaIds } from "helpers/hooks";
 import TwitterIcon from "../public/icons/twitter";
 import FacebookIcon from "../public/icons/facebook";
 import InstagramIcon from "../public/icons/insta";
+import TelegramIcon from "../public/icons/tg";
+import SiteIcon from "../public/icons/site";
 import { fadeRightSlideAnimation } from "styles/theme";
 import { motion } from "framer-motion";
 
@@ -131,6 +133,8 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
                           [SocialMediaIds.Twitter]: <TwitterIcon />,
                           [SocialMediaIds.Instagram]: <InstagramIcon />,
                           [SocialMediaIds.Facebook]: <FacebookIcon />,
+                          [SocialMediaIds.Telegram]: <TelegramIcon width="1.25rem" />,
+                          [SocialMediaIds.Site]: <SiteIcon width="1.25rem" />,
                         }[mediaLinkId]
                       }
                     />
