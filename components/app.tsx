@@ -61,7 +61,7 @@ const App: React.FC = (props) => {
               </MenuItem>
               <MenuItem>
                 <Flex align={"center"} gap=".5rem">
-                  <Link>Event Explorer</Link>
+                  <Link>Explore events</Link>
                   <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
                     soon
                   </Badge>

@@ -51,7 +51,8 @@
     "use-click-outside": "2.0.0",
     "use-image": "1.0.12",
     "wagmi": "0.6.4",
-    "webrtc-adapter": "8.1.1"
+    "webrtc-adapter": "8.1.1",
+    "yup": "^0.32.11"
   },
   "devDependencies": {
     "@chakra-ui/cli": "^2.1.7",

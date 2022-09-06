@@ -5,6 +5,7 @@ import theme from "../styles/theme";
 import { ChakraProvider } from "@chakra-ui/react";
 import type { AppProps } from "next/app";
 import Head from "next/head";
+import Script from "next/script";
 // import { StyledEngineProvider } from "@mui/material/styles";
 import { store } from "../app/store";
 import { Provider } from "react-redux";
@@ -26,6 +27,19 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Head>
         <title>web3events</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-470YTNYWWK"
+        />
+        <Script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments)}
+          gtag('js', new Date());
+
+          gtag('config', 'G-470YTNYWWK');`,
+          }}
+        ></Script>
         <style>{`
           ${resetCss}
           ${normalizeCss}
@@ -36,7 +50,9 @@ function MyApp({ Component, pageProps }: AppProps) {
         {/* <StyledEngineProvider injectFirst> */}
         <ChakraProvider theme={theme}>
           <WagmiConfig client={client}>
-            <ConnectKitProvider options={{walletConnectName: "Zerion & Wallet Connect" }} >
+            <ConnectKitProvider
+              options={{ walletConnectName: "Zerion & Wallet Connect" }}
+            >
               <Component {...pageProps} />
             </ConnectKitProvider>
           </WagmiConfig>

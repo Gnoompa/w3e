@@ -101,6 +101,8 @@ import FacebookIcon from "../public/icons/facebook";
 import InstagramIcon from "../public/icons/insta";
 import TelegramIcon from "../public/icons/tg";
 import SiteIcon from "../public/icons/site";
+import { object, string, number, InferType } from "yup";
+import { SchemaLike } from "yup/lib/types";
 
 const EventTicketImage = dynamic(() => import("./eventTicket"), {
   ssr: false,
@@ -238,6 +240,11 @@ const EventForm = () => {
     true: { opacity: 1, y: 0 },
     false: { opacity: 0, y: "-20px" },
   };
+  const prevEventFormTabIndex = useRef(eventFormData.tabIndex);
+  const [invalidEventFormTabIndexes, setInvalidEventFormTabIndexes] = useState(
+    []
+  );
+  const [invalidEventFormFields, setInvalidEventFormFields] = useState([]);
 
   useEffect(() => {
     init();
@@ -520,10 +527,10 @@ const EventForm = () => {
       : setEvent({ tabIndex: eventFormData.tabIndex + 1 });
   };
 
-  const onPrevFormTabButtonClick = () => {
-    eventFormData.tabIndex !== 0 &&
-      setEvent({ tabIndex: eventFormData.tabIndex - 1 });
-  };
+  // const onPrevFormTabButtonClick = () => {
+  //   eventFormData.tabIndex !== 0 &&
+  //     setEvent({ tabIndex: eventFormData.tabIndex - 1 });
+  // };
 
   const addEventManager = () => {
     setEvent({
@@ -537,6 +544,24 @@ const EventForm = () => {
         (_, i) => i != managerIndex
       ),
     });
+  };
+
+  const eventFormTabsValidationSchemas = [
+    {
+      eventTitle: () => string().required(),
+    },
+  ] as { [Property in keyof typeof eventFormData]: () => any }[];
+
+  const validateEventFormTab = (tabIndex: number) => {
+    eventFormTabsValidationSchemas[tabIndex];
+  };
+
+  const onEventFormTabChange = (tabIndex: number) => {
+    validateEventFormTab(eventFormData.tabIndex);
+
+    // prevEventFormTabIndex.current = eventFormData.tabIndex
+
+    setEvent({ tabIndex: tabIndex || 0 });
   };
 
   return (
@@ -584,7 +609,7 @@ const EventForm = () => {
             minH={"41rem"}
             w={"25rem"}
             maxW={"100%"}
-            onChange={(tabIndex) => setEvent({ tabIndex: tabIndex || 0 })}
+            onChange={onEventFormTabChange}
           >
             <TabPanels>
               <TabPanel
@@ -612,7 +637,12 @@ const EventForm = () => {
                   overflowY={"scroll"}
                 >
                   <Flex mt={"1.5rem"} direction={"column"} gap={"1rem"}>
-                    <FormControl variant="floating" id="title" isRequired>
+                    <FormControl
+                      variant="floating"
+                      id="title"
+                      isRequired
+                      isInvalid={invalidEventFormFields.includes("eventTitle")}
+                    >
                       <Input
                         value={eventFormData.eventTitle}
                         autoFocus
