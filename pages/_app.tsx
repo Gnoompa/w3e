@@ -12,13 +12,17 @@ import { Provider } from "react-redux";
 import process from "process";
 import { WagmiConfig, createClient, chain } from "wagmi";
 import { ConnectKitProvider, getDefaultClient } from "connectkit";
+import { defaultChainId } from "helpers/contract";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const client = createClient(
     getDefaultClient({
       appName: "web3events",
       alchemyId: process.env.alchemyId,
-      chains: [chain.polygonMumbai, chain.polygon],
+      chains:
+        defaultChainId == chain.polygon.id
+          ? [chain.polygon, chain.polygonMumbai]
+          : [chain.polygonMumbai, chain.polygon],
     })
   );
 

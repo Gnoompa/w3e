@@ -76,13 +76,18 @@ import {
   prepareCreateEvent,
   createEvent,
   parseTransactionLogs,
+  defaultChainId,
+  getChainNameById,
+  getChainById,
 } from "helpers/contract";
 import date from "date-and-time";
 import { context as appContext } from "./context";
 import {
   useAccount,
   useConnect,
+  useNetwork,
   useProvider,
+  useSwitchNetwork,
   useWaitForTransaction,
 } from "wagmi";
 import {
@@ -128,7 +133,9 @@ const EventForm = () => {
   const router = useRouter();
   const { address: connectedWalletAddress, isConnected: isWalletConnected } =
     useAccount();
-  const { connect: connectWallet } = useConnect();
+
+  const { chain: connectedChain } = useNetwork();
+  const { chains, switchNetwork } = useSwitchNetwork();
   const [currentEventCreationStage, setCurrentEventCreationStage] =
     useState<EventCreationStages>(EventCreationStages.eventConfig);
   const [eventFormActiveFieldModal, setEventFormActiveFieldModal] =
@@ -401,15 +408,21 @@ const EventForm = () => {
     );
   };
 
-  const validateEventForm = (): true | string =>
-    (!eventFormData.beneficiary && "Add event description") ||
-    (!eventFormData.eventTitle &&
-      !eventFormData.eventShortDescription &&
-      "Add event short description") ||
-    (!eventFormData.ticketPrice &&
-      !eventFormData.isFreeTicketPrice &&
-      "Add ticket or subscription price") ||
-    true;
+  const validateEventForm = (): boolean =>
+    !eventFormData.beneficiary ||
+    !eventFormData.eventTitle ||
+    !eventFormData.eventShortDescription ||
+    (!eventFormData.isFreeTicketPrice && !eventFormData.ticketPrice) ||
+    (!eventFormData.isUnlimitedTicketSupply &&
+      !eventFormData.isUnlimitedTicketSupply)
+      ? (setSimpleDialogData({
+          title: "Please, fill all the required fields",
+          desc: "",
+          actions: [{ label: "Ok", action: onSimpleDialogClose }],
+        }),
+        onSimpleDialogOpen(),
+        true)
+      : false;
 
   const uploadMetadata = (
     metatata: Parameters<typeof context.NFTStorageClient.store>[0]
@@ -476,12 +489,37 @@ const EventForm = () => {
   });
 
   const beforeEventCreation = () => {
-    !isWalletConnected && setWalletConnectModalOpen(true);
-
-    isWalletConnected &&
-      validateEventForm() &&
+    mbConnectWallet() ||
+      mbSwitchChain() ||
+      validateEventForm() ||
       setCurrentEventCreationStage(EventCreationStages.creatingEvent);
   };
+
+  const mbConnectWallet = () =>
+    isWalletConnected ? false : (setWalletConnectModalOpen(true), true);
+
+  const mbSwitchChain = () =>
+    connectedChain?.id == defaultChainId
+      ? false
+      : (setSimpleDialogData({
+          title: "Wrong network",
+          desc:
+            `Please, switch your wallet to ` +
+            getChainById(defaultChainId).name +
+            ` network`,
+          actions: switchNetwork
+            ? [
+                {
+                  label: "Switch Network",
+                  action: () => (
+                    switchNetwork?.(defaultChainId), onSimpleDialogClose()
+                  ),
+                },
+              ]
+            : [],
+        }),
+        onSimpleDialogOpen(),
+        true);
 
   // todo prepare request before uploading to ipfs
   const prepareEventForCreation = async () => {
@@ -507,12 +545,8 @@ const EventForm = () => {
       managers: [eventFormData.beneficiary],
       params: [
         BigNumber.from(
-          (1 <<
-            [
-              eventFormData.isFreeTicketPrice,
-              eventFormData.isUnlimitedTicketSupply,
-            ].filter(Boolean).length) >>
-            1
+          1 <<
+            [eventFormData.isUnlimitedTicketSupply && 2].filter(Boolean).length
         ),
       ],
       subscriptionDuration: [eventFormData.subscriptionDuration || 0],
@@ -656,7 +690,7 @@ const EventForm = () => {
                     <FormControl variant="floating" id="type" isRequired>
                       <Select defaultValue={"offline"} isRequired>
                         <option value={"offline"}>Offline</option>
-                        <option value={"online"}>Online</option>
+                        {/* <option value={"online"}>Online</option> */}
                       </Select>
                       <FormLabel>Event type</FormLabel>
                     </FormControl>
@@ -1462,20 +1496,17 @@ const EventForm = () => {
             </AlertDialogHeader>
             <AlertDialogBody>{simpleDialogData?.desc}</AlertDialogBody>
 
-            <AlertDialogFooter>
-              <Button
-                ref={simpleDialogCancelRef}
-                onClick={simpleDialogData?.actions[0].action}
-              >
-                {simpleDialogData?.actions[0].label}
-              </Button>
-              <Button
-                variant="accent"
-                onClick={simpleDialogData?.actions[1].action}
-                ml={"1rem"}
-              >
-                {simpleDialogData?.actions[1].label}
-              </Button>
+            <AlertDialogFooter as={Flex} gap={"1rem"}>
+              {simpleDialogData?.actions.map(({ action, label }, index) => (
+                <Button
+                  key={index}
+                  ref={index == 0 ? simpleDialogCancelRef : undefined}
+                  onClick={action}
+                  variant={index == 0 ? "solid" : "accent"}
+                >
+                  {label}
+                </Button>
+              ))}
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialogOverlay>
