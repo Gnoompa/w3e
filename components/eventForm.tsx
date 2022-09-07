@@ -414,7 +414,7 @@ const EventForm = () => {
     !eventFormData.eventShortDescription ||
     (!eventFormData.isFreeTicketPrice && !eventFormData.ticketPrice) ||
     (!eventFormData.isUnlimitedTicketSupply &&
-      !eventFormData.isUnlimitedTicketSupply)
+      !eventFormData.ticketSupply)
       ? (setSimpleDialogData({
           title: "Please, fill all the required fields",
           desc: "",
