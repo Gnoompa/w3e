@@ -23,8 +23,10 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface MainInterface extends ethers.utils.Interface {
   functions: {
     "DEFAULT_ADMIN_ROLE()": FunctionFragment;
-    "IS_INFINITE_SUPPLY()": FunctionFragment;
-    "IS_SUBSCRIPTION()": FunctionFragment;
+    "INFINITE_SUPPLY_TICKET_BIT()": FunctionFragment;
+    "OFFLINE_TICKET_TYPE_BIT()": FunctionFragment;
+    "ONLINE_TICKET_TYPE_BIT()": FunctionFragment;
+    "SUBSCRIPTION_TICKET_TYPE_BIT()": FunctionFragment;
     "buyTickets(uint256,address)": FunctionFragment;
     "commitVerifiedTickets(uint256,uint256[],address[])": FunctionFragment;
     "createEvent((uint256[],uint256[],uint256[],uint256[],address,address[],string,string[]))": FunctionFragment;
@@ -50,11 +52,19 @@ interface MainInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "IS_INFINITE_SUPPLY",
+    functionFragment: "INFINITE_SUPPLY_TICKET_BIT",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "IS_SUBSCRIPTION",
+    functionFragment: "OFFLINE_TICKET_TYPE_BIT",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "ONLINE_TICKET_TYPE_BIT",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "SUBSCRIPTION_TICKET_TYPE_BIT",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -146,11 +156,19 @@ interface MainInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "IS_INFINITE_SUPPLY",
+    functionFragment: "INFINITE_SUPPLY_TICKET_BIT",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "IS_SUBSCRIPTION",
+    functionFragment: "OFFLINE_TICKET_TYPE_BIT",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "ONLINE_TICKET_TYPE_BIT",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "SUBSCRIPTION_TICKET_TYPE_BIT",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "buyTickets", data: BytesLike): Result;
@@ -209,7 +227,7 @@ interface MainInterface extends ethers.utils.Interface {
     "RoleRevoked(bytes32,address,address)": EventFragment;
     "TicketBought(uint256,uint256,address)": EventFragment;
     "TicketUsed(uint256,uint256,address)": EventFragment;
-    "TicketsCreated(uint256,uint256)": EventFragment;
+    "TicketsCreated(uint256,uint256,address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "EventCreated"): EventFragment;
@@ -258,7 +276,11 @@ export type TicketUsedEvent = TypedEvent<
 >;
 
 export type TicketsCreatedEvent = TypedEvent<
-  [BigNumber, BigNumber] & { tokenId: BigNumber; eventTokenId: BigNumber }
+  [BigNumber, BigNumber, string] & {
+    tokenId: BigNumber;
+    eventTokenId: BigNumber;
+    organizer: string;
+  }
 >;
 
 export class Main extends BaseContract {
@@ -307,9 +329,15 @@ export class Main extends BaseContract {
   functions: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
-    IS_INFINITE_SUPPLY(overrides?: CallOverrides): Promise<[BigNumber]>;
+    INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    IS_SUBSCRIPTION(overrides?: CallOverrides): Promise<[BigNumber]>;
+    OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    SUBSCRIPTION_TICKET_TYPE_BIT(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
 
     buyTickets(
       ticketId: BigNumberish,
@@ -360,19 +388,19 @@ export class Main extends BaseContract {
           BigNumber,
           BigNumber,
           BigNumber,
-          boolean,
           BigNumber,
-          BigNumber
+          boolean,
+          boolean
         ] & {
           eventTokenId: BigNumber;
           ticketType: BigNumber;
           price: BigNumber;
           supply: BigNumber;
-          isInfiniteSupply: BigNumber;
-          duration: BigNumber;
-          used: boolean;
-          activatedAt: BigNumber;
+          subscriptionDuration: BigNumber;
+          subscriptionActivatedAt: BigNumber;
           tier: BigNumber;
+          isInfiniteSupply: boolean;
+          used: boolean;
         })[][]
       ]
     >;
@@ -410,19 +438,19 @@ export class Main extends BaseContract {
           BigNumber,
           BigNumber,
           BigNumber,
-          boolean,
           BigNumber,
-          BigNumber
+          boolean,
+          boolean
         ] & {
           eventTokenId: BigNumber;
           ticketType: BigNumber;
           price: BigNumber;
           supply: BigNumber;
-          isInfiniteSupply: BigNumber;
-          duration: BigNumber;
-          used: boolean;
-          activatedAt: BigNumber;
+          subscriptionDuration: BigNumber;
+          subscriptionActivatedAt: BigNumber;
           tier: BigNumber;
+          isInfiniteSupply: boolean;
+          used: boolean;
         })[]
       ]
     >;
@@ -477,28 +505,32 @@ export class Main extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        boolean,
         BigNumber,
-        BigNumber
+        boolean,
+        boolean
       ] & {
         eventTokenId: BigNumber;
         ticketType: BigNumber;
         price: BigNumber;
         supply: BigNumber;
-        isInfiniteSupply: BigNumber;
-        duration: BigNumber;
-        used: boolean;
-        activatedAt: BigNumber;
+        subscriptionDuration: BigNumber;
+        subscriptionActivatedAt: BigNumber;
         tier: BigNumber;
+        isInfiniteSupply: boolean;
+        used: boolean;
       }
     >;
   };
 
   DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
-  IS_INFINITE_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
+  INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-  IS_SUBSCRIPTION(overrides?: CallOverrides): Promise<BigNumber>;
+  OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+
+  ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+
+  SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
   buyTickets(
     ticketId: BigNumberish,
@@ -548,19 +580,19 @@ export class Main extends BaseContract {
       BigNumber,
       BigNumber,
       BigNumber,
-      boolean,
       BigNumber,
-      BigNumber
+      boolean,
+      boolean
     ] & {
       eventTokenId: BigNumber;
       ticketType: BigNumber;
       price: BigNumber;
       supply: BigNumber;
-      isInfiniteSupply: BigNumber;
-      duration: BigNumber;
-      used: boolean;
-      activatedAt: BigNumber;
+      subscriptionDuration: BigNumber;
+      subscriptionActivatedAt: BigNumber;
       tier: BigNumber;
+      isInfiniteSupply: boolean;
+      used: boolean;
     })[][]
   >;
 
@@ -594,19 +626,19 @@ export class Main extends BaseContract {
       BigNumber,
       BigNumber,
       BigNumber,
-      boolean,
       BigNumber,
-      BigNumber
+      boolean,
+      boolean
     ] & {
       eventTokenId: BigNumber;
       ticketType: BigNumber;
       price: BigNumber;
       supply: BigNumber;
-      isInfiniteSupply: BigNumber;
-      duration: BigNumber;
-      used: boolean;
-      activatedAt: BigNumber;
+      subscriptionDuration: BigNumber;
+      subscriptionActivatedAt: BigNumber;
       tier: BigNumber;
+      isInfiniteSupply: boolean;
+      used: boolean;
     })[]
   >;
 
@@ -660,28 +692,32 @@ export class Main extends BaseContract {
       BigNumber,
       BigNumber,
       BigNumber,
-      boolean,
       BigNumber,
-      BigNumber
+      boolean,
+      boolean
     ] & {
       eventTokenId: BigNumber;
       ticketType: BigNumber;
       price: BigNumber;
       supply: BigNumber;
-      isInfiniteSupply: BigNumber;
-      duration: BigNumber;
-      used: boolean;
-      activatedAt: BigNumber;
+      subscriptionDuration: BigNumber;
+      subscriptionActivatedAt: BigNumber;
       tier: BigNumber;
+      isInfiniteSupply: boolean;
+      used: boolean;
     }
   >;
 
   callStatic: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
-    IS_INFINITE_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
+    INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    IS_SUBSCRIPTION(overrides?: CallOverrides): Promise<BigNumber>;
+    OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+
+    ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+
+    SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
     buyTickets(
       ticketId: BigNumberish,
@@ -731,19 +767,19 @@ export class Main extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        boolean,
         BigNumber,
-        BigNumber
+        boolean,
+        boolean
       ] & {
         eventTokenId: BigNumber;
         ticketType: BigNumber;
         price: BigNumber;
         supply: BigNumber;
-        isInfiniteSupply: BigNumber;
-        duration: BigNumber;
-        used: boolean;
-        activatedAt: BigNumber;
+        subscriptionDuration: BigNumber;
+        subscriptionActivatedAt: BigNumber;
         tier: BigNumber;
+        isInfiniteSupply: boolean;
+        used: boolean;
       })[][]
     >;
 
@@ -777,19 +813,19 @@ export class Main extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        boolean,
         BigNumber,
-        BigNumber
+        boolean,
+        boolean
       ] & {
         eventTokenId: BigNumber;
         ticketType: BigNumber;
         price: BigNumber;
         supply: BigNumber;
-        isInfiniteSupply: BigNumber;
-        duration: BigNumber;
-        used: boolean;
-        activatedAt: BigNumber;
+        subscriptionDuration: BigNumber;
+        subscriptionActivatedAt: BigNumber;
         tier: BigNumber;
+        isInfiniteSupply: boolean;
+        used: boolean;
       })[]
     >;
 
@@ -843,19 +879,19 @@ export class Main extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        boolean,
         BigNumber,
-        BigNumber
+        boolean,
+        boolean
       ] & {
         eventTokenId: BigNumber;
         ticketType: BigNumber;
         price: BigNumber;
         supply: BigNumber;
-        isInfiniteSupply: BigNumber;
-        duration: BigNumber;
-        used: boolean;
-        activatedAt: BigNumber;
+        subscriptionDuration: BigNumber;
+        subscriptionActivatedAt: BigNumber;
         tier: BigNumber;
+        isInfiniteSupply: boolean;
+        used: boolean;
       }
     >;
   };
@@ -967,29 +1003,35 @@ export class Main extends BaseContract {
       { tokenId: BigNumber; eventTokenId: BigNumber; owner: string }
     >;
 
-    "TicketsCreated(uint256,uint256)"(
+    "TicketsCreated(uint256,uint256,address)"(
       tokenId?: BigNumberish | null,
-      eventTokenId?: BigNumberish | null
+      eventTokenId?: BigNumberish | null,
+      organizer?: string | null
     ): TypedEventFilter<
-      [BigNumber, BigNumber],
-      { tokenId: BigNumber; eventTokenId: BigNumber }
+      [BigNumber, BigNumber, string],
+      { tokenId: BigNumber; eventTokenId: BigNumber; organizer: string }
     >;
 
     TicketsCreated(
       tokenId?: BigNumberish | null,
-      eventTokenId?: BigNumberish | null
+      eventTokenId?: BigNumberish | null,
+      organizer?: string | null
     ): TypedEventFilter<
-      [BigNumber, BigNumber],
-      { tokenId: BigNumber; eventTokenId: BigNumber }
+      [BigNumber, BigNumber, string],
+      { tokenId: BigNumber; eventTokenId: BigNumber; organizer: string }
     >;
   };
 
   estimateGas: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    IS_INFINITE_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
+    INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    IS_SUBSCRIPTION(overrides?: CallOverrides): Promise<BigNumber>;
+    OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+
+    ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+
+    SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
     buyTickets(
       ticketId: BigNumberish,
@@ -1097,11 +1139,21 @@ export class Main extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    IS_INFINITE_SUPPLY(
+    INFINITE_SUPPLY_TICKET_BIT(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    IS_SUBSCRIPTION(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    OFFLINE_TICKET_TYPE_BIT(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    ONLINE_TICKET_TYPE_BIT(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    SUBSCRIPTION_TICKET_TYPE_BIT(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     buyTickets(
       ticketId: BigNumberish,

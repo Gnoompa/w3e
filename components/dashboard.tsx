@@ -253,7 +253,7 @@ const Dashboard = () => {
                         eventMetadatas[index] && (
                           <Container variant={"contrastAccent"} key={index}>
                             <Flex align={"center"} justify={"space-between"}>
-                              <Flex gap={"5rem"}>
+                              <Flex gap={"1rem"} direction="column">
                                 <Text
                                   color={"textContrast"}
                                   fontWeight="bold"
@@ -271,7 +271,7 @@ const Dashboard = () => {
                                 >
                                   {eventMetadatas[index].description}
                                 </Text>
-                                <Text
+                                {/* <Text
                                   color={"textContrast"}
                                   fontWeight="medium"
                                   fontSize={"lg"}
@@ -283,16 +283,18 @@ const Dashboard = () => {
                                     eventMetadatas[index],
                                     "Event Start Date"
                                   )}
-                                </Text>
+                                </Text> */}
                               </Flex>
-                              <IconButton
-                                variant={"unstyled"}
+                              <Button
+                                variant={"accent"}
+                                as={Flex}
+                                alignItems={"center"}
+                                gap={"1rem"}
                                 onClick={() => goToEventPage(eventIds[index])}
-                                aria-label="go to event page"
-                                icon={
-                                  <ArrowForwardIcon color={"textContrast"} />
-                                }
-                              />
+                              >
+                                to event page
+                                <ArrowForwardIcon color={"textContrast"} />
+                              </Button>
                             </Flex>
                           </Container>
                         )
@@ -327,7 +329,7 @@ const Dashboard = () => {
                       ownedTicketEventMetadatas[index] && (
                         <Container variant={"contrastAccent"} key={index}>
                           <Flex align={"center"} justify={"space-between"}>
-                            <Flex gap={"5rem"}>
+                            <Flex gap={"1rem"} direction="column">
                               <Text
                                 color={"textContrast"}
                                 fontWeight="bold"
@@ -345,7 +347,7 @@ const Dashboard = () => {
                               >
                                 {ownedTicketEventMetadatas[index].description}
                               </Text>
-                              <Text
+                              {/* <Text
                                 color={"textContrast"}
                                 fontWeight="medium"
                                 fontSize={"lg"}
@@ -357,16 +359,18 @@ const Dashboard = () => {
                                   ownedTicketEventMetadatas[index],
                                   "Event Start Date"
                                 )}
-                              </Text>
+                              </Text> */}
                             </Flex>
-                            <IconButton
-                              variant={"unstyled"}
+                            <Button
+                              as={Flex}
+                              alignItems={"center"}
                               onClick={() =>
                                 goToEventPage(ownedTicketEventIds[index])
                               }
-                              aria-label="go to event page"
-                              icon={<ArrowForwardIcon color={"textContrast"} />}
-                            />
+                            >
+                              to event page
+                              <ArrowForwardIcon color={"textContrast"} />
+                            </Button>
                           </Flex>
                         </Container>
                       )
