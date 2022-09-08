@@ -106,7 +106,7 @@ import FacebookIcon from "../public/icons/facebook";
 import InstagramIcon from "../public/icons/insta";
 import TelegramIcon from "../public/icons/tg";
 import SiteIcon from "../public/icons/site";
-import { object, string, number, InferType } from "yup";
+import { object, string, number, InferType, TypeOf, ObjectSchema } from "yup";
 import { SchemaLike } from "yup/lib/types";
 
 const EventTicketImage = dynamic(() => import("./eventTicket"), {
@@ -142,6 +142,7 @@ const EventForm = () => {
     useState<FieldModalIds>();
 
   const eventFormData = useAppSelector((state) => state.eventForm);
+  const eventFormDataRef = useRef(eventFormData);
 
   const [ticketEventTitle, setTicketEventTitle] = useState<string>();
   const [ticketEventImageResult, setTicketEventImageResult] = useState<{
@@ -251,15 +252,15 @@ const EventForm = () => {
   const [invalidEventFormTabIndexes, setInvalidEventFormTabIndexes] = useState(
     []
   );
-  const [invalidEventFormFields, setInvalidEventFormFields] = useState([]);
+  const [invalidEventFormFields, setInvalidEventFormFields] = useState<
+    { name: string; tabIndex: number }[]
+  >([]);
+  const invalidEventFormFieldsRef = useRef(invalidEventFormFields);
 
   useEffect(() => {
     init();
   }, []);
 
-  useEffect(() => {
-    console.log(shouldShowActiveEventFormTabShadow);
-  }, [shouldShowActiveEventFormTabShadow]);
   useEffect(() => {
     setEventPreviewData({
       ...eventPreviewData,
@@ -296,7 +297,13 @@ const EventForm = () => {
     eventFormData.eventEndTime && onOpenEventEndTimeField();
     eventFormData.eventAdditionalLocationInfo && onOpenEventLocationInfoField();
     eventFormData.eventLongDescription && onOpenLongEventDescriptionField();
+
+    eventFormDataRef.current = eventFormData;
   }, [eventFormData]);
+
+  useEffect(() => {
+    invalidEventFormFieldsRef.current = invalidEventFormFields;
+  }, [invalidEventFormFields]);
 
   useEffect(() => {
     setEventPreviewData((prevData) => ({
@@ -380,7 +387,11 @@ const EventForm = () => {
       actions: [
         {
           label: "Start from scratch",
-          action: () => (dispatch(resetEventAction()), onSimpleDialogClose()),
+          action: () => (
+            dispatch(resetEventAction()),
+            setInvalidEventFormFields([]),
+            onSimpleDialogClose()
+          ),
         },
         { label: "Continue", action: onSimpleDialogClose },
       ],
@@ -408,21 +419,12 @@ const EventForm = () => {
     );
   };
 
-  const validateEventForm = (): boolean =>
-    !eventFormData.beneficiary ||
-    !eventFormData.eventTitle ||
-    !eventFormData.eventShortDescription ||
-    (!eventFormData.isFreeTicketPrice && !eventFormData.ticketPrice) ||
-    (!eventFormData.isUnlimitedTicketSupply &&
-      !eventFormData.ticketSupply)
-      ? (setSimpleDialogData({
-          title: "Please, fill all the required fields",
-          desc: "",
-          actions: [{ label: "Ok", action: onSimpleDialogClose }],
-        }),
-        onSimpleDialogOpen(),
-        true)
-      : false;
+  const validateEventForm = () =>
+    Promise.all(
+      eventFormTabsValidationSchema
+        .map((_, tabIndex) => validateEventFormTabFields(tabIndex))
+        .flat()
+    );
 
   const uploadMetadata = (
     metatata: Parameters<typeof context.NFTStorageClient.store>[0]
@@ -491,8 +493,20 @@ const EventForm = () => {
   const beforeEventCreation = () => {
     mbConnectWallet() ||
       mbSwitchChain() ||
-      validateEventForm() ||
-      setCurrentEventCreationStage(EventCreationStages.creatingEvent);
+      validateEventForm()
+        .then(() =>
+          setCurrentEventCreationStage(EventCreationStages.creatingEvent)
+        )
+        .catch(
+          () => (
+            setSimpleDialogData({
+              title: "Please, fill all the required fields",
+              desc: "",
+              actions: [{ label: "Ok", action: onSimpleDialogClose }],
+            }),
+            onSimpleDialogOpen()
+          )
+        );
   };
 
   const mbConnectWallet = () =>
@@ -544,10 +558,7 @@ const EventForm = () => {
       beneficiary: eventFormData.beneficiary,
       managers: [eventFormData.beneficiary],
       params: [
-        BigNumber.from(
-          1 <<
-            [eventFormData.isUnlimitedTicketSupply && 2].filter(Boolean).length
-        ),
+        BigNumber.from(1 << (eventFormData.isUnlimitedTicketSupply ? 2 : 0)),
       ],
       subscriptionDuration: [eventFormData.subscriptionDuration || 0],
       eventMetadataUri: eventMetadataUrl.url,
@@ -580,20 +591,85 @@ const EventForm = () => {
     });
   };
 
-  const eventFormTabsValidationSchemas = [
-    {
-      eventTitle: () => string().required(),
-    },
-  ] as { [Property in keyof typeof eventFormData]: () => any }[];
+  const eventFormTabsValidationSchema = [
+    object({
+      eventTitle: string().required(),
+      eventShortDescription: string().required(),
+    }),
+    undefined,
+    object({
+      ticketPrice: number().when("isFreeTicketPrice", {
+        is: true,
+        then: (schema) => schema.optional(),
+        otherwise: (schema) => schema.required(),
+      }),
+      ticketSupply: number().when("isUnlimitedTicketSupply", {
+        is: true,
+        then: (schema) => schema.optional(),
+        otherwise: (schema) => schema.required(),
+      }),
+    }),
+    object({
+      beneficiary: string().required(),
+    }),
+    // !eventFormData.beneficiary ||
+    //   !eventFormData.eventTitle ||
+    //   !eventFormData.eventShortDescription ||
+    //   (!eventFormData.isFreeTicketPrice && !eventFormData.ticketPrice) ||
+    //   (!eventFormData.isUnlimitedTicketSupply && !eventFormData.ticketSupply),
+  ];
 
-  const validateEventFormTab = (tabIndex: number) => {
-    eventFormTabsValidationSchemas[tabIndex];
-  };
+  const validateEventFormField = (
+    fieldName: keyof typeof eventFormData,
+    eventFormTabIndex?: number
+  ) =>
+    eventFormTabsValidationSchema[eventFormTabIndex || eventFormData.tabIndex]
+      ?.validateAt(fieldName, eventFormDataRef.current)
+      .then(() =>
+        setInvalidEventFormFields(
+          invalidEventFormFields.filter((field) => field.name != fieldName)
+        )
+      )
+      .catch(() =>
+        setInvalidEventFormFields([
+          ...invalidEventFormFields,
+          {
+            name: fieldName,
+            tabIndex: eventFormTabIndex || eventFormData.tabIndex,
+          },
+        ])
+      );
+
+  const getIsEventFormFieldInvalid = (fieldName: string) =>
+    !!invalidEventFormFields.filter((field) => field.name == fieldName).length;
+
+  const getIsEventFormTabInvalid = (tabIndex: number) =>
+    !!invalidEventFormFields.filter((field) => field.tabIndex == tabIndex)
+      .length;
+
+  const validateEventFormTabFields = (tabIndex: number) =>
+    eventFormTabsValidationSchema[tabIndex]
+      ? Object.keys(eventFormTabsValidationSchema[tabIndex].fields).map(
+          (field) =>
+            eventFormTabsValidationSchema[tabIndex]
+              .validateAt(field, eventFormData)
+              .catch((e) => {
+                setInvalidEventFormFields(
+                  (invalidEventFormFieldsRef.current = [
+                    ...invalidEventFormFieldsRef.current,
+                    { name: field, tabIndex },
+                  ])
+                );
+
+                throw e;
+              })
+        )
+      : [];
 
   const onEventFormTabChange = (tabIndex: number) => {
-    validateEventFormTab(eventFormData.tabIndex);
-
-    // prevEventFormTabIndex.current = eventFormData.tabIndex
+    Promise.all(validateEventFormTabFields(eventFormData.tabIndex)).catch(
+      () => {}
+    );
 
     setEvent({ tabIndex: tabIndex || 0 });
   };
@@ -675,7 +751,7 @@ const EventForm = () => {
                       variant="floating"
                       id="title"
                       isRequired
-                      isInvalid={invalidEventFormFields.includes("eventTitle")}
+                      isInvalid={getIsEventFormFieldInvalid("eventTitle")}
                     >
                       <Input
                         value={eventFormData.eventTitle}
@@ -684,6 +760,7 @@ const EventForm = () => {
                         onChange={(event) =>
                           setEvent({ eventTitle: event.target.value })
                         }
+                        onBlur={() => validateEventFormField("eventTitle")}
                       />
                       <FormLabel>Event title</FormLabel>
                     </FormControl>
@@ -703,6 +780,12 @@ const EventForm = () => {
                             eventShortDescription: event.target.value,
                           })
                         }
+                        onBlur={() =>
+                          validateEventFormField("eventShortDescription")
+                        }
+                        isInvalid={getIsEventFormFieldInvalid(
+                          "eventShortDescription"
+                        )}
                       />
                       <FormLabel>Short description</FormLabel>
                       <FormHelperText>
@@ -1121,6 +1204,7 @@ const EventForm = () => {
                         id="price"
                         isRequired
                         flex={0.6}
+                        isInvalid={getIsEventFormFieldInvalid("ticketPrice")}
                       >
                         <InputGroup>
                           <InputLeftAddon children="$" />
@@ -1134,6 +1218,7 @@ const EventForm = () => {
                               setEvent({ ticketPrice: event.target.value })
                             }
                             textAlign={"center"}
+                            onBlur={() => validateEventFormField("ticketPrice")}
                           />
                           <FormLabel left={"3rem !important"}>
                             Ticket price
@@ -1155,12 +1240,15 @@ const EventForm = () => {
                         <Switch
                           value={+eventFormData.isFreeTicketPrice}
                           isChecked={eventFormData.isFreeTicketPrice}
-                          onChange={() =>
+                          onChange={() => (
                             setEvent({
                               isFreeTicketPrice:
                                 !eventFormData.isFreeTicketPrice,
-                            })
-                          }
+                            }),
+                            setTimeout(() =>
+                              validateEventFormField("ticketPrice")
+                            )
+                          )}
                           id="freeTickets"
                           size={"lg"}
                         />
@@ -1173,6 +1261,7 @@ const EventForm = () => {
                         variant="floating"
                         id="ticketSupply"
                         isRequired
+                        isInvalid={getIsEventFormFieldInvalid("ticketSupply")}
                       >
                         <Input
                           value={eventFormData.ticketSupply}
@@ -1182,6 +1271,7 @@ const EventForm = () => {
                           onChange={(event) =>
                             setEvent({ ticketSupply: +event.target.value })
                           }
+                          onBlur={() => validateEventFormField("ticketSupply")}
                         />
                         <FormLabel>Tickets supply</FormLabel>
                       </FormControl>
@@ -1196,12 +1286,15 @@ const EventForm = () => {
                         <Switch
                           value={+eventFormData.isUnlimitedTicketSupply}
                           isChecked={eventFormData.isUnlimitedTicketSupply}
-                          onChange={() =>
+                          onChange={() => (
                             setEvent({
                               isUnlimitedTicketSupply:
                                 !eventFormData.isUnlimitedTicketSupply,
-                            })
-                          }
+                            }),
+                            setTimeout(() =>
+                              validateEventFormField("ticketSupply")
+                            )
+                          )}
                           id="unlimitedTicketSupply"
                           size={"lg"}
                         />
@@ -1232,6 +1325,7 @@ const EventForm = () => {
                       isRequired
                       display={"flex"}
                       gap={"1rem"}
+                      isInvalid={getIsEventFormFieldInvalid("beneficiary")}
                     >
                       <Input
                         value={eventFormData.beneficiary}
@@ -1239,15 +1333,19 @@ const EventForm = () => {
                         onChange={(event) =>
                           setEvent({ beneficiary: event.target.value })
                         }
+                        onBlur={() => validateEventFormField("beneficiary")}
                       />
                       <FormLabel>Beneficiary wallet address</FormLabel>
                       <Button
                         variant={"accent"}
                         onClick={() =>
                           isWalletConnected
-                            ? setEvent({
+                            ? (setEvent({
                                 beneficiary: connectedWalletAddress,
-                              })
+                              }),
+                              setTimeout(() =>
+                                validateEventFormField("beneficiary")
+                              ))
                             : setWalletConnectModalOpen(true)
                         }
                       >
@@ -1265,7 +1363,6 @@ const EventForm = () => {
                               }
                               placeholder=" "
                               onChange={(event) => {
-                                console.log(managerIndex);
                                 let eventManagers = [
                                   ...(eventFormData.eventManagers || []),
                                 ];
@@ -1323,7 +1420,7 @@ const EventForm = () => {
                       </Container>
                       <Input
                         value={
-                          eventFormData?.eventMediaLinks.hasOwnProperty(
+                          eventFormData?.eventMediaLinks?.hasOwnProperty(
                             SocialMediaIds.Telegram
                           )
                             ? eventFormData?.eventMediaLinks?.[
@@ -1349,7 +1446,7 @@ const EventForm = () => {
                       </Container>
                       <Input
                         value={
-                          eventFormData?.eventMediaLinks.hasOwnProperty(
+                          eventFormData?.eventMediaLinks?.hasOwnProperty(
                             SocialMediaIds.Twitter
                           )
                             ? eventFormData?.eventMediaLinks?.[
@@ -1375,8 +1472,8 @@ const EventForm = () => {
                       </Container>
                       <Input
                         value={
-                          eventFormData?.eventMediaLinks.hasOwnProperty(
-                            SocialMediaIds.Twitter
+                          eventFormData?.eventMediaLinks?.hasOwnProperty(
+                            SocialMediaIds.Instagram
                           )
                             ? eventFormData?.eventMediaLinks?.[
                                 SocialMediaIds.Instagram
@@ -1401,8 +1498,8 @@ const EventForm = () => {
                       </Container>
                       <Input
                         value={
-                          eventFormData?.eventMediaLinks.hasOwnProperty(
-                            SocialMediaIds.Twitter
+                          eventFormData?.eventMediaLinks?.hasOwnProperty(
+                            SocialMediaIds.Facebook
                           )
                             ? eventFormData?.eventMediaLinks?.[
                                 SocialMediaIds.Facebook
@@ -1427,7 +1524,7 @@ const EventForm = () => {
                       </Container>
                       <Input
                         value={
-                          eventFormData?.eventMediaLinks.hasOwnProperty(
+                          eventFormData?.eventMediaLinks?.hasOwnProperty(
                             SocialMediaIds.Site
                           )
                             ? eventFormData?.eventMediaLinks?.[
@@ -1462,11 +1559,19 @@ const EventForm = () => {
                   aria-label="back"
                 /> */}
                 <TabList>
-                  <Tab>1</Tab>
-                  <Tab>2</Tab>
-                  <Tab>3</Tab>
-                  <Tab>4</Tab>
-                  <Tab>5</Tab>
+                  {Array(5)
+                    .fill(null)
+                    .map((_, tabIndex) => (
+                      <Tab
+                        bg={
+                          getIsEventFormTabInvalid(tabIndex)
+                            ? "warn"
+                            : "accentPrimaryFaded"
+                        }
+                      >
+                        {tabIndex + 1}
+                      </Tab>
+                    ))}
                 </TabList>
               </Flex>
               <Button

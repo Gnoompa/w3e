@@ -455,7 +455,7 @@ const EventPage = () => {
   const onBuyEventTicketButtonClick = (ticketIndex: number) => {
     setIsBuyingATicket(true);
 
-    console.log(getEventTicketPrice(ticketIndex, true))
+    console.log(eventTickets[0][0][ticketIndex]);
 
     try {
       const ticketTokenId = getTicketTokenId(ticketIndex);
