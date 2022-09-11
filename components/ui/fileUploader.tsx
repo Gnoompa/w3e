@@ -80,16 +80,18 @@ export const FileUploader = (props: FileUploaderProps) => {
             )}
           </Flex>
         )}
-        <Text
-          pos={"absolute"}
-          bottom=".5rem"
-          fontSize={"sm"}
-          opacity={".7"}
-          color={"textContrastSecondary"}
-          textAlign={["center", "center", "center", "initial"]}
-        >
-          PNG or JPEG. Max size 8mb
-        </Text>
+        {files && !files.length && (
+          <Text
+            pos={"absolute"}
+            bottom=".5rem"
+            fontSize={"sm"}
+            opacity={".7"}
+            color={"textContrastSecondary"}
+            textAlign={["center", "center", "center", "initial"]}
+          >
+            PNG or JPEG. Max size 8mb
+          </Text>
+        )}
       </Container>
       {files && !!files.length && (
         <Button

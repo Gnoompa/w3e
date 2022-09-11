@@ -1,7 +1,6 @@
 import React, {
   useState,
   useEffect,
-  ReactElement,
   useContext,
   useRef,
   RefObject,
@@ -10,14 +9,7 @@ import {
   Flex,
   Box,
   Button,
-  Text,
-  FormLabel,
   Container,
-  Textarea,
-  Switch,
-  Input,
-  Tooltip,
-  Spinner,
   Tabs,
   TabList,
   Tab,
@@ -25,9 +17,6 @@ import {
   TabPanel,
   IconButton,
   Heading,
-  InputLeftAddon,
-  InputGroup,
-  InputRightAddon,
   AlertDialog,
   AlertDialogOverlay,
   AlertDialogContent,
@@ -35,28 +24,8 @@ import {
   AlertDialogBody,
   AlertDialogFooter,
   useDisclosure,
-  FormControl,
-  FormHelperText,
-  Highlight,
-  Select,
-  SlideFade,
-  ScaleFade,
-  Collapse,
-  CloseButton,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverArrow,
-  PopoverCloseButton,
-  PopoverBody,
-  Slide,
-  Icon,
-  position,
 } from "@chakra-ui/react";
-import FileUploader from "./ui/fileUploader";
 import {
-  useDebounce,
-  handleOnMouseDown,
   useAppSelector,
   defaultDateFormat,
   SocialMediaIds,
@@ -69,7 +38,7 @@ import {
   setEvent as setEventAction,
   resetEvent as resetEventAction,
   initialState as eventFormInitialState,
-} from "features/eventForm/eventFormSlice";
+} from "features/eventForm/eventPersistedFormSlice";
 import { useAppDispatch } from "helpers/hooks";
 import {
   getNativeCurrencyToUsdPrice,
@@ -77,7 +46,6 @@ import {
   createEvent,
   parseTransactionLogs,
   defaultChainId,
-  getChainNameById,
   getChainById,
 } from "helpers/contract";
 import date from "date-and-time";
@@ -90,24 +58,20 @@ import {
   useSwitchNetwork,
   useWaitForTransaction,
 } from "wagmi";
-import {
-  AddIcon,
-  ArrowBackIcon,
-  CloseIcon,
-  DeleteIcon,
-  PlusSquareIcon,
-  QuestionIcon,
-} from "@chakra-ui/icons";
 import { useModal } from "connectkit";
 import EventPreview, { EventProps as EventPreviewProps } from "./eventPreview";
 import { AnimatePresence, motion } from "framer-motion";
-import TwitterIcon from "../public/icons/twitter";
-import FacebookIcon from "../public/icons/facebook";
-import InstagramIcon from "../public/icons/insta";
-import TelegramIcon from "../public/icons/tg";
-import SiteIcon from "../public/icons/site";
-import { object, string, number, InferType, TypeOf, ObjectSchema } from "yup";
-import { SchemaLike } from "yup/lib/types";
+import {
+  selectInvalidFields,
+  setFields as setEventFormFields,
+  State as EventFormStateType,
+} from "features/eventForm/eventFormSlice";
+import { default as MainInfoTab } from "./eventForm/tabs/main";
+import { default as VenueTab } from "./eventForm/tabs/venue";
+import { default as TicketTab } from "./eventForm/tabs/ticket";
+import { default as PaymentTab } from "./eventForm/tabs/payment";
+import { default as SocialsTab } from "./eventForm/tabs/socials";
+import { default as useEventFormValidationHook } from "./eventForm/validationHook";
 
 const EventTicketImage = dynamic(() => import("./eventTicket"), {
   ssr: false,
@@ -136,21 +100,24 @@ const EventForm = () => {
 
   const { chain: connectedChain } = useNetwork();
   const { chains, switchNetwork } = useSwitchNetwork();
+  const { validateField: validateEventFormField } =
+    useEventFormValidationHook();
   const [currentEventCreationStage, setCurrentEventCreationStage] =
     useState<EventCreationStages>(EventCreationStages.eventConfig);
   const [eventFormActiveFieldModal, setEventFormActiveFieldModal] =
     useState<FieldModalIds>();
 
+  const eventPersistedFormData = useAppSelector(
+    (state) => state.eventPersistedForm
+  );
   const eventFormData = useAppSelector((state) => state.eventForm);
-  const eventFormDataRef = useRef(eventFormData);
+  const eventPersistedFormDataRef = useRef(eventPersistedFormData);
 
   const [ticketEventTitle, setTicketEventTitle] = useState<string>();
   const [ticketEventImageResult, setTicketEventImageResult] = useState<{
     eventTitle: string;
     image: string;
   }>();
-  const [ticketNativeCurrencyPriceLabel, setTicketNativeCurrencyPriceLabel] =
-    useState<string | ReactElement>();
 
   const [isScanningBeneficiaryQr, setIsScanningBeneficiaryQr] = useState(false);
   const [scannedBeneficiaryAddress, setScannedBeneficiaryAddress] =
@@ -160,14 +127,6 @@ const EventForm = () => {
     useState<Blob>();
   const [defaultEventPosterImageFile, setDefaultEventPosterImageFile] =
     useState<Blob>();
-
-  const debouncedTicketPrice = useDebounce(eventFormData.ticketPrice, 4000);
-  const [nativeCurrencyToUsdPrice, setNativeCurrencyToUsdPrice] =
-    useState<BigNumberish>();
-  const {
-    data: nativeCurrencyToUsdPriceResponse,
-    refetch: refetchNativeCurrencyToUsdPrice,
-  } = getNativeCurrencyToUsdPrice();
 
   const [
     createEventWritePayloadToPrepare,
@@ -195,41 +154,11 @@ const EventForm = () => {
     hash: createEventWriteResponse?.hash,
     wait: createEventWriteResponse?.wait,
   });
-  const isOnLastFormTab = eventFormData.tabIndex == 4;
+  const isOnLastFormTab = eventPersistedFormData.tabIndex == 4;
   const {
     isOpen: isSimpleDialogOpen,
     onOpen: onSimpleDialogOpen,
     onClose: onSimpleDialogClose,
-  } = useDisclosure();
-  const {
-    isOpen: isLongEventDescriptionFieldOpen,
-    onOpen: onOpenLongEventDescriptionField,
-    onClose: onCloseLongEventDescriptionField,
-  } = useDisclosure();
-  const {
-    isOpen: isEventStartTimeFieldOpen,
-    onOpen: onOpenEventStartTimeField,
-    onClose: onCloseEventStartTimeField,
-  } = useDisclosure();
-  const {
-    isOpen: isEventEndDateFieldOpen,
-    onOpen: onOpenEventEndDateField,
-    onClose: onCloseEventEndDateField,
-  } = useDisclosure();
-  const {
-    isOpen: isEventEndTimeFieldOpen,
-    onOpen: onOpenEventEndTimeField,
-    onClose: onCloseEventEndTimeField,
-  } = useDisclosure();
-  const {
-    isOpen: isEventLocationInfoFieldOpen,
-    onOpen: onOpenEventLocationInfoField,
-    onClose: onCloseEventLocationInfoField,
-  } = useDisclosure();
-  const {
-    isOpen: isEventTicketDescriptionFieldOpen,
-    onOpen: onOpenEventTicketDescriptionField,
-    onClose: onCloseEventTicketDescriptionField,
   } = useDisclosure();
   const [simpleDialogData, setSimpleDialogData] = useState<{
     title: string | JSX.Element;
@@ -242,20 +171,23 @@ const EventForm = () => {
     activeEventFormTabRef.current
   );
   const hasPersistedFormDataChangedFromInitial =
-    JSON.stringify(eventFormData) != JSON.stringify(eventFormInitialState);
+    JSON.stringify(eventPersistedFormData) !=
+    JSON.stringify(eventFormInitialState);
   const [eventPreviewData, setEventPreviewData] = useState<EventPreviewProps>();
   const tabPanelAnimation = {
     true: { opacity: 1, y: 0 },
     false: { opacity: 0, y: "-20px" },
   };
-  const prevEventFormTabIndex = useRef(eventFormData.tabIndex);
-  const [invalidEventFormTabIndexes, setInvalidEventFormTabIndexes] = useState(
-    []
-  );
-  const [invalidEventFormFields, setInvalidEventFormFields] = useState<
-    { name: string; tabIndex: number }[]
-  >([]);
-  const invalidEventFormFieldsRef = useRef(invalidEventFormFields);
+  const eventFormFields = useAppSelector((state) => state.eventForm.fields);
+  const invalidEventFormFields = useAppSelector(selectInvalidFields);
+  const eventFormFieldsRef = useRef(eventFormFields);
+  const eventFormTabIdToFieldNameMap = {
+    0: ["eventTitle", "eventShortDescription"],
+    2: ["ticketPrice", "ticketSupply"],
+    3: ["beneficiary"],
+  } as {
+    [key: number]: (keyof typeof eventPersistedFormData)[];
+  };
 
   useEffect(() => {
     init();
@@ -264,55 +196,53 @@ const EventForm = () => {
   useEffect(() => {
     setEventPreviewData({
       ...eventPreviewData,
-      name: eventFormData.eventTitle,
-      shortDescription: eventFormData.eventShortDescription,
-      longDescription: eventFormData.eventLongDescription,
+      name: eventPersistedFormData.eventTitle,
+      shortDescription: eventPersistedFormData.eventShortDescription,
+      longDescription: eventPersistedFormData.eventLongDescription,
       location: [
-        eventFormData.eventLocation,
-        eventFormData.eventAdditionalLocationInfo,
+        eventPersistedFormData.eventLocation,
+        eventPersistedFormData.eventAdditionalLocationInfo,
       ]
         .filter(Boolean)
         .join(", "),
-      eventTicketPriceLabel: eventFormData.ticketPrice
-        ? "$" + eventFormData.ticketPrice
+      eventTicketPriceLabel: eventPersistedFormData.ticketPrice
+        ? "$" + eventPersistedFormData.ticketPrice
         : "",
       date: [
-        eventFormData.eventStartDate
+        eventPersistedFormData.eventStartDate
           ? date.format(
-              new Date(eventFormData.eventStartDate),
+              new Date(eventPersistedFormData.eventStartDate),
               defaultDateFormat
             )
           : "",
-        eventFormData.eventEndDate
-          ? date.format(new Date(eventFormData.eventEndDate), defaultDateFormat)
+        eventPersistedFormData.eventEndDate
+          ? date.format(
+              new Date(eventPersistedFormData.eventEndDate),
+              defaultDateFormat
+            )
           : "",
       ].filter(Boolean),
-      eventTicketsTotalSupply: `${eventFormData.ticketSupply || ""}`,
-      mediaLinks: eventFormData.eventMediaLinks,
-      isUnlimitedTicketSupply: eventFormData.isUnlimitedTicketSupply,
-      isFreeTicketPrice: eventFormData.isFreeTicketPrice,
+      eventTicketsTotalSupply: `${eventPersistedFormData.ticketSupply || ""}`,
+      mediaLinks: eventPersistedFormData.eventMediaLinks,
+      isUnlimitedTicketSupply: eventPersistedFormData.isUnlimitedTicketSupply,
+      isFreeTicketPrice: eventPersistedFormData.isFreeTicketPrice,
     });
 
-    eventFormData.eventEndDate && onOpenEventEndDateField();
-    eventFormData.eventEndTime && onOpenEventEndTimeField();
-    eventFormData.eventAdditionalLocationInfo && onOpenEventLocationInfoField();
-    eventFormData.eventLongDescription && onOpenLongEventDescriptionField();
-
-    eventFormDataRef.current = eventFormData;
-  }, [eventFormData]);
+    eventPersistedFormDataRef.current = eventPersistedFormData;
+  }, [eventPersistedFormData]);
 
   useEffect(() => {
-    invalidEventFormFieldsRef.current = invalidEventFormFields;
-  }, [invalidEventFormFields]);
+    eventFormFieldsRef.current = eventFormFields;
+  }, [eventFormFields]);
 
   useEffect(() => {
     setEventPreviewData((prevData) => ({
       ...prevData,
-      image: eventPosterImageFile
-        ? URL.createObjectURL(eventPosterImageFile)
+      image: eventFormData.eventPoster
+        ? URL.createObjectURL(eventFormData.eventPoster)
         : undefined,
     }));
-  }, [eventPosterImageFile]);
+  }, [eventFormData.eventPoster]);
 
   useEffect(() => {
     createEventWriteReceipt &&
@@ -325,38 +255,6 @@ const EventForm = () => {
       ),
       dispatch(resetEventAction()));
   }, [createEventWriteReceipt, isSuccessCreateEventWrite]);
-
-  useEffect(() => {
-    nativeCurrencyToUsdPriceResponse?.length &&
-      setNativeCurrencyToUsdPrice(nativeCurrencyToUsdPriceResponse[0].answer);
-  }, [nativeCurrencyToUsdPriceResponse]);
-
-  useEffect(() => {
-    setTicketNativeCurrencyPriceLabel(
-      eventFormData.isFreeTicketPrice ? (
-        "FREE"
-      ) : eventFormData.ticketPrice && nativeCurrencyToUsdPrice ? (
-        `~${(
-          +ethers.utils.formatUnits(nativeCurrencyToUsdPrice, 8) *
-          +eventFormData.ticketPrice
-        ).toFixed(2)} MATIC`
-      ) : eventFormData.ticketPrice && !nativeCurrencyToUsdPrice ? (
-        <Spinner size={".75rem"} />
-      ) : (
-        "0 MATIC"
-      )
-    );
-  }, [
-    nativeCurrencyToUsdPrice,
-    eventFormData.ticketPrice,
-    eventFormData.isFreeTicketPrice,
-  ]);
-
-  useEffect(() => {
-    !eventFormData.isFreeTicketPrice &&
-      debouncedTicketPrice &&
-      refetchNativeCurrencyToUsdPrice();
-  }, [eventFormData.isFreeTicketPrice, debouncedTicketPrice]);
 
   useEffect(() => {
     currentEventCreationStage == EventCreationStages.creatingEvent &&
@@ -389,7 +287,7 @@ const EventForm = () => {
           label: "Start from scratch",
           action: () => (
             dispatch(resetEventAction()),
-            setInvalidEventFormFields([]),
+            dispatch(setEventFormFields([])),
             onSimpleDialogClose()
           ),
         },
@@ -399,31 +297,15 @@ const EventForm = () => {
     onSimpleDialogOpen();
   };
 
-  const setEvent = (data: Partial<typeof eventFormData>) => {
-    dispatch(setEventAction({ ...eventFormData, ...data }));
-  };
-
-  const onEventFormFieldBlur = (): void => {
-    setEventFormActiveFieldModal(undefined);
-  };
-
-  const onBeneficiaryQrScanResult = (result: string): void => {
-    setScannedBeneficiaryAddress(result);
-  };
-
-  const toggleEventFormActiveFieldModal = (fieldId: FieldModalIds): void => {
-    setTimeout(() =>
-      setEventFormActiveFieldModal(
-        eventFormActiveFieldModal === fieldId ? undefined : fieldId
-      )
-    );
+  const setEvent = (data: Partial<typeof eventPersistedFormData>) => {
+    dispatch(setEventAction({ ...eventPersistedFormData, ...data }));
   };
 
   const validateEventForm = () =>
     Promise.all(
-      eventFormTabsValidationSchema
-        .map((_, tabIndex) => validateEventFormTabFields(tabIndex))
-        .flat()
+      Object.keys(eventFormTabIdToFieldNameMap)
+        .map((tabId) => validateEventFormTabFields(+tabId))
+        ?.flat()
     );
 
   const uploadMetadata = (
@@ -431,7 +313,7 @@ const EventForm = () => {
   ) => context.NFTStorageClient.store(metatata);
 
   const getEventMetadata = (
-    eventData: typeof eventFormData
+    eventData: typeof eventPersistedFormData
   ): Partial<EventMetadata> => ({
     name: eventData.eventTitle || "",
     description: eventData.eventShortDescription || "",
@@ -481,7 +363,7 @@ const EventForm = () => {
   });
 
   const getEventTicketMetadata = (
-    ticketData: typeof eventFormData
+    ticketData: typeof eventPersistedFormData
   ): Partial<EventTicketMetadata> => ({
     name: ticketData.eventTitle || "",
     description:
@@ -537,8 +419,8 @@ const EventForm = () => {
 
   // todo prepare request before uploading to ipfs
   const prepareEventForCreation = async () => {
-    const eventMetadata = getEventMetadata(eventFormData);
-    const eventTicketMetadata = getEventTicketMetadata(eventFormData);
+    const eventMetadata = getEventMetadata(eventPersistedFormData);
+    const eventTicketMetadata = getEventTicketMetadata(eventPersistedFormData);
 
     const eventMetadataUrl = await uploadMetadata({
       ...(eventMetadata as EventMetadata),
@@ -551,16 +433,18 @@ const EventForm = () => {
     });
 
     setCreateEventWritePayloadToPrepare({
-      ticketSupply: [Math.floor(+eventFormData.ticketSupply! || 0)],
+      ticketSupply: [Math.floor(+eventPersistedFormData.ticketSupply! || 0)],
       ticketPrice: [
-        ethers.utils.parseEther(`${+eventFormData.ticketPrice! || 0}`),
+        ethers.utils.parseEther(`${+eventPersistedFormData.ticketPrice! || 0}`),
       ],
-      beneficiary: eventFormData.beneficiary,
-      managers: [eventFormData.beneficiary],
+      beneficiary: eventPersistedFormData.beneficiary,
+      managers: [eventPersistedFormData.beneficiary],
       params: [
-        BigNumber.from(1 << (eventFormData.isUnlimitedTicketSupply ? 2 : 0)),
+        BigNumber.from(
+          1 << (eventPersistedFormData.isUnlimitedTicketSupply ? 2 : 0)
+        ),
       ],
-      subscriptionDuration: [eventFormData.subscriptionDuration || 0],
+      subscriptionDuration: [eventPersistedFormData.subscriptionDuration || 0],
       eventMetadataUri: eventMetadataUrl.url,
       ticketMetadataUri: [ticketMetadataUrl.url],
     });
@@ -569,107 +453,21 @@ const EventForm = () => {
   const onNextFormTabButtonClick = () => {
     isOnLastFormTab
       ? beforeEventCreation()
-      : setEvent({ tabIndex: eventFormData.tabIndex + 1 });
+      : setEvent({ tabIndex: eventPersistedFormData.tabIndex + 1 });
   };
-
-  // const onPrevFormTabButtonClick = () => {
-  //   eventFormData.tabIndex !== 0 &&
-  //     setEvent({ tabIndex: eventFormData.tabIndex - 1 });
-  // };
-
-  const addEventManager = () => {
-    setEvent({
-      eventManagers: [...(eventFormData.eventManagers || []), ""],
-    });
-  };
-
-  const removeEventManager = (managerIndex: number) => {
-    setEvent({
-      eventManagers: eventFormData.eventManagers?.filter(
-        (_, i) => i != managerIndex
-      ),
-    });
-  };
-
-  const eventFormTabsValidationSchema = [
-    object({
-      eventTitle: string().required(),
-      eventShortDescription: string().required(),
-    }),
-    undefined,
-    object({
-      ticketPrice: number().when("isFreeTicketPrice", {
-        is: true,
-        then: (schema) => schema.optional(),
-        otherwise: (schema) => schema.required(),
-      }),
-      ticketSupply: number().when("isUnlimitedTicketSupply", {
-        is: true,
-        then: (schema) => schema.optional(),
-        otherwise: (schema) => schema.required(),
-      }),
-    }),
-    object({
-      beneficiary: string().required(),
-    }),
-    // !eventFormData.beneficiary ||
-    //   !eventFormData.eventTitle ||
-    //   !eventFormData.eventShortDescription ||
-    //   (!eventFormData.isFreeTicketPrice && !eventFormData.ticketPrice) ||
-    //   (!eventFormData.isUnlimitedTicketSupply && !eventFormData.ticketSupply),
-  ];
-
-  const validateEventFormField = (
-    fieldName: keyof typeof eventFormData,
-    eventFormTabIndex?: number
-  ) =>
-    eventFormTabsValidationSchema[eventFormTabIndex || eventFormData.tabIndex]
-      ?.validateAt(fieldName, eventFormDataRef.current)
-      .then(() =>
-        setInvalidEventFormFields(
-          invalidEventFormFields.filter((field) => field.name != fieldName)
-        )
-      )
-      .catch(() =>
-        setInvalidEventFormFields([
-          ...invalidEventFormFields,
-          {
-            name: fieldName,
-            tabIndex: eventFormTabIndex || eventFormData.tabIndex,
-          },
-        ])
-      );
-
-  const getIsEventFormFieldInvalid = (fieldName: string) =>
-    !!invalidEventFormFields.filter((field) => field.name == fieldName).length;
 
   const getIsEventFormTabInvalid = (tabIndex: number) =>
-    !!invalidEventFormFields.filter((field) => field.tabIndex == tabIndex)
-      .length;
+    !!invalidEventFormFields.filter(({ tabId }) => tabId == tabIndex).length;
 
   const validateEventFormTabFields = (tabIndex: number) =>
-    eventFormTabsValidationSchema[tabIndex]
-      ? Object.keys(eventFormTabsValidationSchema[tabIndex].fields).map(
-          (field) =>
-            eventFormTabsValidationSchema[tabIndex]
-              .validateAt(field, eventFormData)
-              .catch((e) => {
-                setInvalidEventFormFields(
-                  (invalidEventFormFieldsRef.current = [
-                    ...invalidEventFormFieldsRef.current,
-                    { name: field, tabIndex },
-                  ])
-                );
-
-                throw e;
-              })
-        )
-      : [];
+    eventFormTabIdToFieldNameMap[tabIndex]?.map((field) =>
+      validateEventFormField(field, tabIndex)
+    );
 
   const onEventFormTabChange = (tabIndex: number) => {
-    Promise.all(validateEventFormTabFields(eventFormData.tabIndex)).catch(
-      () => {}
-    );
+    Promise.all(
+      validateEventFormTabFields(eventPersistedFormData.tabIndex)
+    ).catch(() => {});
 
     setEvent({ tabIndex: tabIndex || 0 });
   };
@@ -708,9 +506,9 @@ const EventForm = () => {
           }
           variant={"simple"}
         >
-          <Heading as="h1">Ticket constructor</Heading>
+          <Heading as="h1">Event constructor</Heading>
           <Tabs
-            index={eventFormData.tabIndex}
+            index={eventPersistedFormData.tabIndex}
             display={"flex"}
             flexDirection={"column"}
             justifyContent={"space-between"}
@@ -722,838 +520,28 @@ const EventForm = () => {
             onChange={onEventFormTabChange}
           >
             <TabPanels>
-              <TabPanel
-                as={motion.div}
-                animate={tabPanelAnimation[`${eventFormData.tabIndex == 0}`]}
-              >
-                <Heading
-                  as="h3"
-                  fontSize={"xx-large"}
-                  boxShadow={
-                    shouldShowActiveEventFormTabShadow
-                      ? "0 15px 15px -17px grey"
-                      : "none"
-                  }
-                  position={"relative"}
-                  zIndex="banner"
-                >
-                  Main info
-                </Heading>
-                <Flex
-                  ref={activeEventFormTabRef}
-                  direction={"column"}
-                  maxH={"32rem"}
-                  px={".5rem"}
-                  overflowY={"scroll"}
-                >
-                  <Flex mt={"1.5rem"} direction={"column"} gap={"1rem"}>
-                    <FormControl
-                      variant="floating"
-                      id="title"
-                      isRequired
-                      isInvalid={getIsEventFormFieldInvalid("eventTitle")}
-                    >
-                      <Input
-                        value={eventFormData.eventTitle}
-                        autoFocus
-                        placeholder=" "
-                        onChange={(event) =>
-                          setEvent({ eventTitle: event.target.value })
-                        }
-                        onBlur={() => validateEventFormField("eventTitle")}
-                      />
-                      <FormLabel>Event title</FormLabel>
-                    </FormControl>
-                    <FormControl variant="floating" id="type" isRequired>
-                      <Select defaultValue={"offline"} isRequired>
-                        <option value={"offline"}>Offline</option>
-                        {/* <option value={"online"}>Online</option> */}
-                      </Select>
-                      <FormLabel>Event type</FormLabel>
-                    </FormControl>
-                    <FormControl variant="floating" id="shortdesc" isRequired>
-                      <Textarea
-                        value={eventFormData.eventShortDescription}
-                        placeholder=" "
-                        onChange={(event) =>
-                          setEvent({
-                            eventShortDescription: event.target.value,
-                          })
-                        }
-                        onBlur={() =>
-                          validateEventFormField("eventShortDescription")
-                        }
-                        isInvalid={getIsEventFormFieldInvalid(
-                          "eventShortDescription"
-                        )}
-                      />
-                      <FormLabel>Short description</FormLabel>
-                      <FormHelperText>
-                        Min 30, Max 200 symbols. Description will be shown on
-                        the list of all events
-                      </FormHelperText>
-                    </FormControl>
-                    <FileUploader
-                      placeholder={
-                        <Highlight
-                          query={"upload event cover"}
-                          styles={{
-                            background: "accentSecondary",
-                            color: "textContrast",
-                            px: ".5rem",
-                            py: ".5rem",
-                            borderRadius: "sm",
-                          }}
-                        >
-                          Drad and grop or click to upload event cover
-                        </Highlight>
-                      }
-                      onChange={(files) => setEventPosterImageFile(files[0])}
-                      config={{
-                        maxFiles: 1,
-                        accept: { "image/*": [], "video/*": [] },
-                      }}
-                    />
-                    {!isLongEventDescriptionFieldOpen && (
-                      <Flex align={"center"} gap={".5rem"}>
-                        <Button
-                          variant={"ghost"}
-                          display={"flex"}
-                          gap={"1rem"}
-                          onClick={onOpenLongEventDescriptionField}
-                        >
-                          <AddIcon color={"accentSecondary"} />
-                          <Text>Add long description</Text>
-                        </Button>
-                        <Popover trigger="hover">
-                          <PopoverTrigger>
-                            <QuestionIcon color={"accentPrimaryContrast"} />
-                          </PopoverTrigger>
-                          <PopoverContent>
-                            <PopoverArrow />
-                            <PopoverBody>
-                              Long description, if present, is shown on events’
-                              details page and short description on events
-                              listing page. Otherwise short description is used
-                              on both pages.
-                            </PopoverBody>
-                          </PopoverContent>
-                        </Popover>
-                      </Flex>
-                    )}
-                    {isLongEventDescriptionFieldOpen && (
-                      <Flex gap={".5rem"}>
-                        <FormControl variant="floating" id="longdesc">
-                          <Textarea
-                            autoFocus
-                            value={eventFormData.eventLongDescription}
-                            placeholder=" "
-                            rows={6}
-                            onChange={(event) =>
-                              setEvent({
-                                eventLongDescription: event.target.value,
-                              })
-                            }
-                          />
-                          <FormLabel>Long description</FormLabel>
-                        </FormControl>
-                        <CloseButton
-                          onClick={() => (
-                            onCloseLongEventDescriptionField(),
-                            setEvent({
-                              eventLongDescription: "",
-                            })
-                          )}
-                        />
-                      </Flex>
-                    )}
-                  </Flex>
-                </Flex>
-              </TabPanel>
-              <TabPanel
-                as={motion.div}
-                animate={tabPanelAnimation[`${eventFormData.tabIndex == 1}`]}
-              >
-                <Flex direction={"column"}>
-                  <Heading as="h3" fontSize={"xx-large"}>
-                    Additional Info
-                  </Heading>
-                  <Flex
-                    paddingTop={"1.5rem"}
-                    maxH={"32rem"}
-                    px={".5rem"}
-                    direction={"column"}
-                    gap={"1rem"}
-                    overflowY={"scroll"}
+              {[MainInfoTab, VenueTab, TicketTab, PaymentTab, SocialsTab].map(
+                (Tab, index) => (
+                  <TabPanel
+                    as={motion.div}
+                    key={index}
+                    animate={
+                      tabPanelAnimation[
+                        `${eventPersistedFormData.tabIndex == index}`
+                      ]
+                    }
                   >
-                    <Flex gap={"1rem"}>
-                      <FormControl
-                        variant="floating"
-                        id="startDate"
-                        flex={1}
-                        isRequired
-                      >
-                        <Input
-                          autoFocus
-                          value={eventFormData.eventStartDate}
-                          placeholder=" "
-                          min={eventFormData.eventEndDate}
-                          type="date"
-                          onChange={(event) =>
-                            setEvent({ eventStartDate: event.target.value })
-                          }
-                        />
-                        <FormLabel>Start Date</FormLabel>
-                      </FormControl>
-                      {!isEventStartTimeFieldOpen && (
-                        <Button
-                          variant={"ghost"}
-                          display={"flex"}
-                          gap={"1rem"}
-                          onClick={onOpenEventStartTimeField}
-                        >
-                          <AddIcon color={"accentSecondary"} />
-                          <Text>Add start time</Text>
-                        </Button>
-                      )}
-                      {isEventStartTimeFieldOpen && (
-                        <Flex gap={".5rem"} align="center" flex={1}>
-                          <FormControl variant="floating" id="longdesc">
-                            <Input
-                              autoFocus
-                              value={eventFormData.eventStartTime}
-                              placeholder=" "
-                              type="time"
-                              onChange={(event) =>
-                                setEvent({
-                                  eventStartTime: event.target.value,
-                                })
-                              }
-                            />
-                            <FormLabel>Start time</FormLabel>
-                          </FormControl>
-                          <CloseButton
-                            onClick={() => (
-                              onCloseEventStartTimeField(),
-                              setEvent({
-                                eventStartTime: "",
-                              })
-                            )}
-                          />
-                        </Flex>
-                      )}
-                    </Flex>
-                    {isEventEndDateFieldOpen && (
-                      <Flex gap={".5rem"} align={"center"}>
-                        <FormControl variant="floating" id="enddate" flex={1}>
-                          <Input
-                            autoFocus
-                            value={eventFormData.eventEndDate}
-                            placeholder=" "
-                            type="date"
-                            min={eventFormData.eventStartDate}
-                            onChange={(event) =>
-                              setEvent({
-                                eventEndDate: event.target.value,
-                              })
-                            }
-                          />
-                          <FormLabel>End date</FormLabel>
-                        </FormControl>
-                        <CloseButton
-                          onClick={() => (
-                            onCloseEventEndDateField(),
-                            onCloseEventEndTimeField(),
-                            setEvent({
-                              eventEndDate: "",
-                              eventEndTime: "",
-                            })
-                          )}
-                        />
-                        {!isEventEndTimeFieldOpen && (
-                          <Button
-                            variant={"ghost"}
-                            display={"flex"}
-                            gap={"1rem"}
-                            onClick={onOpenEventEndTimeField}
-                          >
-                            <AddIcon color={"accentSecondary"} />
-                            <Text>Add end time</Text>
-                          </Button>
-                        )}
-                        {isEventEndTimeFieldOpen && (
-                          <Flex gap={".5rem"} flex={1} align={"center"}>
-                            <FormControl variant="floating" id="longdesc">
-                              <Input
-                                autoFocus
-                                value={eventFormData.eventEndTime}
-                                placeholder=" "
-                                type="time"
-                                min={eventFormData.eventStartTime}
-                                onChange={(event) =>
-                                  setEvent({
-                                    eventEndTime: event.target.value,
-                                  })
-                                }
-                              />
-                              <FormLabel>End time</FormLabel>
-                            </FormControl>
-                            <CloseButton
-                              onClick={() => (
-                                onCloseEventEndTimeField(),
-                                setEvent({
-                                  eventEndTime: "",
-                                })
-                              )}
-                            />
-                          </Flex>
-                        )}
-                      </Flex>
-                    )}
-                    {!isEventEndDateFieldOpen && (
-                      <Button
-                        variant={"ghost"}
-                        display={"flex"}
-                        gap={"1rem"}
-                        onClick={onOpenEventEndDateField}
-                      >
-                        <AddIcon color={"accentSecondary"} />
-                        <Text>Add end date</Text>
-                      </Button>
-                    )}
-                    <FormControl variant="floating" id="address" isRequired>
-                      <Input
-                        value={eventFormData.eventLocation}
-                        placeholder=" "
-                        onChange={(event) =>
-                          setEvent({ eventLocation: event.target.value })
-                        }
-                      />
-                      <FormLabel>Address</FormLabel>
-                    </FormControl>
-                    {!isEventLocationInfoFieldOpen && (
-                      <Flex gap={".5rem"} align={"center"}>
-                        <Button
-                          variant={"ghost"}
-                          display={"flex"}
-                          gap={"1rem"}
-                          onClick={onOpenEventLocationInfoField}
-                        >
-                          <AddIcon color={"accentSecondary"} />
-                          <Text>Add additional location info</Text>
-                        </Button>
-                        <Popover trigger="hover">
-                          <PopoverTrigger>
-                            <QuestionIcon color={"accentPrimaryContrast"} />
-                          </PopoverTrigger>
-                          <PopoverContent>
-                            <PopoverArrow />
-                            <PopoverBody>
-                              Add more info about location, like floor or
-                              building number
-                            </PopoverBody>
-                          </PopoverContent>
-                        </Popover>
-                      </Flex>
-                    )}
-                    {isEventLocationInfoFieldOpen && (
-                      <Flex gap={".5rem"}>
-                        <FormControl
-                          variant="floating"
-                          id="eventAdditionalLocationInfo"
-                        >
-                          <Textarea
-                            autoFocus
-                            value={eventFormData.eventAdditionalLocationInfo}
-                            placeholder=" "
-                            onChange={(event) =>
-                              setEvent({
-                                eventAdditionalLocationInfo: event.target.value,
-                              })
-                            }
-                          />
-                          <FormLabel>Additional location info</FormLabel>
-                        </FormControl>
-                        <CloseButton
-                          onClick={() => (
-                            onCloseEventLocationInfoField(),
-                            setEvent({
-                              eventAdditionalLocationInfo: "",
-                            })
-                          )}
-                        />
-                      </Flex>
-                    )}
-                  </Flex>
-                </Flex>
-              </TabPanel>
-              <TabPanel
-                as={motion.div}
-                animate={tabPanelAnimation[`${eventFormData.tabIndex == 2}`]}
-              >
-                <Flex direction={"column"}>
-                  <Heading as="h3" fontSize={"xx-large"}>
-                    Ticket Info
-                  </Heading>
-                  <Flex
-                    paddingTop={"1.5rem"}
-                    direction={"column"}
-                    gap={"1.25rem"}
-                    maxH={"32rem"}
-                    px={".5rem"}
-                    overflowY={"scroll"}
-                  >
-                    <Popover trigger="hover">
-                      <PopoverTrigger>
-                        <QuestionIcon
-                          color={"accentPrimaryContrast"}
-                          alignSelf={"flex-end"}
-                          mb={"-2.75rem"}
-                          mr={".5rem"}
-                          zIndex={"overlay"}
-                        />
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <PopoverArrow />
-                        <PopoverBody>
-                          While it’s possible to attach imagery of any size
-                          proportions, we recommend upholding vertical A4(1:√2)
-                          proportions
-                        </PopoverBody>
-                      </PopoverContent>
-                    </Popover>
-                    <FileUploader
-                      placeholder={
-                        <Highlight
-                          query={"upload ticket cover"}
-                          styles={{
-                            background: "accentSecondary",
-                            color: "textContrast",
-                            px: ".5rem",
-                            py: ".5rem",
-                            borderRadius: "sm",
-                          }}
-                        >
-                          Drad and grop or click to upload ticket cover
-                        </Highlight>
-                      }
-                      onChange={(files) =>
-                        setEventTicketPosterImageFile(files[0])
-                      }
-                      config={{
-                        maxFiles: 1,
-                        accept: { "image/*": [], "video/*": [] },
-                      }}
-                    />
-                    {!isEventTicketDescriptionFieldOpen && (
-                      <Flex gap={".5rem"} align={"center"}>
-                        <Button
-                          variant={"ghost"}
-                          display={"flex"}
-                          gap={"1rem"}
-                          onClick={onOpenEventTicketDescriptionField}
-                        >
-                          <AddIcon color={"accentSecondary"} />
-                          <Text>Add ticket description</Text>
-                        </Button>
-                        <Popover trigger="hover">
-                          <PopoverTrigger>
-                            <QuestionIcon color={"accentPrimaryContrast"} />
-                          </PopoverTrigger>
-                          <PopoverContent>
-                            <PopoverArrow />
-                            <PopoverBody>
-                              This information is going to be shown on NFT
-                              marketplaces/aggregators when collection is going
-                              to be deployed under NFT description section. If
-                              not specified, event short description will be
-                              used
-                            </PopoverBody>
-                          </PopoverContent>
-                        </Popover>
-                      </Flex>
-                    )}
-                    {isEventTicketDescriptionFieldOpen && (
-                      <Flex gap={".5rem"}>
-                        <FormControl variant="floating" id="ticketDesc">
-                          <Textarea
-                            autoFocus
-                            value={eventFormData.eventTicketDescription}
-                            placeholder=" "
-                            onChange={(event) =>
-                              setEvent({
-                                eventTicketDescription: event.target.value,
-                              })
-                            }
-                          />
-                          <FormLabel>Ticket description</FormLabel>
-                        </FormControl>
-                        <CloseButton
-                          onClick={() => (
-                            onCloseEventTicketDescriptionField(),
-                            setEvent({
-                              eventTicketDescription: "",
-                            })
-                          )}
-                        />
-                      </Flex>
-                    )}
-                    <Flex gap={"1rem"} justifyContent={"space-between"}>
-                      <FormControl
-                        variant="floating"
-                        id="price"
-                        isRequired
-                        flex={0.6}
-                        isInvalid={getIsEventFormFieldInvalid("ticketPrice")}
-                      >
-                        <InputGroup>
-                          <InputLeftAddon children="$" />
-                          <Input
-                            value={eventFormData.ticketPrice}
-                            isDisabled={eventFormData.isFreeTicketPrice}
-                            type="number"
-                            max="99999"
-                            placeholder=" "
-                            onChange={(event) =>
-                              setEvent({ ticketPrice: event.target.value })
-                            }
-                            textAlign={"center"}
-                            onBlur={() => validateEventFormField("ticketPrice")}
-                          />
-                          <FormLabel left={"3rem !important"}>
-                            Ticket price
-                          </FormLabel>
-                        </InputGroup>
-                        <FormHelperText textAlign={"right"}>
-                          {ticketNativeCurrencyPriceLabel}
-                        </FormHelperText>
-                      </FormControl>
-                      <FormControl
-                        display="flex"
-                        alignItems="center"
-                        flex={0.4}
-                        mt="-1.25rem"
-                      >
-                        <FormLabel htmlFor="freeTickets" mb="0">
-                          free
-                        </FormLabel>
-                        <Switch
-                          value={+eventFormData.isFreeTicketPrice}
-                          isChecked={eventFormData.isFreeTicketPrice}
-                          onChange={() => (
-                            setEvent({
-                              isFreeTicketPrice:
-                                !eventFormData.isFreeTicketPrice,
-                            }),
-                            setTimeout(() =>
-                              validateEventFormField("ticketPrice")
-                            )
-                          )}
-                          id="freeTickets"
-                          size={"lg"}
-                        />
-                      </FormControl>
-                    </Flex>
-                    <Flex gap={"1rem"} justifyContent={"space-between"}>
-                      <FormControl
-                        flex={0.6}
-                        isDisabled={eventFormData.isUnlimitedTicketSupply}
-                        variant="floating"
-                        id="ticketSupply"
-                        isRequired
-                        isInvalid={getIsEventFormFieldInvalid("ticketSupply")}
-                      >
-                        <Input
-                          value={eventFormData.ticketSupply}
-                          placeholder=" "
-                          type="number"
-                          min={1}
-                          onChange={(event) =>
-                            setEvent({ ticketSupply: +event.target.value })
-                          }
-                          onBlur={() => validateEventFormField("ticketSupply")}
-                        />
-                        <FormLabel>Tickets supply</FormLabel>
-                      </FormControl>
-                      <FormControl
-                        display="flex"
-                        alignItems="center"
-                        flex={0.4}
-                      >
-                        <FormLabel htmlFor="unlimitedTicketSupply" mb="0">
-                          unlimited
-                        </FormLabel>
-                        <Switch
-                          value={+eventFormData.isUnlimitedTicketSupply}
-                          isChecked={eventFormData.isUnlimitedTicketSupply}
-                          onChange={() => (
-                            setEvent({
-                              isUnlimitedTicketSupply:
-                                !eventFormData.isUnlimitedTicketSupply,
-                            }),
-                            setTimeout(() =>
-                              validateEventFormField("ticketSupply")
-                            )
-                          )}
-                          id="unlimitedTicketSupply"
-                          size={"lg"}
-                        />
-                      </FormControl>
-                    </Flex>
-                  </Flex>
-                </Flex>
-              </TabPanel>
-              <TabPanel
-                as={motion.div}
-                animate={tabPanelAnimation[`${eventFormData.tabIndex == 3}`]}
-              >
-                <Flex direction={"column"}>
-                  <Heading as="h3" fontSize={"xx-large"}>
-                    Payment Info
-                  </Heading>
-                  <Flex
-                    paddingTop={"1.5rem"}
-                    direction={"column"}
-                    gap={"1.5rem"}
-                    maxH={"32rem"}
-                    px={".5rem"}
-                    overflowY={"scroll"}
-                  >
-                    <FormControl
-                      variant="floating"
-                      id="beneficiary"
-                      isRequired
-                      display={"flex"}
-                      gap={"1rem"}
-                      isInvalid={getIsEventFormFieldInvalid("beneficiary")}
-                    >
-                      <Input
-                        value={eventFormData.beneficiary}
-                        placeholder=" "
-                        onChange={(event) =>
-                          setEvent({ beneficiary: event.target.value })
-                        }
-                        onBlur={() => validateEventFormField("beneficiary")}
-                      />
-                      <FormLabel>Beneficiary wallet address</FormLabel>
-                      <Button
-                        variant={"accent"}
-                        onClick={() =>
-                          isWalletConnected
-                            ? (setEvent({
-                                beneficiary: connectedWalletAddress,
-                              }),
-                              setTimeout(() =>
-                                validateEventFormField("beneficiary")
-                              ))
-                            : setWalletConnectModalOpen(true)
-                        }
-                      >
-                        Me
-                      </Button>
-                    </FormControl>
-                    {eventFormData.eventManagers?.map(
-                      (manager, managerIndex) => (
-                        <Flex gap={"1rem"} key={managerIndex} align={"center"}>
-                          <FormControl variant="floating" id="longdesc">
-                            <Input
-                              autoFocus
-                              value={
-                                eventFormData.eventManagers?.[managerIndex]
-                              }
-                              placeholder=" "
-                              onChange={(event) => {
-                                let eventManagers = [
-                                  ...(eventFormData.eventManagers || []),
-                                ];
-                                eventManagers.splice(
-                                  managerIndex,
-                                  1,
-                                  event.target.value
-                                );
-                                setEvent({
-                                  eventManagers,
-                                });
-                              }}
-                            />
-                            <FormLabel>
-                              Manager #{managerIndex + 1} wallet address
-                            </FormLabel>
-                          </FormControl>
-                          <CloseButton
-                            onClick={() => removeEventManager(managerIndex)}
-                          />
-                        </Flex>
-                      )
-                    )}
-                    <Button
-                      variant={"ghost"}
-                      display={"flex"}
-                      gap={"1rem"}
-                      onClick={addEventManager}
-                    >
-                      <AddIcon color={"accentSecondary"} />
-                      <Text>Add event manager</Text>
-                    </Button>
-                  </Flex>
-                </Flex>
-              </TabPanel>
-              <TabPanel
-                as={motion.div}
-                animate={tabPanelAnimation[`${eventFormData.tabIndex == 4}`]}
-              >
-                <Flex direction={"column"}>
-                  <Heading as="h3" fontSize={"xx-large"}>
-                    Social
-                  </Heading>
-                  <Flex
-                    paddingTop={"1.5rem"}
-                    direction={"column"}
-                    gap={"1.5rem"}
-                    maxH={"32rem"}
-                    px={".5rem"}
-                    overflowY={"scroll"}
-                  >
-                    <Flex gap={"1rem"} align={"center"}>
-                      <Container variant={"icon"} flex={0}>
-                        <TelegramIcon width={16} />
-                      </Container>
-                      <Input
-                        value={
-                          eventFormData?.eventMediaLinks?.hasOwnProperty(
-                            SocialMediaIds.Telegram
-                          )
-                            ? eventFormData?.eventMediaLinks?.[
-                                SocialMediaIds.Telegram
-                              ]
-                            : ""
-                        }
-                        flex={1}
-                        onChange={(event) =>
-                          setEvent({
-                            eventMediaLinks: {
-                              ...eventFormData.eventMediaLinks,
-                              [SocialMediaIds.Telegram]: event.target.value,
-                            },
-                          })
-                        }
-                        placeholder="f.e https://t.me/web3events_eng"
-                      />
-                    </Flex>
-                    <Flex gap={"1rem"} align={"center"}>
-                      <Container variant={"icon"} flex={0}>
-                        <TwitterIcon />
-                      </Container>
-                      <Input
-                        value={
-                          eventFormData?.eventMediaLinks?.hasOwnProperty(
-                            SocialMediaIds.Twitter
-                          )
-                            ? eventFormData?.eventMediaLinks?.[
-                                SocialMediaIds.Twitter
-                              ]
-                            : ""
-                        }
-                        flex={1}
-                        onChange={(event) =>
-                          setEvent({
-                            eventMediaLinks: {
-                              ...eventFormData.eventMediaLinks,
-                              [SocialMediaIds.Twitter]: event.target.value,
-                            },
-                          })
-                        }
-                        placeholder="f.e https://twitter.com/VitalikButerin"
-                      />
-                    </Flex>
-                    <Flex gap={"1rem"} align={"center"}>
-                      <Container variant={"icon"} flex={0}>
-                        <InstagramIcon />
-                      </Container>
-                      <Input
-                        value={
-                          eventFormData?.eventMediaLinks?.hasOwnProperty(
-                            SocialMediaIds.Instagram
-                          )
-                            ? eventFormData?.eventMediaLinks?.[
-                                SocialMediaIds.Instagram
-                              ]
-                            : ""
-                        }
-                        flex={1}
-                        onChange={(event) =>
-                          setEvent({
-                            eventMediaLinks: {
-                              ...eventFormData.eventMediaLinks,
-                              [SocialMediaIds.Instagram]: event.target.value,
-                            },
-                          })
-                        }
-                        placeholder="f.e https://instagram.com/buterin_vitalik.eth"
-                      />
-                    </Flex>
-                    <Flex gap={"1rem"} align={"center"}>
-                      <Container variant={"icon"} flex={0}>
-                        <FacebookIcon />
-                      </Container>
-                      <Input
-                        value={
-                          eventFormData?.eventMediaLinks?.hasOwnProperty(
-                            SocialMediaIds.Facebook
-                          )
-                            ? eventFormData?.eventMediaLinks?.[
-                                SocialMediaIds.Facebook
-                              ]
-                            : ""
-                        }
-                        flex={1}
-                        onChange={(event) =>
-                          setEvent({
-                            eventMediaLinks: {
-                              ...eventFormData.eventMediaLinks,
-                              [SocialMediaIds.Facebook]: event.target.value,
-                            },
-                          })
-                        }
-                        placeholder="f.e https://facebook.com/VitalikButerinCa"
-                      />
-                    </Flex>
-                    <Flex gap={"1rem"} align={"center"}>
-                      <Container variant={"icon"} flex={0}>
-                        <SiteIcon width={16} />
-                      </Container>
-                      <Input
-                        value={
-                          eventFormData?.eventMediaLinks?.hasOwnProperty(
-                            SocialMediaIds.Site
-                          )
-                            ? eventFormData?.eventMediaLinks?.[
-                                SocialMediaIds.Site
-                              ]
-                            : ""
-                        }
-                        flex={1}
-                        onChange={(event) =>
-                          setEvent({
-                            eventMediaLinks: {
-                              ...eventFormData.eventMediaLinks,
-                              [SocialMediaIds.Site]: event.target.value,
-                            },
-                          })
-                        }
-                        placeholder="f.e https://web3events.ai/"
-                      />
-                    </Flex>
-                  </Flex>
-                </Flex>
-              </TabPanel>
+                    <Tab />
+                  </TabPanel>
+                )
+              )}
             </TabPanels>
             <Flex mt={"4rem"} justifyContent={"space-between"}>
               <Flex align={"center"}>
                 {/* <IconButton
                   mr={"1rem"}
                   display={["none", "none", "block"]}
-                  disabled={eventFormData.tabIndex == 0}
+                  disabled={eventPersistedFormData.tabIndex == 0}
                   onClick={onPrevFormTabButtonClick}
                   icon={<ArrowBackIcon boxSize={"1.5rem"} />}
                   aria-label="back"

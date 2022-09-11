@@ -133,8 +133,10 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
                           [SocialMediaIds.Twitter]: <TwitterIcon />,
                           [SocialMediaIds.Instagram]: <InstagramIcon />,
                           [SocialMediaIds.Facebook]: <FacebookIcon />,
-                          [SocialMediaIds.Telegram]: <TelegramIcon width="1.25rem" />,
-                          [SocialMediaIds.Site]: <SiteIcon width="1.25rem" />,
+                          [SocialMediaIds.Telegram]: (
+                            <TelegramIcon width="1.25rem" />
+                          ),
+                          // [SocialMediaIds.Site]: <SiteIcon width="1.25rem" />,
                         }[mediaLinkId]
                       }
                     />
@@ -151,80 +153,78 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
         zIndex={"docked"}
         px={"2rem"}
       >
-        <Container
-          pos={"absolute"}
-          top={"-.5 rem"}
-          left={"2rem"}
-          zIndex={"overlay"}
-        >
-          <Flex
-            pos={"absolute"}
-            bottom={"1rem"}
-            gap={"3rem"}
-            zIndex={"overlay"}
-          >
-            <Flex gap={".5rem"} align={"center"}>
-              <Image src="/icons/calendar.svg"></Image>
-              <Text
-                color={"textContrast"}
-                whiteSpace={"nowrap"}
-                fontSize={["sm"]}
-              >
-                {eventData?.date?.[0] || "date"}
-              </Text>
-              {eventData?.date?.[1] && (
-                <Flex gap={".5rem"}>
-                  <ArrowForwardIcon color={"textContrast"} />
-                  <Text
-                    color={"textContrast"}
-                    whiteSpace={"nowrap"}
-                    fontSize={["sm"]}
-                  >
-                    {eventData?.date?.[1]}
-                  </Text>
-                </Flex>
-              )}
-            </Flex>
-            <Flex gap={".5rem"} align={"center"}>
-              <Image src="/icons/location.svg"></Image>
-              <Text
-                color={"textContrast"}
-                whiteSpace={"nowrap"}
-                maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
-                fontSize={["sm"]}
-                overflow={"hidden"}
-                textOverflow={"ellipsis"}
-              >
-                {eventData?.location || "location"}
-              </Text>
-            </Flex>
-          </Flex>
-          <Flex
-            pos={"absolute"}
-            bottom={"3rem"}
-            zIndex={"docked"}
-            w={"100%"}
-            left={"50%"}
-            transform={"translateX(-50%)"}
-          >
-            <Heading
-              color={"textContrast"}
-              maxW={"100%"}
-              whiteSpace={"nowrap"}
-              overflow={"hidden"}
-              textOverflow={"ellipsis"}
-            >
-              {eventData?.name || "event title"}
-            </Heading>
-          </Flex>
-        </Container>
-
         <Flex
           paddingTop={"2rem"}
           direction={"column"}
           pos={"relative"}
           gap={"2rem"}
         >
+          <Container
+            pos={"absolute"}
+            top={"-.5rem"}
+            zIndex={"overlay"}
+          >
+            <Flex
+              pos={"absolute"}
+              bottom={"1rem"}
+              gap={"3rem"}
+              zIndex={"overlay"}
+            >
+              <Flex gap={".5rem"} align={"center"}>
+                <Image src="/icons/calendar.svg"></Image>
+                <Text
+                  color={"textContrast"}
+                  whiteSpace={"nowrap"}
+                  fontSize={["sm"]}
+                >
+                  {eventData?.date?.[0] || "date"}
+                </Text>
+                {eventData?.date?.[1] && (
+                  <Flex gap={".5rem"}>
+                    <ArrowForwardIcon color={"textContrast"} />
+                    <Text
+                      color={"textContrast"}
+                      whiteSpace={"nowrap"}
+                      fontSize={["sm"]}
+                    >
+                      {eventData?.date?.[1]}
+                    </Text>
+                  </Flex>
+                )}
+              </Flex>
+              <Flex gap={".5rem"} align={"center"}>
+                <Image src="/icons/location.svg"></Image>
+                <Text
+                  color={"textContrast"}
+                  whiteSpace={"nowrap"}
+                  maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
+                  fontSize={["sm"]}
+                  overflow={"hidden"}
+                  textOverflow={"ellipsis"}
+                >
+                  {eventData?.location || "location"}
+                </Text>
+              </Flex>
+            </Flex>
+            <Flex
+              pos={"absolute"}
+              bottom={"3rem"}
+              zIndex={"docked"}
+              w={"100%"}
+              left={"50%"}
+              transform={"translateX(-50%)"}
+            >
+              <Heading
+                color={"textContrast"}
+                maxW={"100%"}
+                whiteSpace={"nowrap"}
+                overflow={"hidden"}
+                textOverflow={"ellipsis"}
+              >
+                {eventData?.name || "event title"}
+              </Heading>
+            </Flex>
+          </Container>
           <Container variant="contrastAccent">
             <Flex justify={"space-between"} align={"center"}>
               <Flex gap={"2rem"}>
@@ -281,7 +281,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
               {eventData?.shortDescription || "-"}
             </Text>
           </Flex>
-          {/* <Flex direction={"column"} px={"1rem"}>
+          <Flex direction={"column"} px={"1rem"}>
             <Heading
               fontSize={"md"}
               color={"textContrastSecondary"}
@@ -292,7 +292,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
             <Text color={"textContrast"} mt={".5rem"}>
               {eventData?.longDescription || "-"}
             </Text>
-          </Flex> */}
+          </Flex>
         </Flex>
       </Container>
     </Container>
