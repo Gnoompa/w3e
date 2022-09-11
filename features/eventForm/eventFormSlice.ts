@@ -1,59 +1,40 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { SocialMediaIds } from "helpers/hooks";
+import { RootState } from "app/store";
 
 export interface State {
-  eventTitle: string;
-  eventShortDescription?: string;
-  eventLongDescription?: string;
-  eventTicketDescription?: string;
-  eventLocation?: string;
-  eventAdditionalLocationInfo?: string;
-  eventStartDate?: string;
-  eventStartTime?: string;
-  eventEndDate?: string;
-  eventEndTime?: string;
-  isInSubscriptionMode?: boolean;
-  isIndefiniteSubscription?: boolean;
-  subscriptionDuration?: number;
-  isUnlimitedTicketSupply: boolean;
-  isFreeTicketPrice: boolean;
-  ticketSupply?: number;
-  ticketPrice?: string;
-  beneficiary: string;
-  eventManagers: (string | undefined)[];
-  eventMediaLinks: { [key in SocialMediaIds]?: string };
-  tabIndex: number;
+  fields: { name: string; tabId: number; isInvalid: boolean }[];
+  eventPoster?: Blob;
+  ticketPoster?: Blob;
 }
 
 export const initialState: State = {
-  eventTitle: "",
-  beneficiary: "",
-  eventStartDate: "",
-  eventStartTime: "",
-  eventEndDate: "",
-  eventEndTime: "",
-  eventShortDescription: "",
-  eventLongDescription: "",
-  eventLocation: "",
-  eventAdditionalLocationInfo: "",
-  ticketPrice: undefined,
-  isUnlimitedTicketSupply: false,
-  isFreeTicketPrice: false,
-  eventManagers: [],
-  eventMediaLinks: {},
-  tabIndex: 0,
+  fields: [],
 };
 
 export const slice = createSlice({
   name: "eventForm",
   initialState,
   reducers: {
-    setEvent: (state, action: PayloadAction<State>) => action.payload,
-    resetEvent: () => initialState,
+    setState: (state, action: PayloadAction<State>) => action.payload,
+    setFields: (state, action: PayloadAction<State["fields"]>) => {
+      state.fields = action.payload;
+    },
+    setEventPoster: (state, action: PayloadAction<State["eventPoster"]>) => {
+      state.eventPoster = action.payload;
+    },
+    setTicketPoster: (state, action: PayloadAction<State["ticketPoster"]>) => {
+      state.ticketPoster = action.payload;
+    },
+    resetState: () => initialState,
   },
 });
 
-export const { setEvent, resetEvent } = slice.actions;
+export const { setFields, resetState, setEventPoster, setTicketPoster } =
+  slice.actions;
+
+export const selectInvalidFields = (state: RootState) =>
+  state.eventForm.fields.filter(({ isInvalid }) => isInvalid);
 
 export default slice.reducer;

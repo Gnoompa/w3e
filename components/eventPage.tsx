@@ -126,6 +126,11 @@ const EventPage = () => {
     onClose: onTicketPreviewModalClose,
   } = useDisclosure();
   const {
+    isOpen: isEventPosterModalOpen,
+    onOpen: onOpenEventPosterModalOpen,
+    onClose: onCloseEventPosterModal,
+  } = useDisclosure();
+  const {
     isOpen: isTicketVerificationModalOpen,
     onOpen: onTicketVerificationModalOpen,
     onClose: onTicketVerificationModalClose,
@@ -169,6 +174,7 @@ const EventPage = () => {
     dids: eventMetadataUri?.[0],
   }) as { data: EventMetadata[] | undefined };
   const [eventMetadata, setEventMetadata] = useState<EventMetadata>();
+  const [isEventPosterLoaded, setIsEventPosterLoaded] = useState(false);
   const { data: events } = getEvents([{ args: [eventId] }]);
   const { data: eventManagers } = getEventManagers([{ args: [eventId] }]);
   const { data: eventTickets } = getEventTickets([{ args: [[eventId]] }]);
@@ -267,6 +273,13 @@ const EventPage = () => {
       eventMetadatas &&
       (setEventMetadata(eventMetadatas[0]), setCurrentStage(Stage.EventLoaded));
   }, [eventMetadataUri, event, eventMetadatas]);
+
+  useEffect(() => {
+    eventMetadata?.image &&
+      fetch(getIPFSUri(eventMetadata?.image as string) as string).then(() =>
+        setIsEventPosterLoaded(true)
+      );
+  }, [eventMetadata]);
 
   useEffect(() => {
     events && setEvent(events[0]);
@@ -560,24 +573,44 @@ const EventPage = () => {
                   zIndex={"base"}
                   overflow={"hidden"}
                 >
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={isEventPosterLoaded && { opacity: 1 }}
+                  >
+                    <Image
+                      src={getIPFSUri(eventMetadata?.image)}
+                      w={"100vw"}
+                      filter={"blur(40px)"}
+                    />
+                  </motion.div>
+                </Box>
+                <Box
+                  as={motion.div}
+                  initial={{ marginTop: "20rem" }}
+                  animate={
+                    isEventPosterLoaded && {
+                      marginTop: "5rem",
+                    }
+                  }
+                  whileHover={{ marginTop: "4rem" }}
+                  zIndex={"docked"}
+                  style={{ cursor: "pointer" }}
+                >
                   <Image
                     src={getIPFSUri(eventMetadata?.image)}
-                    w={"100vw"}
-                    filter={"blur(40px)"}
+                    borderRadius="lg"
+                    px={"1rem"}
+                    title={"show poster"}
+                    onClick={onOpenEventPosterModalOpen}
                   />
                 </Box>
-                <Image
-                  src={getIPFSUri(eventMetadata?.image)}
-                  zIndex={"docked"}
-                  mt={"5rem"}
-                  px={"1rem"}
-                />
               </Flex>
             )}
           </Container>
           <Container
             variant={"undersceen"}
             bg={"accentPrimary"}
+            position={"relative"}
             zIndex={"docked"}
             px={"2rem"}
           >
@@ -587,15 +620,11 @@ const EventPage = () => {
                   pos={"absolute"}
                   maxWidth={"min(1440px, calc(100vw - 4rem))"}
                   left="50%"
+                  top="-3rem"
                   transform={"translateX(-50%)"}
                   zIndex={"overlay"}
                 >
-                  <Flex
-                    pos={"absolute"}
-                    bottom={"1rem"}
-                    gap={"3rem"}
-                    zIndex={"overlay"}
-                  >
+                  <Flex gap={"3rem"} zIndex={"overlay"}>
                     <Flex gap={".5rem"} align={"center"}>
                       <Image src="/icons/calendar.svg"></Image>
                       <Text
@@ -649,78 +678,73 @@ const EventPage = () => {
                       </Text>
                     </Flex>
                   </Flex>
-                  <Flex
-                    pos={"absolute"}
-                    bottom={"3rem"}
-                    zIndex={"docked"}
-                    w={"100%"}
-                    left={"50%"}
-                    transform={"translateX(-50%)"}
+                  <Heading
+                    position={"absolute"}
+                    top={"-4rem"}
+                    color={"textContrast"}
+                    maxW={"95%"}
+                    whiteSpace={"nowrap"}
+                    overflow={"hidden"}
+                    textOverflow={"ellipsis"}
                   >
-                    <Heading
-                      color={"textContrast"}
-                      maxW={"100%"}
-                      whiteSpace={"nowrap"}
-                      overflow={"hidden"}
-                      textOverflow={"ellipsis"}
+                    {eventMetadata?.name}
+                  </Heading>
+                  {getMetadataAttribute(eventMetadata, "media") && (
+                    <Flex
+                      pos={"absolute"}
+                      top={"-14rem"}
+                      right={"0rem"}
+                      zIndex={"overlay"}
+                      direction={"column"}
+                      gap={".5rem"}
                     >
-                      {eventMetadata?.name}
-                    </Heading>
-                  </Flex>
-                </Container>
-                {getMetadataAttribute(eventMetadata, "media") && (
-                  <Flex
-                    pos={"absolute"}
-                    top={"2rem"}
-                    right={"2rem"}
-                    zIndex={"overlay"}
-                    direction={"column"}
-                    gap={".5rem"}
-                  >
-                    {Object.keys(
-                      // @ts-ignore
-                      getMetadataAttribute(eventMetadata, "media")
-                    ).map(
-                      (mediaLinkId) =>
-                        getMetadataAttribute(eventMetadata, "media")?.[
-                          // @ts-ignore
-                          mediaLinkId as SocialMediaIds
-                        ] && (
-                          // @ts-ignore
-                          <Link
-                            href={
-                              // @ts-ignore
-                              getMetadataAttribute(eventMetadata, "media")[
-                                mediaLinkId as keyof SocialMediaIds
-                              ] as string
-                            }
-                            target={"_blank"}
-                          >
-                            <IconButton
-                              variant={"icon"}
-                              as={motion.div}
-                              aria-label={mediaLinkId}
-                              initial={fadeRightSlideAnimation["false"]}
-                              animate={fadeRightSlideAnimation["true"]}
-                              icon={
-                                {
-                                  [SocialMediaIds.Twitter]: <TwitterIcon />,
-                                  [SocialMediaIds.Instagram]: <InstagramIcon />,
-                                  [SocialMediaIds.Facebook]: <FacebookIcon />,
-                                  [SocialMediaIds.Telegram]: (
-                                    <TelegramIcon width="1.25rem" />
-                                  ),
-                                  [SocialMediaIds.Site]: (
-                                    <SiteIcon width="1.25rem" />
-                                  ),
-                                }[mediaLinkId]
+                      {Object.keys(
+                        // @ts-ignore
+                        getMetadataAttribute(eventMetadata, "media")
+                      ).map(
+                        (mediaLinkId) =>
+                          getMetadataAttribute(eventMetadata, "media")?.[
+                            // @ts-ignore
+                            mediaLinkId as SocialMediaIds
+                          ] && (
+                            // @ts-ignore
+                            <Link
+                              href={
+                                // @ts-ignore
+                                getMetadataAttribute(eventMetadata, "media")[
+                                  mediaLinkId as keyof SocialMediaIds
+                                ] as string
                               }
-                            />
-                          </Link>
-                        )
-                    )}
-                  </Flex>
-                )}
+                              target={"_blank"}
+                            >
+                              <IconButton
+                                variant={"icon"}
+                                as={motion.div}
+                                aria-label={mediaLinkId}
+                                initial={fadeRightSlideAnimation["false"]}
+                                animate={fadeRightSlideAnimation["true"]}
+                                icon={
+                                  {
+                                    [SocialMediaIds.Twitter]: <TwitterIcon />,
+                                    [SocialMediaIds.Instagram]: (
+                                      <InstagramIcon />
+                                    ),
+                                    [SocialMediaIds.Facebook]: <FacebookIcon />,
+                                    [SocialMediaIds.Telegram]: (
+                                      <TelegramIcon width="1.25rem" />
+                                    ),
+                                    [SocialMediaIds.Site]: (
+                                      <SiteIcon width="1.25rem" />
+                                    ),
+                                  }[mediaLinkId]
+                                }
+                              />
+                            </Link>
+                          )
+                      )}
+                    </Flex>
+                  )}
+                </Container>
               </>
             )}
             <Flex
@@ -1025,6 +1049,22 @@ const EventPage = () => {
           </Container>
         </Flex>
       </Flex>
+      <Modal isOpen={isEventPosterModalOpen} onClose={onCloseEventPosterModal}>
+        <ModalOverlay></ModalOverlay>
+        <ModalContent
+          maxW={"calc(100vw - 4rem)"}
+          bg={"transparent"}
+          onClick={onCloseEventPosterModal}
+        >
+          <Image
+            src={getIPFSUri(eventMetadata?.image)}
+            maxW={"calc(100vw - 4rem)"}
+            width={"fit-content"}
+            margin="0 auto"
+            // onClick={onCloseEventPosterModal}
+          ></Image>
+        </ModalContent>
+      </Modal>
     </Container>
   );
 };

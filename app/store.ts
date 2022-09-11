@@ -11,16 +11,20 @@ import {
   REGISTER,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import eventPersistedFormReducer from "../features/eventForm/eventPersistedFormSlice";
 import eventFormReducer from "../features/eventForm/eventFormSlice";
+import eventPreviewReducer from "../features/eventForm/eventPreviewSlice";
 
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["eventForm"],
+  whitelist: ["eventPersistedForm"],
 };
 
 const reducer = combineReducers({
+  eventPersistedForm: eventPersistedFormReducer,
   eventForm: eventFormReducer,
+  eventPreview: eventPreviewReducer,
 });
 
 export const store = configureStore({
