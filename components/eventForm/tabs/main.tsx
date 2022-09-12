@@ -77,7 +77,7 @@ const MainTab = () => {
           onChange={(event) =>
             dispatch(upsertEvent({ eventTitle: event.target.value }))
           }
-          onBlur={() => validateField("eventTitle")}
+          onBlur={() => validateField({ fieldName: "eventTitle" })}
         />
         <FormLabel>Event title</FormLabel>
       </FormControl>
@@ -95,7 +95,7 @@ const MainTab = () => {
           onChange={(event) =>
             dispatch(upsertEvent({ eventShortDescription: event.target.value }))
           }
-          onBlur={() => validateField("eventShortDescription")}
+          onBlur={() => validateField({ fieldName: "eventShortDescription" })}
           isInvalid={getIsFieldInvalid("eventShortDescription")}
         />
         <FormLabel>Short description</FormLabel>

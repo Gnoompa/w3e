@@ -6,7 +6,6 @@ export interface State {
   eventTitle: string;
   eventShortDescription?: string;
   eventLongDescription?: string;
-  eventTicketDescription?: string;
   eventLocation?: string;
   eventAdditionalLocationInfo?: string;
   eventStartDate?: string;
@@ -16,10 +15,12 @@ export interface State {
   isInSubscriptionMode?: boolean;
   isIndefiniteSubscription?: boolean;
   subscriptionDuration?: number;
-  isUnlimitedTicketSupply: boolean;
-  isFreeTicketPrice: boolean;
-  ticketSupply?: number;
-  ticketPrice?: string;
+  eventTicketName: { [key: number]: string };
+  eventTicketDescription: { [key: number]: string };
+  isUnlimitedTicketSupply: { [key: number]: boolean };
+  isFreeTicketPrice: { [key: number]: boolean };
+  ticketSupply: { [key: number]: number };
+  ticketPrice: { [key: number]: string };
   beneficiary: string;
   eventManagers: (string | undefined)[];
   eventMediaLinks: { [key in SocialMediaIds]?: string };
@@ -37,9 +38,12 @@ export const initialState: State = {
   eventLongDescription: "",
   eventLocation: "",
   eventAdditionalLocationInfo: "",
-  ticketPrice: undefined,
-  isUnlimitedTicketSupply: false,
-  isFreeTicketPrice: false,
+  ticketPrice: {},
+  eventTicketName: {},
+  isUnlimitedTicketSupply: {},
+  ticketSupply: {},
+  eventTicketDescription: {},
+  isFreeTicketPrice: {},
   eventManagers: [],
   eventMediaLinks: {},
   tabIndex: 0,

@@ -6,7 +6,7 @@ import { RootState } from "app/store";
 export interface State {
   fields: { name: string; tabId: number; isInvalid: boolean }[];
   eventPoster?: Blob;
-  ticketPoster?: Blob;
+  ticketPosters?: {[key: number]: Blob};
 }
 
 export const initialState: State = {
@@ -24,14 +24,17 @@ export const slice = createSlice({
     setEventPoster: (state, action: PayloadAction<State["eventPoster"]>) => {
       state.eventPoster = action.payload;
     },
-    setTicketPoster: (state, action: PayloadAction<State["ticketPoster"]>) => {
-      state.ticketPoster = action.payload;
+    setTicketPosters: (
+      state,
+      action: PayloadAction<State["ticketPosters"]>
+    ) => {
+      state.ticketPosters = action.payload;
     },
     resetState: () => initialState,
   },
 });
 
-export const { setFields, resetState, setEventPoster, setTicketPoster } =
+export const { setFields, resetState, setEventPoster, setTicketPosters } =
   slice.actions;
 
 export const selectInvalidFields = (state: RootState) =>

@@ -27,7 +27,7 @@ import { useAppSelector, useDebounce } from "helpers/hooks";
 import {
   selectInvalidFields,
   setEventPoster,
-  setTicketPoster,
+  setTicketPosters,
 } from "features/eventForm/eventFormSlice";
 import { useAppDispatch } from "helpers/hooks";
 import { AddIcon, QuestionIcon } from "@chakra-ui/icons";
@@ -38,7 +38,7 @@ import { default as useEventFormValidationHook } from "../validationHook";
 import { BigNumberish, ethers } from "ethers";
 import { getNativeCurrencyToUsdPrice } from "helpers/contract";
 
-const VenueTab = () => {
+const TicketsTab = () => {
   const dispatch = useAppDispatch();
   const { validateField, getIsFieldInvalid } = useEventFormValidationHook();
   const eventPersistedFormData = useAppSelector(
@@ -47,6 +47,7 @@ const VenueTab = () => {
   const eventFormData = useAppSelector((state) => state.eventForm);
   const eventPreviewData = useAppSelector((state) => state.eventPreview);
   const invalidEventFormFields = useAppSelector(selectInvalidFields);
+  const [editingTicketIndex, setEditingTicketIndex] = useState<number>(0);
 
   const {
     isOpen: isEventTicketDescriptionFieldOpen,
@@ -54,10 +55,10 @@ const VenueTab = () => {
     onClose: onCloseEventTicketDescriptionField,
   } = useDisclosure();
 
-  const debouncedTicketPrice = useDebounce(
-    eventPersistedFormData.ticketPrice,
-    4000
-  );
+  // const debouncedTicketPrice = useDebounce(
+  //   eventPersistedFormData.ticketPrice,
+  //   4000
+  // );
   const [nativeCurrencyToUsdPrice, setNativeCurrencyToUsdPrice] =
     useState<BigNumberish>();
   const {
@@ -93,11 +94,11 @@ const VenueTab = () => {
     eventPersistedFormData.isFreeTicketPrice,
   ]);
 
-  useEffect(() => {
-    !eventPersistedFormData.isFreeTicketPrice &&
-      debouncedTicketPrice &&
-      refetchNativeCurrencyToUsdPrice();
-  }, [eventPersistedFormData.isFreeTicketPrice, debouncedTicketPrice]);
+  // useEffect(() => {
+  //   !eventPersistedFormData.isFreeTicketPrice &&
+  //     debouncedTicketPrice &&
+  //     refetchNativeCurrencyToUsdPrice();
+  // }, [eventPersistedFormData.isFreeTicketPrice, debouncedTicketPrice]);
 
   return (
     <TabContainer title={"Tickets"}>
@@ -134,7 +135,14 @@ const VenueTab = () => {
             Drad and grop or click to upload ticket cover
           </Highlight>
         }
-        onChange={(files) => dispatch(setTicketPoster(files[0]))}
+        onChange={(files) =>
+          dispatch(
+            setTicketPosters({
+              ...eventFormData.ticketPosters,
+              [editingTicketIndex]: files[0],
+            })
+          )
+        }
         config={{
           maxFiles: 1,
           accept: { "image/*": [], "video/*": [] },
@@ -172,11 +180,20 @@ const VenueTab = () => {
           <FormControl variant="floating" id="ticketDesc">
             <Textarea
               autoFocus
-              value={eventPersistedFormData.eventTicketDescription}
+              value={
+                eventPersistedFormData.eventTicketDescription[
+                  editingTicketIndex
+                ]
+              }
               placeholder=" "
               onChange={(event) =>
                 dispatch(
-                  upsertEvent({ eventTicketDescription: event.target.value })
+                  upsertEvent({
+                    eventTicketDescription: {
+                      ...eventPersistedFormData.eventTicketDescription,
+                      [editingTicketIndex]: event.target.value,
+                    },
+                  })
                 )
               }
             />
@@ -185,7 +202,14 @@ const VenueTab = () => {
           <CloseButton
             onClick={() => (
               onCloseEventTicketDescriptionField(),
-              dispatch(upsertEvent({ eventTicketDescription: "" }))
+              dispatch(
+                upsertEvent({
+                  eventTicketDescription: {
+                    ...eventPersistedFormData.eventTicketDescription,
+                    [editingTicketIndex]: "",
+                  },
+                })
+              )
             )}
           />
         </Flex>
@@ -201,18 +225,27 @@ const VenueTab = () => {
           <InputGroup>
             <InputLeftAddon children="$" />
             <Input
-              value={eventPersistedFormData.ticketPrice}
-              isDisabled={eventPersistedFormData.isFreeTicketPrice}
+              value={eventPersistedFormData.ticketPrice[editingTicketIndex]}
+              isDisabled={
+                eventPersistedFormData.isFreeTicketPrice[editingTicketIndex]
+              }
               type="number"
               max="99999"
               placeholder=" "
               onChange={(event) =>
-                dispatch(upsertEvent({ ticketPrice: event.target.value }))
+                dispatch(
+                  upsertEvent({
+                    ticketPrice: {
+                      ...eventPersistedFormData.ticketPrice,
+                      [editingTicketIndex]: event.target.value,
+                    },
+                  })
+                )
               }
               textAlign={"center"}
-              onBlur={() => validateField("ticketPrice")}
+              onBlur={() => validateField({ fieldName: "ticketPrice" })}
             />
-            <FormLabel left={"3rem !important"}>Ticket price</FormLabel>
+            <FormLabel left={"3rem !important"}>Price</FormLabel>
           </InputGroup>
           <FormHelperText textAlign={"right"}>
             {ticketNativeCurrencyPriceLabel}
@@ -223,74 +256,129 @@ const VenueTab = () => {
           alignItems="center"
           flex={0.4}
           mt="-1.25rem"
+          gap={"1rem"}
         >
-          <FormLabel htmlFor="freeTickets" mb="0">
-            free
-          </FormLabel>
           <Switch
-            value={+eventPersistedFormData.isFreeTicketPrice}
-            isChecked={eventPersistedFormData.isFreeTicketPrice}
+            value={
+              +eventPersistedFormData.isFreeTicketPrice[editingTicketIndex]
+            }
+            isChecked={
+              eventPersistedFormData.isFreeTicketPrice[editingTicketIndex]
+            }
             onChange={() => (
               dispatch(
                 upsertEvent({
-                  isFreeTicketPrice: !eventPersistedFormData.isFreeTicketPrice,
+                  isFreeTicketPrice: {
+                    ...eventPersistedFormData.isFreeTicketPrice,
+                    [editingTicketIndex]:
+                      !eventPersistedFormData.isFreeTicketPrice[
+                        editingTicketIndex
+                      ],
+                  },
                 })
               ),
-              setTimeout(() => validateField("ticketPrice"))
+              setTimeout(() =>
+                validateField({
+                  fieldName: "ticketPrice",
+                  value: {
+                    ...eventPersistedFormData,
+                    isFreeTicketPrice: {
+                      ...eventPersistedFormData.isFreeTicketPrice,
+                      [editingTicketIndex]:
+                        !eventPersistedFormData.isFreeTicketPrice[
+                          editingTicketIndex
+                        ],
+                    },
+                  },
+                })
+              )
             )}
             id="freeTickets"
             size={"lg"}
           />
+          <FormLabel htmlFor="freeTickets" mb="0">
+            free
+          </FormLabel>
         </FormControl>
       </Flex>
       <Flex gap={"1rem"} justifyContent={"space-between"}>
         <FormControl
           flex={0.6}
-          isDisabled={eventPersistedFormData.isUnlimitedTicketSupply}
+          isDisabled={
+            eventPersistedFormData.isUnlimitedTicketSupply[editingTicketIndex]
+          }
           variant="floating"
           id="ticketSupply"
           isRequired
           isInvalid={getIsFieldInvalid("ticketSupply")}
         >
           <Input
-            value={eventPersistedFormData.ticketSupply}
+            value={eventPersistedFormData.ticketSupply[editingTicketIndex]}
             placeholder=" "
             type="number"
             min={1}
             onChange={(event) =>
               dispatch(
                 upsertEvent({
-                  ticketSupply: +event.target.value,
+                  ticketSupply: {
+                    ...eventPersistedFormData.ticketSupply,
+                    [editingTicketIndex]: +event.target.value,
+                  },
                 })
               )
             }
-            onBlur={() => validateField("ticketSupply")}
+            onBlur={() => validateField({ fieldName: "ticketSupply" })}
           />
-          <FormLabel>Tickets supply</FormLabel>
+          <FormLabel>Amount</FormLabel>
         </FormControl>
-        <FormControl display="flex" alignItems="center" flex={0.4}>
-          <FormLabel htmlFor="unlimitedTicketSupply" mb="0">
-            unlimited
-          </FormLabel>
+        <FormControl display="flex" alignItems="center" flex={0.4} gap={"1rem"}>
           <Switch
-            value={+eventPersistedFormData.isUnlimitedTicketSupply}
-            isChecked={eventPersistedFormData.isUnlimitedTicketSupply}
+            value={
+              +eventPersistedFormData.isUnlimitedTicketSupply[
+                editingTicketIndex
+              ]
+            }
+            isChecked={
+              eventPersistedFormData.isUnlimitedTicketSupply[editingTicketIndex]
+            }
             onChange={() => (
               dispatch(
                 upsertEvent({
-                  isUnlimitedTicketSupply:
-                    !eventPersistedFormData.isUnlimitedTicketSupply,
+                  isUnlimitedTicketSupply: {
+                    ...eventPersistedFormData.isUnlimitedTicketSupply,
+                    [editingTicketIndex]:
+                      !eventPersistedFormData.isUnlimitedTicketSupply[
+                        editingTicketIndex
+                      ],
+                  },
                 })
               ),
-              setTimeout(() => validateField("ticketSupply"))
+              setTimeout(() =>
+                validateField({
+                  fieldName: "ticketSupply",
+                  value: {
+                    ...eventPersistedFormData,
+                    isUnlimitedTicketSupply: {
+                      ...eventPersistedFormData.isUnlimitedTicketSupply,
+                      [editingTicketIndex]:
+                        !eventPersistedFormData.isUnlimitedTicketSupply[
+                          editingTicketIndex
+                        ],
+                    },
+                  },
+                })
+              )
             )}
             id="unlimitedTicketSupply"
             size={"lg"}
           />
+          <FormLabel htmlFor="unlimitedTicketSupply" mb="0">
+            unlimited
+          </FormLabel>
         </FormControl>
       </Flex>
     </TabContainer>
   );
 };
 
-export default VenueTab;
+export default TicketsTab;
