@@ -68,7 +68,7 @@ import {
 } from "features/eventForm/eventFormSlice";
 import { default as MainInfoTab } from "./eventForm/tabs/main";
 import { default as VenueTab } from "./eventForm/tabs/venue";
-import { default as TicketTab } from "./eventForm/tabs/ticket";
+import { default as TicketTab } from "./eventForm/tabs/tickets";
 import { default as PaymentTab } from "./eventForm/tabs/payment";
 import { default as SocialsTab } from "./eventForm/tabs/socials";
 import { default as useEventFormValidationHook } from "./eventForm/validationHook";
@@ -205,8 +205,8 @@ const EventForm = () => {
       ]
         .filter(Boolean)
         .join(", "),
-      eventTicketPriceLabel: eventPersistedFormData.ticketPrice
-        ? "$" + eventPersistedFormData.ticketPrice
+      eventTicketPriceLabel: eventPersistedFormData.ticketPrice[0]
+        ? "$" + eventPersistedFormData.ticketPrice[0]
         : "",
       date: [
         eventPersistedFormData.eventStartDate
@@ -222,10 +222,13 @@ const EventForm = () => {
             )
           : "",
       ].filter(Boolean),
-      eventTicketsTotalSupply: `${eventPersistedFormData.ticketSupply || ""}`,
+      eventTicketsTotalSupply: `${
+        eventPersistedFormData.ticketSupply[0] || ""
+      }`,
       mediaLinks: eventPersistedFormData.eventMediaLinks,
-      isUnlimitedTicketSupply: eventPersistedFormData.isUnlimitedTicketSupply,
-      isFreeTicketPrice: eventPersistedFormData.isFreeTicketPrice,
+      isUnlimitedTicketSupply:
+        eventPersistedFormData.isUnlimitedTicketSupply[0],
+      isFreeTicketPrice: eventPersistedFormData.isFreeTicketPrice[0],
     });
 
     eventPersistedFormDataRef.current = eventPersistedFormData;
@@ -367,7 +370,7 @@ const EventForm = () => {
   ): Partial<EventTicketMetadata> => ({
     name: ticketData.eventTitle || "",
     description:
-      ticketData.eventTicketDescription ||
+      ticketData.eventTicketDescription[0] ||
       ticketData.eventShortDescription ||
       "",
   });
@@ -460,8 +463,8 @@ const EventForm = () => {
     !!invalidEventFormFields.filter(({ tabId }) => tabId == tabIndex).length;
 
   const validateEventFormTabFields = (tabIndex: number) =>
-    eventFormTabIdToFieldNameMap[tabIndex]?.map((field) =>
-      validateEventFormField(field, tabIndex)
+    eventFormTabIdToFieldNameMap[tabIndex]?.map((fieldName) =>
+      validateEventFormField({ fieldName, tabId: tabIndex })
     );
 
   const onEventFormTabChange = (tabIndex: number) => {

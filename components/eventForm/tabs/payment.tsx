@@ -92,7 +92,7 @@ const PaymentTab = () => {
           onChange={(event) =>
             dispatch(upsertEvent({ beneficiary: event.target.value }))
           }
-          onBlur={() => validateField("beneficiary")}
+          onBlur={() => validateField({ fieldName: "beneficiary" })}
         />
         <FormLabel>Beneficiary wallet address</FormLabel>
         <Button
@@ -100,7 +100,7 @@ const PaymentTab = () => {
           onClick={() =>
             isWalletConnected
               ? (dispatch(upsertEvent({ beneficiary: connectedWalletAddress })),
-                setTimeout(() => validateField("beneficiary")))
+                setTimeout(() => validateField({ fieldName: "beneficiary" })))
               : setWalletConnectModalOpen(true)
           }
         >
