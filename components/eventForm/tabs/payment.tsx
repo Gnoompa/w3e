@@ -58,6 +58,18 @@ const PaymentTab = () => {
     );
   }, [eventFormData.eventPoster]);
 
+  useEffect(() => {
+    isWalletConnected &&
+      (dispatch(upsertEvent({ beneficiary: connectedWalletAddress })),
+      validateField({
+        fieldName: "beneficiary",
+        value: {
+          ...eventPersistedFormData,
+          beneficiary: connectedWalletAddress,
+        },
+      }));
+  }, [isWalletConnected]);
+
   const addEventManager = () => {
     dispatch(
       upsertEvent({
@@ -100,7 +112,15 @@ const PaymentTab = () => {
           onClick={() =>
             isWalletConnected
               ? (dispatch(upsertEvent({ beneficiary: connectedWalletAddress })),
-                setTimeout(() => validateField({ fieldName: "beneficiary" })))
+                setTimeout(() =>
+                  validateField({
+                    fieldName: "beneficiary",
+                    value: {
+                      ...eventPersistedFormData,
+                      beneficiary: connectedWalletAddress,
+                    },
+                  })
+                ))
               : setWalletConnectModalOpen(true)
           }
         >

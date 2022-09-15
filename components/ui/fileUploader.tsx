@@ -5,12 +5,15 @@ import { DeleteIcon } from "@chakra-ui/icons";
 
 type FileUploaderProps = {
   placeholder?: string | JSX.Element;
+  value?: Array<Blob>;
   config?: DropzoneOptions;
   onChange?: (files: Array<Blob>) => any;
 };
 
 export const FileUploader = (props: FileUploaderProps) => {
-  const [files, setFiles] = useState<Array<Blob>>();
+  const [files, setFiles] = useState<Array<Blob> | undefined>(
+    props.value || undefined
+  );
   const [preview, setPreview] = useState<string>();
 
   useEffect(() => {

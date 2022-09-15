@@ -262,7 +262,9 @@ export const getEventManagers = (
 
 export const getTokenMetadataUris = (
   configs: (Omit<Partial<Parameters<typeof useContractRead>[0]>, "args"> & {
-    args: Parameters<typeof TokenContractTypechain.prototype.uriOfBatch>[0][];
+    args:
+      | Parameters<typeof TokenContractTypechain.prototype.uriOfBatch>[0][]
+      | undefined;
   })[],
   chainIds: Chain["id"][] = [defaultChainId]
 ) =>

@@ -1,14 +1,6 @@
 import { useAppDispatch, useAppSelector } from "helpers/hooks";
 import React, { useEffect, useRef } from "react";
-import yup, {
-  object,
-  string,
-  number,
-  InferType,
-  TypeOf,
-  ObjectSchema,
-  array,
-} from "yup";
+import yup, { object, string } from "yup";
 import { State as IEventFormState } from "features/eventForm/eventPersistedFormSlice";
 import {
   selectInvalidFields,
@@ -24,7 +16,7 @@ export default () => {
   );
   const eventFormFieldsRef = useRef(eventForm.fields);
 
-  const validationSchema = (value: typeof eventPersistedForm) =>
+  const validationSchema = (value: Partial<typeof eventPersistedForm>) =>
     object({
       eventTitle: string().required(),
       eventShortDescription: string().required(),
@@ -33,7 +25,7 @@ export default () => {
           ((result) => result.length && !result.includes(false))(
             Object.keys({ ...ticketPrice, ...value.isFreeTicketPrice }).map(
               (ticketIndex) =>
-                value.isFreeTicketPrice[+ticketIndex] ||
+                value.isFreeTicketPrice?.[+ticketIndex] ||
                 +ticketPrice[ticketIndex] > 0
             )
           ) as boolean
@@ -46,8 +38,16 @@ export default () => {
               ...value.isUnlimitedTicketSupply,
             }).map(
               (ticketIndex) =>
-                value.isUnlimitedTicketSupply[+ticketIndex] ||
+                value.isUnlimitedTicketSupply?.[+ticketIndex] ||
                 +ticketSupply[ticketIndex] > 0
+            )
+          ) as boolean
+      ),
+      eventTicketName: object().test(
+        (eventTicketName) =>
+          ((result) => result.length && !result.includes(false))(
+            Object.keys(eventTicketName).map(
+              (ticketIndex) => eventTicketName[ticketIndex]?.trim()?.length >= 3
             )
           ) as boolean
       ),
@@ -58,10 +58,12 @@ export default () => {
     fieldName,
     value,
     tabId,
+    invalidateFields = true,
   }: {
     fieldName: keyof typeof eventPersistedForm;
     tabId?: number;
-    value?: typeof eventPersistedForm;
+    value?: Partial<typeof eventPersistedForm>;
+    invalidateFields?: boolean;
   }) =>
     validationSchema(value || eventPersistedForm)
       .validateAt(fieldName, value || eventPersistedForm)
@@ -71,23 +73,25 @@ export default () => {
         )
       )
       .catch((error) => {
-        dispatch(
-          setFields(
-            (eventFormFieldsRef.current = [
-              ...eventFormFieldsRef.current,
-              {
-                name: fieldName,
-                tabId:
-                  tabId !== undefined
-                    ? tabId
-                    : (value || eventPersistedForm).tabIndex,
-                isInvalid: true,
-              },
-            ])
-          )
-        );
+        invalidateFields &&
+          dispatch(
+            setFields(
+              (eventFormFieldsRef.current = [
+                ...eventFormFieldsRef.current,
+                {
+                  name: fieldName,
+                  tabId:
+                    tabId !== undefined
+                      ? tabId
+                      : (value || eventPersistedForm).tabIndex,
+                  isInvalid: true,
+                },
+              ])
+            )
+          );
 
-        if (tabId) {
+        if (tabId !== undefined) {
+          // todo refactor optional error propagation
           throw error;
         }
       });

@@ -59,6 +59,7 @@ import {
 } from "wagmi";
 import {
   buyEventTicket,
+  defaultChainId,
   getBalanceOfToken,
   getEventManagers,
   getEvents,
@@ -107,7 +108,7 @@ const EventPage = () => {
   const [eventTokenId, setEventTokenId] = useState<string>();
   const [event, setEvent] = useState<OnchainEvent>();
   const [scannedTickets, setScannedTickets] = useState<Array<object>>([]);
-  const [isBuyingATicket, setIsBuyingATicket] = useState(false);
+  const [isBuyingATicket, setIsBuyingATicket] = useState<number>();
   const [isVerifyingATicket, setIsVerifyingATicket] = useState(false);
   const [eventTicketStartingPrice, setEventTicketStartingPrice] =
     useState<BigNumberish>();
@@ -129,6 +130,11 @@ const EventPage = () => {
     isOpen: isEventPosterModalOpen,
     onOpen: onOpenEventPosterModalOpen,
     onClose: onCloseEventPosterModal,
+  } = useDisclosure();
+  const {
+    isOpen: isEventTicketsModalOpen,
+    onOpen: onOpenEventTicketsModalOpen,
+    onClose: onCloseEventTicketsModalOpen,
   } = useDisclosure();
   const {
     isOpen: isTicketVerificationModalOpen,
@@ -223,13 +229,24 @@ const EventPage = () => {
   const { data: eventTicketsCreatedEvents } = useMainContractEvents({
     eventName: "TicketsCreated",
     filters: {
-      [chain.polygonMumbai.id]: [
-        null,
-        BigNumber.from(routerQuery.id).toHexString(),
-      ],
+      [defaultChainId]: [null, BigNumber.from(routerQuery.id).toHexString()],
     },
     provider,
   });
+  const {
+    data: eventTicketMetadataUri,
+    refetch: refetchEventTicketMetadataUri,
+  } = getTokenMetadataUris([
+    {
+      args: eventTicketsCreatedEvents
+        ? [eventTicketsCreatedEvents[0].map((event) => event.args.tokenId)]
+        : undefined,
+      enabled: false,
+    },
+  ]);
+  const { data: eventTicketMetadatas } = useTokenMetadataFetch({
+    dids: eventTicketMetadataUri?.[0],
+  }) as { data: EventTicketMetadata[] | undefined };
   const {
     data: eventTicketBoughtEvents,
     refetch: refetchEventTicketBoughtEvents,
@@ -237,7 +254,7 @@ const EventPage = () => {
   } = useMainContractEvents({
     eventName: "TicketBought",
     filters: {
-      [chain.polygonMumbai.id]: [BigNumber.from(routerQuery.id).toHexString()],
+      [defaultChainId]: [BigNumber.from(routerQuery.id).toHexString()],
     },
     provider,
   });
@@ -288,11 +305,10 @@ const EventPage = () => {
   useEffect(() => {
     eventTickets &&
       setEventTicketPriceLabel(
-        BigNumber.from(eventTickets[0][0][0].price).eq(0)
-          ? "FREE"
-          : `$${(+ethers.utils.formatEther(
-              eventTickets[0][0][0].price.toString()
-            )).toFixed(2)}`
+        getEventTicketPriceLabel(0) +
+          (eventTickets[0][0].length > 1
+            ? " - " + getEventTicketPriceLabel(eventTickets[0][0].length - 1)
+            : "")
       );
   }, [eventTickets]);
 
@@ -300,11 +316,9 @@ const EventPage = () => {
     eventTickets &&
       (setEventTicketStartingPrice(eventTickets[0][0][0].price),
       setEventTicketsTotalSupply(
-        BigNumber.from(eventTickets[0][0][0].price).eq(0)
-          ? "∞"
-          : eventTickets[0][0]
-              .map((ticketTier) => +ticketTier.supply)
-              .reduce((a, b) => a + b)
+        eventTickets[0][0]
+          .map((ticketTier) => +ticketTier.supply)
+          .reduce((a, b) => a + b) || "∞"
       ));
   }, [eventTickets]);
 
@@ -338,14 +352,16 @@ const EventPage = () => {
     buyEventTicketWriteData &&
       (isSuccessBuyEventTicketWrite &&
         (refetchEventTicketBoughtEvents(),
-        setIsBuyingATicket(false),
+        setIsBuyingATicket(undefined),
+        onCloseEventTicketsModalOpen(),
         toast({
           title: "A ticket has been bought",
           status: "success",
           isClosable: true,
         })),
       isErrorBuyEventTicketWrite &&
-        (toast({
+        (setIsBuyingATicket(undefined),
+        toast({
           title: "Couldn't buy a ticket",
           status: "error",
           isClosable: true,
@@ -391,8 +407,12 @@ const EventPage = () => {
   }, [copiedValue]);
 
   useEffect(() => {
-    console.log(connectedWalletAddress, eventTicketBoughtEvents);
-  }, [connectedWalletAddress, eventTicketBoughtEvents]);
+    eventTicketsCreatedEvents && refetchEventTicketMetadataUri();
+  }, [eventTicketsCreatedEvents]);
+
+  useEffect(() => {
+    eventTicketsCreatedEvents && refetchEventTicketMetadataUri();
+  }, [eventTicketMetadataUri]);
 
   // todo use recently created event data if exists
   const initEvent = async (eventTokenId: string) => {
@@ -411,6 +431,26 @@ const EventPage = () => {
           .mul(
             +ethers.utils.formatEther(eventTickets[0][0][0].price.toString())
           );
+
+  const getEventTicketPriceLabel = (ticketIndex: number) =>
+    eventTickets?.[0]?.[0]?.[ticketIndex] &&
+    BigNumber.from(eventTickets[0][0][ticketIndex].price).eq(0)
+      ? "FREE"
+      : `$${(+ethers.utils.formatEther(
+          eventTickets[0][0][ticketIndex].price.toString()
+        )).toFixed(2)}`;
+
+  const getEventTicketNativeCurrencyPriceLabel = (ticketIndex: number) =>
+    eventTickets?.[0]?.[0]?.[ticketIndex] &&
+    nativeCurrencyToUsdPrice &&
+    !BigNumber.from(eventTickets[0][0][ticketIndex].price).eq(0)
+      ? `~${(+ethers.utils.formatUnits(
+          nativeCurrencyToUsdPrice[0].answer
+            .mul(eventTickets[0][0][ticketIndex].price)
+            .toString(),
+          26
+        )).toFixed(4)} MATIC`
+      : "";
 
   const onTicketVerificationQrScanned = (scannedTicketQrDataJSON: string) => {
     if (scannedTicketQrDataJSON) {
@@ -466,9 +506,7 @@ const EventPage = () => {
       : undefined;
 
   const onBuyEventTicketButtonClick = (ticketIndex: number) => {
-    setIsBuyingATicket(true);
-
-    console.log(eventTickets[0][0][ticketIndex]);
+    setIsBuyingATicket(ticketIndex);
 
     try {
       const ticketTokenId = getTicketTokenId(ticketIndex);
@@ -531,8 +569,12 @@ const EventPage = () => {
         ...toastConfig,
       }),
       console.error(error),
-      setIsBuyingATicket(false);
+      setIsBuyingATicket(undefined);
   };
+
+  useEffect(() => {
+    console.log(eventTicketMetadatas);
+  }, [eventTicketMetadatas]);
 
   return (
     <Container mt={"-2.5rem"} variant={"fullscreen"} minH={"100vh"}>
@@ -575,7 +617,9 @@ const EventPage = () => {
                 >
                   <motion.div
                     initial={{ opacity: 0 }}
-                    animate={isEventPosterLoaded && { opacity: 1 }}
+                    animate={
+                      isEventPosterLoaded ? { opacity: 1 } : { opacity: 0 }
+                    }
                   >
                     <Image
                       src={getIPFSUri(eventMetadata?.image)}
@@ -871,9 +915,14 @@ const EventPage = () => {
                     {canConnectedWalletBuyTickets ? (
                       <Button
                         variant={"accent"}
-                        onClick={() => onBuyEventTicketButtonClick(0)}
+                        onClick={() =>
+                          eventTickets[0][0].length > 1
+                            ? onOpenEventTicketsModalOpen()
+                            : onBuyEventTicketButtonClick(0)
+                        }
                         isLoading={
-                          isBuyingATicket || isLoadingEventTicketBoughtEvents
+                          isBuyingATicket === 0 ||
+                          isLoadingEventTicketBoughtEvents
                         }
                       >
                         buy
@@ -1011,18 +1060,35 @@ const EventPage = () => {
                   </Modal>
                 </Flex>
               </Container>
-              <Flex direction={"column"} px={"1rem"}>
-                <Heading
-                  fontSize={"md"}
-                  color={"textContrastSecondary"}
-                  fontWeight={"md"}
-                >
-                  Short Description
-                </Heading>
-                <Text color={"textContrast"} mt={".5rem"}>
-                  {eventMetadata?.description || "-"}
-                </Text>
-              </Flex>
+              {eventMetadata?.description && (
+                <Flex direction={"column"} px={"1rem"}>
+                  <Heading
+                    fontSize={"md"}
+                    color={"textContrastSecondary"}
+                    fontWeight={"md"}
+                  >
+                    Short Description
+                  </Heading>
+                  <Text color={"textContrast"} mt={".5rem"}>
+                    {eventMetadata?.description}
+                  </Text>
+                </Flex>
+              )}
+              {eventMetadata &&
+                getMetadataAttribute(eventMetadata, "Long Description") && (
+                  <Flex direction={"column"} px={"1rem"}>
+                    <Heading
+                      fontSize={"md"}
+                      color={"textContrastSecondary"}
+                      fontWeight={"md"}
+                    >
+                      Long Description
+                    </Heading>
+                    <Text color={"textContrast"} mt={".5rem"}>
+                      {getMetadataAttribute(eventMetadata, "Long Description")}
+                    </Text>
+                  </Flex>
+                )}
               {eventMetadata &&
                 getMetadataAttribute(
                   eventMetadata,
@@ -1063,6 +1129,175 @@ const EventPage = () => {
             margin="0 auto"
             // onClick={onCloseEventPosterModal}
           ></Image>
+        </ModalContent>
+      </Modal>
+      <Modal
+        isOpen={isEventTicketsModalOpen}
+        onClose={onCloseEventTicketsModalOpen}
+      >
+        <ModalOverlay></ModalOverlay>
+        <ModalContent
+          width={"65rem"}
+          maxW={"calc(100vw - 4rem)"}
+          bg={"accentPrimary"}
+          paddingY={"2rem"}
+        >
+          <Flex flex={1} direction={"column"} gap={"1rem"}>
+            <Flex
+              flex={1}
+              alignItems={"center"}
+              justify={"space-between"}
+              paddingX={"2rem"}
+            >
+              <Heading color="textContrast">Select ticket</Heading>
+              <ModalCloseButton
+                pos={"relative"}
+                top={0}
+                right={0}
+                color={"textContrastSecondary"}
+                size={"lg"}
+              />
+            </Flex>
+            <Container
+              as={Flex}
+              variant={"scrollableOverlap"}
+              gap={"1.5rem"}
+              style={{
+                maxWidth: "100%",
+                paddingRight: "2rem",
+                paddingLeft: "2rem",
+              }}
+            >
+              {eventTickets &&
+                eventTicketMetadatas &&
+                eventTicketMetadatas.map((ticket, ticketIndex) => (
+                  <Flex
+                    direction={"column"}
+                    borderRadius="md"
+                    overflow={"hidden"}
+                    w={"22rem"}
+                    minW={"22rem"}
+                    h={"32rem"}
+                    minH={"32rem"}
+                    bg={"accentPrimaryContrast"}
+                    as={motion.div}
+                    initial={fadeRightSlideAnimation["false"]}
+                    animate={fadeRightSlideAnimation["true"]}
+                  >
+                    <Flex
+                      justify={"center"}
+                      position={"relative"}
+                      overflow={"hidden"}
+                      height={"12rem"}
+                    >
+                      <Box
+                        pos={"absolute"}
+                        mt={"0rem"}
+                        left={0}
+                        w={"100%"}
+                        h={"12rem"}
+                        zIndex={"base"}
+                        overflow={"hidden"}
+                      >
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={
+                            isEventPosterLoaded
+                              ? { opacity: 1 }
+                              : { opacity: 0 }
+                          }
+                        >
+                          <Image
+                            src={getIPFSUri(
+                              eventTicketMetadatas[ticketIndex]?.image
+                            )}
+                            w={"100%"}
+                            filter={"blur(40px)"}
+                          />
+                        </motion.div>
+                      </Box>
+                      <Box
+                        as={motion.div}
+                        initial={{ marginTop: "3rem" }}
+                        animate={
+                          isEventPosterLoaded && {
+                            marginTop: "2rem",
+                          }
+                        }
+                        whileHover={{ marginTop: "1rem" }}
+                        zIndex={"docked"}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Image
+                          src={getIPFSUri(
+                            eventTicketMetadatas[ticketIndex]?.image
+                          )}
+                          borderRadius="lg"
+                          px={"1rem"}
+                          title={"show poster"}
+                          onClick={onOpenEventPosterModalOpen}
+                        />
+                      </Box>
+                    </Flex>
+                    <Flex
+                      direction={"column"}
+                      p={"1.5rem"}
+                      gap={"1rem"}
+                      flex={1}
+                      justifyContent={"space-between"}
+                    >
+                      <Flex direction={"column"} gap={"1rem"}>
+                        <Text
+                          fontSize="2xl"
+                          color="textContrast"
+                          fontWeight={"bold"}
+                        >
+                          {eventTicketMetadatas[ticketIndex].name}
+                        </Text>
+                        <Text fontSize="lg" color="textContrast">
+                          {eventTicketMetadatas[ticketIndex].description}
+                        </Text>
+                      </Flex>
+                      <Flex justifyContent={"space-between"} align={"flex-end"}>
+                        <Flex direction={"column"} gap={".5rem"}>
+                          <Text
+                            color="textContrast"
+                            fontSize={"sm"}
+                            fontWeight="medium"
+                          >
+                            Minting price
+                          </Text>
+                          <Flex gap={".25rem"} align={"flex-end"}>
+                            <Text
+                              color={"textAccent"}
+                              fontSize={"2xl"}
+                              fontWeight="bold"
+                            >
+                              {getEventTicketPriceLabel(ticketIndex)}
+                            </Text>
+                            <Text color={"textContrastSecondary"} fontSize="sm">
+                              {getEventTicketNativeCurrencyPriceLabel(
+                                ticketIndex
+                              )}
+                            </Text>
+                          </Flex>
+                        </Flex>
+                        <Button
+                          variant={"accent"}
+                          isDisabled={isBuyingATicket !== undefined}
+                          isLoading={isBuyingATicket == ticketIndex}
+                          onClick={() =>
+                            onBuyEventTicketButtonClick(ticketIndex)
+                          }
+                        >
+                          Buy
+                        </Button>
+                      </Flex>
+                    </Flex>
+                  </Flex>
+                ))}
+            </Container>
+          </Flex>
         </ModalContent>
       </Modal>
     </Container>

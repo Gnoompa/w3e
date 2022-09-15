@@ -4,9 +4,9 @@ import { SocialMediaIds } from "helpers/hooks";
 import { RootState } from "app/store";
 
 export interface State {
-  fields: { name: string; tabId: number; isInvalid: boolean }[];
+  fields: { name: string; tabId: number | undefined; isInvalid: boolean }[];
   eventPoster?: Blob;
-  ticketPosters?: {[key: number]: Blob};
+  ticketPosters?: { [key: number]: Blob };
 }
 
 export const initialState: State = {

@@ -41,6 +41,10 @@ const theme = extendTheme({
         textTransform: "capitalize",
         fontWeight: "bold",
         cursor: "pointer",
+        _hover: {
+          opacity: 0.7,
+          // bg: "accentSecondary !important",
+        },
       },
       sizes: {
         sm: {
@@ -77,6 +81,9 @@ const theme = extendTheme({
         accent: (props) => ({
           color: "textContrast",
           bg: "accentSecondary",
+          _hover: {
+            bg: "accentSecondary !important",
+          },
         }),
         secondary: (props) => ({
           borderRadius: "sm",
@@ -158,6 +165,14 @@ const theme = extendTheme({
         },
         undersceen: {
           boxShadow: "0 -45px 45px #00000082",
+        },
+        scrollableOverlap: {
+          overflowX: "scroll",
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
         },
         simple: {
           borderRadius: "lg",
@@ -271,7 +286,7 @@ const theme = extendTheme({
     },
     Text: {
       baseStyle: {
-        lineHeight: "1em",
+        
       },
     },
     Highlight: {
@@ -348,6 +363,13 @@ const theme = extendTheme({
         },
       },
     },
+		Modal: {
+			baseStyle: {
+				dialog: {
+					borderRadius: "lg"
+				}
+			}
+		}
   },
 });
 

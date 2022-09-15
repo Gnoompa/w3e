@@ -143,8 +143,11 @@ const EventForm = () => {
   });
 
   // todo handle transaction signing rejection
-  const { data: createEventWriteResponse, write: createEventWrite } =
-    createEvent(preparedCreateEventWriteConfig);
+  const {
+    data: createEventWriteResponse,
+    write: createEventWrite,
+    isError: isErrorCreateEventWrite,
+  } = createEvent(preparedCreateEventWriteConfig);
 
   const {
     isLoading: isLoadingCreateEventWriteData,
@@ -237,6 +240,17 @@ const EventForm = () => {
   useEffect(() => {
     eventFormFieldsRef.current = eventFormFields;
   }, [eventFormFields]);
+
+  useEffect(() => {
+    isErrorCreateEventWrite &&
+      (setCurrentEventCreationStage(EventCreationStages.eventConfig),
+      setSimpleDialogData({
+        title: "Something went wrong creating the event",
+        desc: "Please, try to create an event again",
+        actions: [{ label: "Ok", action: onSimpleDialogClose }],
+      }),
+      onSimpleDialogOpen());
+  }, [isErrorCreateEventWrite]);
 
   useEffect(() => {
     setEventPreviewData((prevData) => ({
@@ -365,15 +379,16 @@ const EventForm = () => {
     ].filter(Boolean) as object[],
   });
 
-  const getEventTicketMetadata = (
+  const getEventTicketMetadatas = (
     ticketData: typeof eventPersistedFormData
-  ): Partial<EventTicketMetadata> => ({
-    name: ticketData.eventTitle || "",
-    description:
-      ticketData.eventTicketDescription[0] ||
-      ticketData.eventShortDescription ||
-      "",
-  });
+  ): Partial<EventTicketMetadata>[] =>
+    ticketData.addedTickets.map((ticketIndex) => ({
+      name: ticketData.eventTicketName[ticketIndex] || "",
+      description:
+        ticketData.eventTicketDescription[ticketIndex] ||
+        ticketData.eventShortDescription ||
+        "",
+    }));
 
   const beforeEventCreation = () => {
     mbConnectWallet() ||
@@ -423,33 +438,76 @@ const EventForm = () => {
   // todo prepare request before uploading to ipfs
   const prepareEventForCreation = async () => {
     const eventMetadata = getEventMetadata(eventPersistedFormData);
-    const eventTicketMetadata = getEventTicketMetadata(eventPersistedFormData);
+    const eventTicketMetadatas = getEventTicketMetadatas(
+      eventPersistedFormData
+    );
 
-    const eventMetadataUrl = await uploadMetadata({
-      ...(eventMetadata as EventMetadata),
-      image: eventPosterImageFile! || defaultEventPosterImageFile,
-    });
+    let eventMetadataUrl;
+    let ticketMetadataUrls: Awaited<ReturnType<typeof uploadMetadata>>[] = [];
 
-    const ticketMetadataUrl = await uploadMetadata({
-      ...(eventTicketMetadata as EventTicketMetadata),
-      image: eventTicketPosterImageFile! || defaultEventPosterImageFile,
-    });
+    await Promise.all([
+      uploadMetadata({
+        ...(eventMetadata as EventMetadata),
+        image: eventPosterImageFile! || defaultEventPosterImageFile,
+      }).then((response) => (eventMetadataUrl = response)),
+      ...eventTicketMetadatas.map((metadata, ticketIndex) => {
+        uploadMetadata({
+          ...(metadata as EventTicketMetadata),
+          image:
+            eventFormData.ticketPosters?.[ticketIndex] ||
+            defaultEventPosterImageFile!,
+        })
+          .then((response) => ticketMetadataUrls.push(response))
+          .catch(console.error);
+      }),
+    ]);
+
+    let ticketsData = eventPersistedFormData.addedTickets?.map(
+      (ticketIndex) => ({
+        ticketSupply: Math.floor(
+          +eventPersistedFormData.ticketSupply[ticketIndex]! || 0
+        ),
+        ticketPrice: ethers.utils.parseEther(
+          `${+eventPersistedFormData.ticketPrice[ticketIndex]! || 0}`
+        ),
+        params: BigNumber.from(
+          1 <<
+            (eventPersistedFormData.isUnlimitedTicketSupply[ticketIndex]
+              ? 2
+              : 0)
+        ),
+        subscriptionDuration:
+          eventPersistedFormData.subscriptionDuration?.[ticketIndex] || 0,
+      })
+    );
+
+    console.log(
+      {
+        ticketSupply: ticketsData.map(({ ticketSupply }) => ticketSupply),
+        ticketPrice: ticketsData.map(({ ticketPrice }) => ticketPrice),
+        params: ticketsData.map(({ params }) => params),
+        subscriptionDuration: ticketsData.map(
+          ({ subscriptionDuration }) => subscriptionDuration
+        ),
+        beneficiary: eventPersistedFormData.beneficiary,
+        managers: [eventPersistedFormData.beneficiary],
+        eventMetadataUri: eventMetadataUrl?.url || "",
+        ticketMetadataUri: ticketMetadataUrls.map(({ url }) => url),
+      },
+      ticketMetadataUrls
+    );
 
     setCreateEventWritePayloadToPrepare({
-      ticketSupply: [Math.floor(+eventPersistedFormData.ticketSupply! || 0)],
-      ticketPrice: [
-        ethers.utils.parseEther(`${+eventPersistedFormData.ticketPrice! || 0}`),
-      ],
+      ticketSupply: ticketsData.map(({ ticketSupply }) => ticketSupply),
+      ticketPrice: ticketsData.map(({ ticketPrice }) => ticketPrice),
+      params: ticketsData.map(({ params }) => params),
+      subscriptionDuration: ticketsData.map(
+        ({ subscriptionDuration }) => subscriptionDuration
+      ),
       beneficiary: eventPersistedFormData.beneficiary,
       managers: [eventPersistedFormData.beneficiary],
-      params: [
-        BigNumber.from(
-          1 << (eventPersistedFormData.isUnlimitedTicketSupply ? 2 : 0)
-        ),
-      ],
-      subscriptionDuration: [eventPersistedFormData.subscriptionDuration || 0],
-      eventMetadataUri: eventMetadataUrl.url,
-      ticketMetadataUri: [ticketMetadataUrl.url],
+      eventMetadataUri: eventMetadataUrl?.url,
+      ticketMetadataUri: ticketMetadataUrls.map(({ url }) => url),
     });
   };
 
@@ -526,8 +584,8 @@ const EventForm = () => {
               {[MainInfoTab, VenueTab, TicketTab, PaymentTab, SocialsTab].map(
                 (Tab, index) => (
                   <TabPanel
-                    as={motion.div}
                     key={index}
+                    as={motion.div}
                     animate={
                       tabPanelAnimation[
                         `${eventPersistedFormData.tabIndex == index}`
