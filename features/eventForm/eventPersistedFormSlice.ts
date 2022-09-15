@@ -14,17 +14,18 @@ export interface State {
   eventEndTime?: string;
   isInSubscriptionMode?: boolean;
   isIndefiniteSubscription?: boolean;
-  subscriptionDuration?: number;
+  subscriptionDuration: { [key: number]: number };
   eventTicketName: { [key: number]: string };
   eventTicketDescription: { [key: number]: string };
   isUnlimitedTicketSupply: { [key: number]: boolean };
   isFreeTicketPrice: { [key: number]: boolean };
-  ticketSupply: { [key: number]: number };
-  ticketPrice: { [key: number]: string };
+  ticketSupply: { [key: number]: number | undefined };
+  ticketPrice: { [key: number]: string | undefined };
   beneficiary: string;
   eventManagers: (string | undefined)[];
   eventMediaLinks: { [key in SocialMediaIds]?: string };
   tabIndex: number;
+  addedTickets: number[];
 }
 
 export const initialState: State = {
@@ -44,9 +45,11 @@ export const initialState: State = {
   ticketSupply: {},
   eventTicketDescription: {},
   isFreeTicketPrice: {},
+  subscriptionDuration: {},
   eventManagers: [],
   eventMediaLinks: {},
   tabIndex: 0,
+  addedTickets: [],
 };
 
 export const slice = createSlice({
@@ -59,9 +62,13 @@ export const slice = createSlice({
       ...action.payload,
     }),
     resetEvent: () => initialState,
+    setAddedTickets: (state, action: PayloadAction<State["addedTickets"]>) => {
+      state.addedTickets = action.payload;
+    },
   },
 });
 
-export const { setEvent, resetEvent, upsertEvent } = slice.actions;
+export const { setEvent, resetEvent, upsertEvent, setAddedTickets } =
+  slice.actions;
 
 export default slice.reducer;

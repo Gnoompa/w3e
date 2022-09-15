@@ -22,7 +22,9 @@ import NextLink from "next/link";
 import { Routes } from "helpers/routes";
 import {
   ArrowDownIcon,
+  ArrowRightIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   ExternalLinkIcon,
   HamburgerIcon,
 } from "@chakra-ui/icons";
@@ -86,20 +88,50 @@ const App: React.FC = (props) => {
               </MenuButton>
               <MenuList>
                 <MenuItem>
-                  <NextLink href={Routes.EventForm} passHref>
-                    <Link>Events</Link>
+                  <NextLink href={Routes.EventForm}>
+                    <Flex align={"center"} gap={"2rem"}>
+                      <Flex direction={"column"} gap={".25rem"}>
+                        <Text fontSize={"md"} fontWeight="medium">
+                          Events
+                        </Text>
+                        <Text
+                          maxW={"12rem"}
+                          fontSize="sm"
+                          color={"textContrastSecondary"}
+                        >
+                          General event creation platform, backed by NFT
+                          technology
+                        </Text>
+                      </Flex>
+                      <ChevronRightIcon w={"1.5rem"} h="1.5rem" />
+                    </Flex>
                   </NextLink>
                 </MenuItem>
                 <MenuItem>
-                  <Flex align={"center"} gap=".5rem">
-                    <Link>Subscriptions</Link>
-                    <Badge
-                      variant={"solid"}
-                      color={"warn"}
-                      bg={"accentPrimary"}
-                    >
-                      soon
-                    </Badge>
+                  <Flex align={"center"} gap={"2rem"}>
+                    <Flex direction={"column"} gap={".25rem"}>
+                      <Flex align={"center"} gap=".5rem">
+                        <Text fontSize={"md"} fontWeight="medium">
+                          Subscriptions
+                        </Text>
+                        <Badge
+                          variant={"solid"}
+                          color={"warn"}
+                          bg={"accentPrimary"}
+                        >
+                          soon
+                        </Badge>
+                      </Flex>
+                      <Text
+                        maxW={"12rem"}
+                        fontSize="sm"
+                        color={"textContrastSecondary"}
+                      >
+                        Tie physical world subscriptions to blockchain backed
+                        infrastructure
+                      </Text>
+                    </Flex>
+                    <ChevronRightIcon w={"1.5rem"} h="1.5rem" color={"textContrastSecondary"} />
                   </Flex>
                 </MenuItem>
               </MenuList>
