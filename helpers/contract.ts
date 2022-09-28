@@ -9,9 +9,9 @@ import {
 } from "wagmi";
 import { Provider } from "@wagmi/core";
 import { Main as MainContractTypechain } from "types/typechain/Main";
-import { ERC1155MixedFungibleMintable as TokenContractTypechain } from "types/typechain/ERC1155MixedFungibleMintable";
+import { ERC1155MixedFungibleMintableUpgradeable as TokenContractTypechain } from "types/typechain/ERC1155MixedFungibleMintableUpgradeable";
 import MainContractABI from "../abi/Main.sol/Main.json";
-import TokenContractABI from "../abi/ERC1155MixedFungibleMintable.sol/ERC1155MixedFungibleMintable.json";
+import TokenContractABI from "../abi/ERC1155MixedFungibleMintableUpgradeable.sol/ERC1155MixedFungibleMintableUpgradeable.json";
 import { Log } from "@ethersproject/abstract-provider/src.ts";
 import { Interface, LogDescription } from "ethers/lib/utils";
 import { Contract, ethers, Event, Transaction } from "ethers";
@@ -40,11 +40,11 @@ const chainIdToChainlinkPriceOracleContractAddressMap = {
 };
 
 const chainIdToMainContractAddressMap = {
-  [chain.polygonMumbai.id]: "0xee369C242ea7A8d5F4B0303E65A2f01bb6cBcf61",
+  [chain.polygonMumbai.id]: "0x0Cfe5738d738d7230121c4e7975f3925f766a288",
 };
 
 const chainIdToTokenContractAddressMap = {
-  [chain.polygonMumbai.id]: "0xf1248d727A696473B8664E2891e4817BAe00FD52",
+  [chain.polygonMumbai.id]: "0x94b9f3d24B81d3047ECB13562ED89f3d5F59B36d",
 };
 
 const chainIdToMainContractMap = {
@@ -180,12 +180,14 @@ export const getEvents = (
     contracts: chainIds.map((chainId, i) => ({
       addressOrName: chainIdToMainContractAddressMap[chainId],
       contractInterface: MainContractABI.abi,
-      functionName: "events",
+      functionName: "getEvents",
       chainId,
       ...configs[i],
     })),
   }) as ReturnType<typeof useContractReads> & {
-    data: Awaited<ReturnType<typeof MainContractTypechain.prototype.events>>[];
+    data: Awaited<
+      ReturnType<typeof MainContractTypechain.prototype.getEvents>
+    >[];
   };
 
 export const prepareCreateEvent = ({

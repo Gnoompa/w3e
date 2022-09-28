@@ -1,81 +1,202 @@
-import { useEffect, useRef, useState } from "react"
-import { Stage, Layer, Text, Image } from "react-konva"
-// import ticketTemplateImage from "../styles/images/ticketTemplate.png"
+import React, { useEffect, useState } from "react";
+import {
+  Flex,
+  Box,
+  Image,
+  Button,
+  Text,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+} from "@chakra-ui/react";
+import { getIPFSUri } from "helpers/hooks";
+import { motion } from "framer-motion";
+import { fadeRightSlideAnimation } from "styles/theme";
+import { BigNumber, BigNumberish, ethers } from "ethers";
+import {
+  getEventTicketNativeCurrencyPriceLabel,
+  getEventTicketPriceLabel,
+} from "./helpers/events";
 
-type useEventTicketImageProps = {
-    eventTitle: string|undefined,
-    onImageGenerated: (payload: {eventTitle: string, image: string}) => any
-}
+export type PropsType = {
+  isAbleToBuy?: boolean;
+  isBuyingTicket?: boolean;
+  nativeCurrencyToUsdPrice?: BigNumber;
+  ticketData: {
+    title?: string;
+    desc?: string;
+    image?: string;
+    price?: number | string;
+    isFree?: boolean;
+  };
+  onBuyButtonClick?: () => any;
+};
 
-const EventTicketImage = (props: useEventTicketImageProps) => {
-    const canvasRef = useRef();
-    const textRef = useRef();
-    const [image, setImage] = useState<ImageBitmap>()
+const EventTicket = (props: PropsType) => {
+  const [isTicketImageLoaded, setIsTicketImageLoaded] = useState(false);
+  const {
+    isOpen: isTicketImagePreviewModalOpen,
+    onOpen: onOpenTicketImagePreviewModal,
+    onClose: onCloseTicketImagePreviewModal,
+  } = useDisclosure();
 
-    const ticketTemplateSize = { x: 400, y: 254 };
+  useEffect(() => {
+    props.ticketData.image &&
+      fetch(getIPFSUri(props.ticketData.image as string) as string).then(() =>
+        setIsTicketImageLoaded(true)
+      );
+  }, [props.ticketData.image]);
 
-    useEffect(() => {
-        init()
-    }, [])
+  return (
+    <Flex
+      direction={"column"}
+      borderRadius="md"
+      overflow={"hidden"}
+      w={"22rem"}
+      minW={"22rem"}
+      h={"32rem"}
+      minH={"32rem"}
+      bg={"accentPrimaryContrast"}
+      as={motion.div}
+      initial={fadeRightSlideAnimation["false"]}
+      animate={fadeRightSlideAnimation["true"]}
+    >
+      <Flex
+        justify={"center"}
+        position={"relative"}
+        overflow={"hidden"}
+        height={"12rem"}
+      >
+        <Box
+          pos={"absolute"}
+          mt={"0rem"}
+          left={0}
+          w={"100%"}
+          h={"12rem"}
+          zIndex={"base"}
+          overflow={"hidden"}
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={isTicketImageLoaded ? { opacity: 1 } : { opacity: 0 }}
+          >
+            {props.ticketData.image && (
+              <Image
+                src={props.ticketData.image!}
+                w={"100%"}
+                filter={"blur(40px)"}
+              />
+            )}
+          </motion.div>
+        </Box>
+        <Box
+          as={motion.div}
+          initial={{ marginTop: "3rem" }}
+          animate={
+            isTicketImageLoaded && {
+              marginTop: "2rem",
+            }
+          }
+          whileHover={{ marginTop: "1rem" }}
+          zIndex={"docked"}
+          style={{ cursor: "pointer" }}
+        >
+          {props.ticketData.image && (
+            <Image
+              src={props.ticketData.image}
+              borderRadius="lg"
+              px={"1rem"}
+              title={"show poster"}
+              onClick={onOpenTicketImagePreviewModal}
+            />
+          )}
+        </Box>
+      </Flex>
+      <Flex
+        direction={"column"}
+        p={"1.5rem"}
+        gap={"1rem"}
+        flex={1}
+        justifyContent={"space-between"}
+      >
+        <Flex direction={"column"} gap={"1rem"}>
+          <Text
+            fontSize="2xl"
+            color={
+              props.ticketData.title ? "textContrast" : "textContrastSecondary"
+            }
+            fontWeight={"bold"}
+          >
+            {props.ticketData.title || "Ticket title"}
+          </Text>
+          <Text
+            fontSize="lg"
+            color={
+              props.ticketData.desc ? "textContrast" : "textContrastSecondary"
+            }
+          >
+            {props.ticketData.desc || "ticket description"}
+          </Text>
+        </Flex>
+        <Flex justifyContent={"space-between"} align={"flex-end"}>
+          <Flex direction={"column"} gap={".5rem"}>
+            <Text color="textContrast" fontSize={"sm"} fontWeight="medium">
+              Minting price
+            </Text>
+            <Flex gap={".25rem"} align={"flex-end"}>
+              <Text color={"textAccent"} fontSize={"2xl"} fontWeight="bold">
+                {getEventTicketPriceLabel({
+                  price: props.ticketData.price,
+                  isFree: !!props.ticketData.isFree,
+                })}
+              </Text>
+              {!props.ticketData.isFree && (
+                <Text color={"textContrastSecondary"} fontSize="sm">
+                  {getEventTicketNativeCurrencyPriceLabel(
+                    { price: props.ticketData.price },
+                    props.nativeCurrencyToUsdPrice
+                  )}
+                </Text>
+              )}
+            </Flex>
+          </Flex>
+          <Button
+            variant={props.isAbleToBuy ? "accent" : "outlineAccent"}
+            pointerEvents={props.isAbleToBuy ? "initial" : "none"}
+            isDisabled={props.isAbleToBuy || props.isBuyingTicket}
+            isLoading={props.isBuyingTicket}
+            onClick={props.onBuyButtonClick}
+          >
+            Buy
+          </Button>
+        </Flex>
+      </Flex>
+      <Modal
+        isOpen={isTicketImagePreviewModalOpen}
+        onClose={onCloseTicketImagePreviewModal}
+        portalProps={{ appendToParentPortal: false }}
+      >
+        <ModalOverlay></ModalOverlay>
+        <ModalContent
+          maxW={"calc(100vw - 4rem)"}
+          bg={"transparent"}
+          onClick={onCloseTicketImagePreviewModal}
+        >
+          <Image
+            src={props.ticketData.image}
+            maxW={"calc(100vw - 4rem)"}
+            width={"fit-content"}
+            margin="0 auto"
+          ></Image>
+        </ModalContent>
+      </Modal>
+    </Flex>
+  );
+};
 
-    useEffect(() => {
-        props.eventTitle && image && props.onImageGenerated({
-            eventTitle: props.eventTitle,
-            image: canvasRef.current.toDataURL({pixelRatio: 2 })
-        })
-    }, [props.eventTitle, image])
+EventTicket.defaultProps = {
+  isAbleToBuy: true,
+} as PropsType;
 
-    const init = async () => {        
-        // const response = await fetch(ticketTemplateImage)
-        // const blob = await response.blob()
-
-        // setImage(await createImageBitmap(blob))
-    }
-
-    return (
-        <Stage width={ticketTemplateSize.x} height={ticketTemplateSize.y} ref={canvasRef} style={{display: 'none'}}>
-            <Layer>
-                <Image
-                    image={image}
-                    width={ticketTemplateSize.x}
-                    height={ticketTemplateSize.y}
-                />
-                <Text
-                    text={props.eventTitle}
-                    wrap="wrap"
-                    fontStyle="800"
-                    ellipsis={true}
-                    width={ticketTemplateSize.x * .6}
-                    height={254}
-                    interfill="#401384"
-                    fontSize={35}
-                    verticalAlign='middle'
-                    fontFamily="inter"
-                    letterSpacing={2}
-                    x={ticketTemplateSize.x * 0.3}
-                    ref={textRef}
-                />
-                {/* <Text
-                    text={eventDate}
-                    fontSize={eventDateFontsize}
-                    fontStyle="800"
-                    fontFamily="inter"
-                    fill="#650969"
-                    y={ticketTemplateSize.y * 0.69}
-                    x={ticketTemplateSize.x * 0.27}
-                />
-                <Text
-                    text={eventTime}
-                    fontSize={eventDateFontsize * .7}
-                    fontStyle="800"
-                    fontFamily="inter"
-                    fill="#650969"
-                    y={ticketTemplateSize.y * 0.81}
-                    x={ticketTemplateSize.x * 0.27}
-                /> */}
-            </Layer>
-        </Stage>
-    )
-}
-
-export default EventTicketImage
+export default EventTicket;

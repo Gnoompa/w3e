@@ -22,35 +22,30 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface MainInterface extends ethers.utils.Interface {
   functions: {
-    "DEFAULT_ADMIN_ROLE()": FunctionFragment;
     "INFINITE_SUPPLY_TICKET_BIT()": FunctionFragment;
     "OFFLINE_TICKET_TYPE_BIT()": FunctionFragment;
     "ONLINE_TICKET_TYPE_BIT()": FunctionFragment;
     "SUBSCRIPTION_TICKET_TYPE_BIT()": FunctionFragment;
+    "USED_TICKET_BIT()": FunctionFragment;
     "buyTickets(uint256,address)": FunctionFragment;
     "commitVerifiedTickets(uint256,uint256[],address[])": FunctionFragment;
     "createEvent((uint256[],uint256[],uint256[],uint256[],address,address[],string,string[]))": FunctionFragment;
-    "events(uint256)": FunctionFragment;
     "getEventManagers(uint256)": FunctionFragment;
     "getEventTickets(uint256[])": FunctionFragment;
     "getEvents(uint256[])": FunctionFragment;
-    "getRoleAdmin(bytes32)": FunctionFragment;
-    "getTicketUsdMaticPrice(uint256)": FunctionFragment;
     "getTickets(uint256[])": FunctionFragment;
-    "grantRole(bytes32,address)": FunctionFragment;
-    "hasRole(bytes32,address)": FunctionFragment;
+    "initialize(address,address)": FunctionFragment;
+    "owner()": FunctionFragment;
     "prolongSubscription(uint256)": FunctionFragment;
-    "renounceRole(bytes32,address)": FunctionFragment;
-    "revokeRole(bytes32,address)": FunctionFragment;
+    "proxiableUUID()": FunctionFragment;
+    "renounceOwnership()": FunctionFragment;
     "setTokenContract(address)": FunctionFragment;
-    "supportsInterface(bytes4)": FunctionFragment;
-    "tickets(uint256)": FunctionFragment;
+    "transferOwnership(address)": FunctionFragment;
+    "upgradeTo(address)": FunctionFragment;
+    "upgradeToAndCall(address,bytes)": FunctionFragment;
+    "version()": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "DEFAULT_ADMIN_ROLE",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "INFINITE_SUPPLY_TICKET_BIT",
     values?: undefined
@@ -65,6 +60,10 @@ interface MainInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "SUBSCRIPTION_TICKET_TYPE_BIT",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "USED_TICKET_BIT",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -91,10 +90,6 @@ interface MainInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "events",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "getEventManagers",
     values: [BigNumberish]
   ): string;
@@ -107,54 +102,41 @@ interface MainInterface extends ethers.utils.Interface {
     values: [BigNumberish[]]
   ): string;
   encodeFunctionData(
-    functionFragment: "getRoleAdmin",
-    values: [BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getTicketUsdMaticPrice",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "getTickets",
     values: [BigNumberish[]]
   ): string;
   encodeFunctionData(
-    functionFragment: "grantRole",
-    values: [BytesLike, string]
+    functionFragment: "initialize",
+    values: [string, string]
   ): string;
-  encodeFunctionData(
-    functionFragment: "hasRole",
-    values: [BytesLike, string]
-  ): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "prolongSubscription",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "renounceRole",
-    values: [BytesLike, string]
+    functionFragment: "proxiableUUID",
+    values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "revokeRole",
-    values: [BytesLike, string]
+    functionFragment: "renounceOwnership",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "setTokenContract",
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "supportsInterface",
-    values: [BytesLike]
+    functionFragment: "transferOwnership",
+    values: [string]
   ): string;
+  encodeFunctionData(functionFragment: "upgradeTo", values: [string]): string;
   encodeFunctionData(
-    functionFragment: "tickets",
-    values: [BigNumberish]
+    functionFragment: "upgradeToAndCall",
+    values: [string, BytesLike]
   ): string;
+  encodeFunctionData(functionFragment: "version", values?: undefined): string;
 
-  decodeFunctionResult(
-    functionFragment: "DEFAULT_ADMIN_ROLE",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "INFINITE_SUPPLY_TICKET_BIT",
     data: BytesLike
@@ -171,6 +153,10 @@ interface MainInterface extends ethers.utils.Interface {
     functionFragment: "SUBSCRIPTION_TICKET_TYPE_BIT",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "USED_TICKET_BIT",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "buyTickets", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "commitVerifiedTickets",
@@ -180,7 +166,6 @@ interface MainInterface extends ethers.utils.Interface {
     functionFragment: "createEvent",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "events", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getEventManagers",
     data: BytesLike
@@ -190,73 +175,73 @@ interface MainInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getEvents", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "getRoleAdmin",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getTicketUsdMaticPrice",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "getTickets", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "prolongSubscription",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "renounceRole",
+    functionFragment: "proxiableUUID",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "setTokenContract",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "supportsInterface",
+    functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "tickets", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "upgradeTo", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "upgradeToAndCall",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "version", data: BytesLike): Result;
 
   events: {
+    "AdminChanged(address,address)": EventFragment;
+    "BeaconUpgraded(address)": EventFragment;
     "EventCreated(uint256,address)": EventFragment;
-    "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
-    "RoleGranted(bytes32,address,address)": EventFragment;
-    "RoleRevoked(bytes32,address,address)": EventFragment;
+    "Initialized(uint8)": EventFragment;
+    "OwnershipTransferred(address,address)": EventFragment;
     "TicketBought(uint256,uint256,address)": EventFragment;
     "TicketUsed(uint256,uint256,address)": EventFragment;
     "TicketsCreated(uint256,uint256,address)": EventFragment;
+    "Upgraded(address)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "EventCreated"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TicketBought"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TicketUsed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TicketsCreated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
+
+export type AdminChangedEvent = TypedEvent<
+  [string, string] & { previousAdmin: string; newAdmin: string }
+>;
+
+export type BeaconUpgradedEvent = TypedEvent<[string] & { beacon: string }>;
 
 export type EventCreatedEvent = TypedEvent<
   [BigNumber, string] & { tokenId: BigNumber; organizer: string }
 >;
 
-export type RoleAdminChangedEvent = TypedEvent<
-  [string, string, string] & {
-    role: string;
-    previousAdminRole: string;
-    newAdminRole: string;
-  }
->;
+export type InitializedEvent = TypedEvent<[number] & { version: number }>;
 
-export type RoleGrantedEvent = TypedEvent<
-  [string, string, string] & { role: string; account: string; sender: string }
->;
-
-export type RoleRevokedEvent = TypedEvent<
-  [string, string, string] & { role: string; account: string; sender: string }
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string] & { previousOwner: string; newOwner: string }
 >;
 
 export type TicketBoughtEvent = TypedEvent<
@@ -282,6 +267,8 @@ export type TicketsCreatedEvent = TypedEvent<
     organizer: string;
   }
 >;
+
+export type UpgradedEvent = TypedEvent<[string] & { implementation: string }>;
 
 export class Main extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -327,17 +314,15 @@ export class Main extends BaseContract {
   interface: MainInterface;
 
   functions: {
-    DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<[string]>;
+    INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<[number]>;
 
-    INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<[BigNumber]>;
+    OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<[number]>;
 
-    OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<[BigNumber]>;
+    ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<[number]>;
 
-    ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<[BigNumber]>;
+    SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<[number]>;
 
-    SUBSCRIPTION_TICKET_TYPE_BIT(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    USED_TICKET_BIT(overrides?: CallOverrides): Promise<[number]>;
 
     buyTickets(
       ticketId: BigNumberish,
@@ -366,11 +351,6 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    events(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string, string] & { organizer: string; beneficiary: string }>;
-
     getEventManagers(
       eventId: BigNumberish,
       overrides?: CallOverrides
@@ -388,19 +368,15 @@ export class Main extends BaseContract {
           BigNumber,
           BigNumber,
           BigNumber,
-          BigNumber,
-          boolean,
-          boolean
+          BigNumber
         ] & {
           eventTokenId: BigNumber;
-          ticketType: BigNumber;
+          params: BigNumber;
           price: BigNumber;
           supply: BigNumber;
           subscriptionDuration: BigNumber;
           subscriptionActivatedAt: BigNumber;
           tier: BigNumber;
-          isInfiniteSupply: boolean;
-          used: boolean;
         })[][]
       ]
     >;
@@ -419,13 +395,6 @@ export class Main extends BaseContract {
       ]
     >;
 
-    getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<[string]>;
-
-    getTicketUsdMaticPrice(
-      ticketId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     getTickets(
       ticketIds: BigNumberish[],
       overrides?: CallOverrides
@@ -438,49 +407,35 @@ export class Main extends BaseContract {
           BigNumber,
           BigNumber,
           BigNumber,
-          BigNumber,
-          boolean,
-          boolean
+          BigNumber
         ] & {
           eventTokenId: BigNumber;
-          ticketType: BigNumber;
+          params: BigNumber;
           price: BigNumber;
           supply: BigNumber;
           subscriptionDuration: BigNumber;
           subscriptionActivatedAt: BigNumber;
           tier: BigNumber;
-          isInfiniteSupply: boolean;
-          used: boolean;
         })[]
       ]
     >;
 
-    grantRole(
-      role: BytesLike,
-      account: string,
+    initialize(
+      storageAddress: string,
+      chainlinkPriceAggregator: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    hasRole(
-      role: BytesLike,
-      account: string,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
+    owner(overrides?: CallOverrides): Promise<[string]>;
 
     prolongSubscription(
       ticketId: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    renounceRole(
-      role: BytesLike,
-      account: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
+    proxiableUUID(overrides?: CallOverrides): Promise<[string]>;
 
-    revokeRole(
-      role: BytesLike,
-      account: string,
+    renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -489,48 +444,34 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    supportsInterface(
-      interfaceId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
-    tickets(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<
-      [
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        boolean,
-        boolean
-      ] & {
-        eventTokenId: BigNumber;
-        ticketType: BigNumber;
-        price: BigNumber;
-        supply: BigNumber;
-        subscriptionDuration: BigNumber;
-        subscriptionActivatedAt: BigNumber;
-        tier: BigNumber;
-        isInfiniteSupply: boolean;
-        used: boolean;
-      }
-    >;
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    version(overrides?: CallOverrides): Promise<[number]>;
   };
 
-  DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
+  INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<number>;
 
-  INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+  OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
 
-  OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+  ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
 
-  ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+  SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
 
-  SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+  USED_TICKET_BIT(overrides?: CallOverrides): Promise<number>;
 
   buyTickets(
     ticketId: BigNumberish,
@@ -559,11 +500,6 @@ export class Main extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  events(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<[string, string] & { organizer: string; beneficiary: string }>;
-
   getEventManagers(
     eventId: BigNumberish,
     overrides?: CallOverrides
@@ -580,19 +516,15 @@ export class Main extends BaseContract {
       BigNumber,
       BigNumber,
       BigNumber,
-      BigNumber,
-      boolean,
-      boolean
+      BigNumber
     ] & {
       eventTokenId: BigNumber;
-      ticketType: BigNumber;
+      params: BigNumber;
       price: BigNumber;
       supply: BigNumber;
       subscriptionDuration: BigNumber;
       subscriptionActivatedAt: BigNumber;
       tier: BigNumber;
-      isInfiniteSupply: boolean;
-      used: boolean;
     })[][]
   >;
 
@@ -608,13 +540,6 @@ export class Main extends BaseContract {
     })[]
   >;
 
-  getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
-
-  getTicketUsdMaticPrice(
-    ticketId: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   getTickets(
     ticketIds: BigNumberish[],
     overrides?: CallOverrides
@@ -626,48 +551,34 @@ export class Main extends BaseContract {
       BigNumber,
       BigNumber,
       BigNumber,
-      BigNumber,
-      boolean,
-      boolean
+      BigNumber
     ] & {
       eventTokenId: BigNumber;
-      ticketType: BigNumber;
+      params: BigNumber;
       price: BigNumber;
       supply: BigNumber;
       subscriptionDuration: BigNumber;
       subscriptionActivatedAt: BigNumber;
       tier: BigNumber;
-      isInfiniteSupply: boolean;
-      used: boolean;
     })[]
   >;
 
-  grantRole(
-    role: BytesLike,
-    account: string,
+  initialize(
+    storageAddress: string,
+    chainlinkPriceAggregator: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  hasRole(
-    role: BytesLike,
-    account: string,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  owner(overrides?: CallOverrides): Promise<string>;
 
   prolongSubscription(
     ticketId: BigNumberish,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  renounceRole(
-    role: BytesLike,
-    account: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
+  proxiableUUID(overrides?: CallOverrides): Promise<string>;
 
-  revokeRole(
-    role: BytesLike,
-    account: string,
+  renounceOwnership(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -676,48 +587,34 @@ export class Main extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  supportsInterface(
-    interfaceId: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  transferOwnership(
+    newOwner: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
-  tickets(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<
-    [
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      boolean,
-      boolean
-    ] & {
-      eventTokenId: BigNumber;
-      ticketType: BigNumber;
-      price: BigNumber;
-      supply: BigNumber;
-      subscriptionDuration: BigNumber;
-      subscriptionActivatedAt: BigNumber;
-      tier: BigNumber;
-      isInfiniteSupply: boolean;
-      used: boolean;
-    }
-  >;
+  upgradeTo(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  upgradeToAndCall(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  version(overrides?: CallOverrides): Promise<number>;
 
   callStatic: {
-    DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
+    INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<number>;
 
-    INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+    OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
 
-    OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+    ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
 
-    ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+    SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
 
-    SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+    USED_TICKET_BIT(overrides?: CallOverrides): Promise<number>;
 
     buyTickets(
       ticketId: BigNumberish,
@@ -746,11 +643,6 @@ export class Main extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    events(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string, string] & { organizer: string; beneficiary: string }>;
-
     getEventManagers(
       eventId: BigNumberish,
       overrides?: CallOverrides
@@ -767,19 +659,15 @@ export class Main extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        BigNumber,
-        boolean,
-        boolean
+        BigNumber
       ] & {
         eventTokenId: BigNumber;
-        ticketType: BigNumber;
+        params: BigNumber;
         price: BigNumber;
         supply: BigNumber;
         subscriptionDuration: BigNumber;
         subscriptionActivatedAt: BigNumber;
         tier: BigNumber;
-        isInfiniteSupply: boolean;
-        used: boolean;
       })[][]
     >;
 
@@ -795,13 +683,6 @@ export class Main extends BaseContract {
       })[]
     >;
 
-    getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
-
-    getTicketUsdMaticPrice(
-      ticketId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     getTickets(
       ticketIds: BigNumberish[],
       overrides?: CallOverrides
@@ -813,90 +694,84 @@ export class Main extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        BigNumber,
-        boolean,
-        boolean
+        BigNumber
       ] & {
         eventTokenId: BigNumber;
-        ticketType: BigNumber;
+        params: BigNumber;
         price: BigNumber;
         supply: BigNumber;
         subscriptionDuration: BigNumber;
         subscriptionActivatedAt: BigNumber;
         tier: BigNumber;
-        isInfiniteSupply: boolean;
-        used: boolean;
       })[]
     >;
 
-    grantRole(
-      role: BytesLike,
-      account: string,
+    initialize(
+      storageAddress: string,
+      chainlinkPriceAggregator: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    hasRole(
-      role: BytesLike,
-      account: string,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+    owner(overrides?: CallOverrides): Promise<string>;
 
     prolongSubscription(
       ticketId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    renounceRole(
-      role: BytesLike,
-      account: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    proxiableUUID(overrides?: CallOverrides): Promise<string>;
 
-    revokeRole(
-      role: BytesLike,
-      account: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
     setTokenContract(
       tokenContractAddress: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    supportsInterface(
-      interfaceId: BytesLike,
+    transferOwnership(
+      newOwner: string,
       overrides?: CallOverrides
-    ): Promise<boolean>;
+    ): Promise<void>;
 
-    tickets(
-      arg0: BigNumberish,
+    upgradeTo(
+      newImplementation: string,
       overrides?: CallOverrides
-    ): Promise<
-      [
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        boolean,
-        boolean
-      ] & {
-        eventTokenId: BigNumber;
-        ticketType: BigNumber;
-        price: BigNumber;
-        supply: BigNumber;
-        subscriptionDuration: BigNumber;
-        subscriptionActivatedAt: BigNumber;
-        tier: BigNumber;
-        isInfiniteSupply: boolean;
-        used: boolean;
-      }
-    >;
+    ): Promise<void>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    version(overrides?: CallOverrides): Promise<number>;
   };
 
   filters: {
+    "AdminChanged(address,address)"(
+      previousAdmin?: null,
+      newAdmin?: null
+    ): TypedEventFilter<
+      [string, string],
+      { previousAdmin: string; newAdmin: string }
+    >;
+
+    AdminChanged(
+      previousAdmin?: null,
+      newAdmin?: null
+    ): TypedEventFilter<
+      [string, string],
+      { previousAdmin: string; newAdmin: string }
+    >;
+
+    "BeaconUpgraded(address)"(
+      beacon?: string | null
+    ): TypedEventFilter<[string], { beacon: string }>;
+
+    BeaconUpgraded(
+      beacon?: string | null
+    ): TypedEventFilter<[string], { beacon: string }>;
+
     "EventCreated(uint256,address)"(
       tokenId?: BigNumberish | null,
       organizer?: string | null
@@ -913,58 +788,28 @@ export class Main extends BaseContract {
       { tokenId: BigNumber; organizer: string }
     >;
 
-    "RoleAdminChanged(bytes32,bytes32,bytes32)"(
-      role?: BytesLike | null,
-      previousAdminRole?: BytesLike | null,
-      newAdminRole?: BytesLike | null
+    "Initialized(uint8)"(
+      version?: null
+    ): TypedEventFilter<[number], { version: number }>;
+
+    Initialized(
+      version?: null
+    ): TypedEventFilter<[number], { version: number }>;
+
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
     ): TypedEventFilter<
-      [string, string, string],
-      { role: string; previousAdminRole: string; newAdminRole: string }
+      [string, string],
+      { previousOwner: string; newOwner: string }
     >;
 
-    RoleAdminChanged(
-      role?: BytesLike | null,
-      previousAdminRole?: BytesLike | null,
-      newAdminRole?: BytesLike | null
+    OwnershipTransferred(
+      previousOwner?: string | null,
+      newOwner?: string | null
     ): TypedEventFilter<
-      [string, string, string],
-      { role: string; previousAdminRole: string; newAdminRole: string }
-    >;
-
-    "RoleGranted(bytes32,address,address)"(
-      role?: BytesLike | null,
-      account?: string | null,
-      sender?: string | null
-    ): TypedEventFilter<
-      [string, string, string],
-      { role: string; account: string; sender: string }
-    >;
-
-    RoleGranted(
-      role?: BytesLike | null,
-      account?: string | null,
-      sender?: string | null
-    ): TypedEventFilter<
-      [string, string, string],
-      { role: string; account: string; sender: string }
-    >;
-
-    "RoleRevoked(bytes32,address,address)"(
-      role?: BytesLike | null,
-      account?: string | null,
-      sender?: string | null
-    ): TypedEventFilter<
-      [string, string, string],
-      { role: string; account: string; sender: string }
-    >;
-
-    RoleRevoked(
-      role?: BytesLike | null,
-      account?: string | null,
-      sender?: string | null
-    ): TypedEventFilter<
-      [string, string, string],
-      { role: string; account: string; sender: string }
+      [string, string],
+      { previousOwner: string; newOwner: string }
     >;
 
     "TicketBought(uint256,uint256,address)"(
@@ -1020,11 +865,17 @@ export class Main extends BaseContract {
       [BigNumber, BigNumber, string],
       { tokenId: BigNumber; eventTokenId: BigNumber; organizer: string }
     >;
+
+    "Upgraded(address)"(
+      implementation?: string | null
+    ): TypedEventFilter<[string], { implementation: string }>;
+
+    Upgraded(
+      implementation?: string | null
+    ): TypedEventFilter<[string], { implementation: string }>;
   };
 
   estimateGas: {
-    DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
-
     INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
     OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1032,6 +883,8 @@ export class Main extends BaseContract {
     ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
     SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+
+    USED_TICKET_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
     buyTickets(
       ticketId: BigNumberish,
@@ -1060,8 +913,6 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    events(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
     getEventManagers(
       eventId: BigNumberish,
       overrides?: CallOverrides
@@ -1077,47 +928,27 @@ export class Main extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getRoleAdmin(
-      role: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getTicketUsdMaticPrice(
-      ticketId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     getTickets(
       ticketIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    grantRole(
-      role: BytesLike,
-      account: string,
+    initialize(
+      storageAddress: string,
+      chainlinkPriceAggregator: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    hasRole(
-      role: BytesLike,
-      account: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     prolongSubscription(
       ticketId: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    renounceRole(
-      role: BytesLike,
-      account: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
+    proxiableUUID(overrides?: CallOverrides): Promise<BigNumber>;
 
-    revokeRole(
-      role: BytesLike,
-      account: string,
+    renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1126,19 +957,26 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    supportsInterface(
-      interfaceId: BytesLike,
-      overrides?: CallOverrides
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    tickets(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    version(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    DEFAULT_ADMIN_ROLE(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     INFINITE_SUPPLY_TICKET_BIT(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1155,6 +993,8 @@ export class Main extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    USED_TICKET_BIT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     buyTickets(
       ticketId: BigNumberish,
       _for: string,
@@ -1182,11 +1022,6 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    events(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     getEventManagers(
       eventId: BigNumberish,
       overrides?: CallOverrides
@@ -1202,47 +1037,27 @@ export class Main extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getRoleAdmin(
-      role: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getTicketUsdMaticPrice(
-      ticketId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     getTickets(
       ticketIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    grantRole(
-      role: BytesLike,
-      account: string,
+    initialize(
+      storageAddress: string,
+      chainlinkPriceAggregator: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    hasRole(
-      role: BytesLike,
-      account: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     prolongSubscription(
       ticketId: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    renounceRole(
-      role: BytesLike,
-      account: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
+    proxiableUUID(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    revokeRole(
-      role: BytesLike,
-      account: string,
+    renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1251,14 +1066,22 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    supportsInterface(
-      interfaceId: BytesLike,
-      overrides?: CallOverrides
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    tickets(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    version(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

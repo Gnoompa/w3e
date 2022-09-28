@@ -30,6 +30,7 @@ import {
   selectInvalidFields,
   setEventPoster,
   setTicketPosters,
+  setEditingTicketIndex as setEditingTicketIndexAction,
 } from "features/eventForm/eventFormSlice";
 import { useAppDispatch } from "helpers/hooks";
 import { AddIcon, QuestionIcon } from "@chakra-ui/icons";
@@ -89,6 +90,10 @@ const TicketsTab = () => {
   useEffect(() => {
     !eventPersistedFormData.addedTickets?.length && setEditingTicketIndex(0);
   }, []);
+
+  useEffect(() => {
+    dispatch(setEditingTicketIndexAction(editingTicketIndex));
+  }, [editingTicketIndex]);
 
   useEffect(() => {
     eventPersistedFormData.addedTickets?.length
@@ -156,6 +161,8 @@ const TicketsTab = () => {
           value: {
             ...eventPersistedFormData,
             [fieldName]: {
+              //@ts-ignore
+              ...eventPersistedFormData[fieldName],
               //@ts-ignore
               [editingTicketIndex]:
                 //@ts-ignore

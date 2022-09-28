@@ -59,7 +59,7 @@ const StartPage: NextPage = () => {
               style={{
                 maxHeight: "max(35rem, calc(100vh - 15rem))",
                 maxWidth: "calc(100vw - 2rem)",
-                margin: "0 auto"
+                margin: "0 auto",
               }}
             ></StartPageGraphicsPlaceholder>
           </Box>

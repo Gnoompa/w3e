@@ -84,6 +84,12 @@ import FacebookIcon from "../public/icons/facebook";
 import InstagramIcon from "../public/icons/insta";
 import TelegramIcon from "../public/icons/tg";
 import SiteIcon from "../public/icons/site";
+import { useModal } from "connectkit";
+import EventTicket from "./eventTicket";
+import {
+  getEventTicketPriceRangeLabel,
+  getEventTicketTotalSupplyLabel,
+} from "./helpers/events";
 
 const QrScanner = dynamic(() => import("./ui/qrScanner"), {
   ssr: false,
@@ -101,19 +107,22 @@ const EventPage = () => {
   const router = useRouter();
   const routerQuery = useRouterQuery(router);
   const toast = useToast();
+  const { setOpen: setOpenWalletConnectModal } = useModal();
   const [copiedValue, setCopiedValue] = useState<string>("");
   const { hasCopied, onCopy } = useClipboard(copiedValue);
-  const { address: connectedWalletAddress } = useAccount();
+  const { address: connectedWalletAddress, isConnected: isWalletConnected } =
+    useAccount();
   const [currentStage, setCurrentStage] = useState<Stage>(Stage.LoadingEvent);
   const [eventTokenId, setEventTokenId] = useState<string>();
-  const [event, setEvent] = useState<OnchainEvent>();
+  const [event, setEvent] = useState<Partial<OnchainEvent>>();
   const [scannedTickets, setScannedTickets] = useState<Array<object>>([]);
   const [isBuyingATicket, setIsBuyingATicket] = useState<number>();
   const [isVerifyingATicket, setIsVerifyingATicket] = useState(false);
   const [eventTicketStartingPrice, setEventTicketStartingPrice] =
     useState<BigNumberish>();
-  const [eventTicketsTotalSupply, setEventTicketsTotalSupply] =
-    useState<number>();
+  const [eventTicketsTotalSupply, setEventTicketsTotalSupply] = useState<
+    number | string
+  >();
   const [eventTicketsMintedAmount, setEventTicketsMintedAmount] =
     useState<number>();
   const [eventTicketPriceLabel, setEventTicketPriceLabel] = useState<string>();
@@ -181,7 +190,7 @@ const EventPage = () => {
   }) as { data: EventMetadata[] | undefined };
   const [eventMetadata, setEventMetadata] = useState<EventMetadata>();
   const [isEventPosterLoaded, setIsEventPosterLoaded] = useState(false);
-  const { data: events } = getEvents([{ args: [eventId] }]);
+  const { data: events } = getEvents([{ args: [[eventId]] }]);
   const { data: eventManagers } = getEventManagers([{ args: [eventId] }]);
   const { data: eventTickets } = getEventTickets([{ args: [[eventId]] }]);
   const [verifyingTicketTokenId, setVerifyingTicketTokenId] =
@@ -276,8 +285,7 @@ const EventPage = () => {
   const canShowTicketQr = !!connectedWalletOwnedTickets?.length;
   const isConnectedWalletAnEventManager =
     connectedWalletAddress &&
-    eventManagers &&
-    eventManagers[0].includes(connectedWalletAddress);
+    eventManagers?.[0]?.includes(connectedWalletAddress);
   const canConnectedWalletBuyTickets =
     !connectedWalletOwnedTickets?.length && !isConnectedWalletAnEventManager;
 
@@ -299,26 +307,31 @@ const EventPage = () => {
   }, [eventMetadata]);
 
   useEffect(() => {
-    events && setEvent(events[0]);
+    events && events[0] && setEvent(events[0][0]);
   }, [events]);
 
   useEffect(() => {
-    eventTickets &&
+    eventTickets?.[0]?.[0] &&
       setEventTicketPriceLabel(
-        getEventTicketPriceLabel(0) +
-          (eventTickets[0][0].length > 1
-            ? " - " + getEventTicketPriceLabel(eventTickets[0][0].length - 1)
-            : "")
+        getEventTicketPriceRangeLabel(
+          eventTickets[0][0].map((ticket) => ({
+            price: ethers.utils.formatEther(ticket.price),
+            isFree: ticket.price.eq(0),
+          }))
+        )
       );
   }, [eventTickets]);
 
   useEffect(() => {
-    eventTickets &&
+    eventTickets?.[0]?.[0] &&
       (setEventTicketStartingPrice(eventTickets[0][0][0].price),
       setEventTicketsTotalSupply(
-        eventTickets[0][0]
-          .map((ticketTier) => +ticketTier.supply)
-          .reduce((a, b) => a + b) || "∞"
+        getEventTicketTotalSupplyLabel(
+          eventTickets[0][0].map((ticket) => ({
+            supply: +ticket.supply,
+            isUnlimitedSupply: !!(ticket.params & (1 << 2)),
+          }))
+        )
       ));
   }, [eventTickets]);
 
@@ -414,6 +427,14 @@ const EventPage = () => {
     eventTicketsCreatedEvents && refetchEventTicketMetadataUri();
   }, [eventTicketMetadataUri]);
 
+  useEffect(() => {
+    isWalletConnected &&
+      isBuyingATicket !== undefined &&
+      eventManagers?.[0] &&
+      !eventManagers[0].includes(connectedWalletAddress) &&
+      onBuyEventTicketButtonClick(isBuyingATicket);
+  }, [isWalletConnected, isBuyingATicket, connectedWalletAddress]);
+
   // todo use recently created event data if exists
   const initEvent = async (eventTokenId: string) => {
     setEventTokenId(eventTokenId);
@@ -508,19 +529,23 @@ const EventPage = () => {
   const onBuyEventTicketButtonClick = (ticketIndex: number) => {
     setIsBuyingATicket(ticketIndex);
 
-    try {
-      const ticketTokenId = getTicketTokenId(ticketIndex);
+    if (isWalletConnected && !isLoadingBuyEventTicketWrite) {
+      try {
+        const ticketTokenId = getTicketTokenId(ticketIndex);
 
-      ticketTokenId
-        ? setBuyEventTicketWriteConfigToPrepare({
-            args: [ticketTokenId, connectedWalletAddress!],
-            overrides: {
-              value: getEventTicketPrice(ticketIndex, true),
-            },
-          })
-        : handleError(new Error("Unable to prepare write config"));
-    } catch (error) {
-      handleError(error as Error);
+        ticketTokenId
+          ? setBuyEventTicketWriteConfigToPrepare({
+              args: [ticketTokenId, connectedWalletAddress!],
+              overrides: {
+                value: getEventTicketPrice(ticketIndex, true),
+              },
+            })
+          : handleError(new Error("Unable to prepare write config"));
+      } catch (error) {
+        handleError(error as Error);
+      }
+    } else {
+      setOpenWalletConnectModal(true);
     }
   };
 
@@ -571,10 +596,6 @@ const EventPage = () => {
       console.error(error),
       setIsBuyingATicket(undefined);
   };
-
-  useEffect(() => {
-    console.log(eventTicketMetadatas);
-  }, [eventTicketMetadatas]);
 
   return (
     <Container mt={"-2.5rem"} variant={"fullscreen"} minH={"100vh"}>
@@ -750,7 +771,8 @@ const EventPage = () => {
                           getMetadataAttribute(eventMetadata, "media")?.[
                             // @ts-ignore
                             mediaLinkId as SocialMediaIds
-                          ] && (
+                          ] &&
+                          mediaLinkId !== SocialMediaIds.Site && (
                             // @ts-ignore
                             <Link
                               href={
@@ -1111,6 +1133,44 @@ const EventPage = () => {
                     </Text>
                   </Flex>
                 )}
+              {eventMetadata &&
+                getMetadataAttribute(eventMetadata, "media")?.[
+                  SocialMediaIds.Site
+                ] && (
+                  <Flex direction={"column"} px={"1rem"}>
+                    <Heading
+                      fontSize={"md"}
+                      color={"textContrastSecondary"}
+                      fontWeight={"md"}
+                    >
+                      Contact Information
+                    </Heading>
+                    <Link
+                      mt="1rem"
+                      href={
+                        getMetadataAttribute(eventMetadata, "media")[
+                          SocialMediaIds.Site
+                        ]!
+                      }
+                      target={"_blank"}
+                    >
+                      <Button
+                        variant={"icon"}
+                        p={"1rem"}
+                        as={motion.div}
+                        initial={fadeRightSlideAnimation["false"]}
+                        animate={fadeRightSlideAnimation["true"]}
+                      >
+                        {
+                          getMetadataAttribute(eventMetadata, "media")[
+                            SocialMediaIds.Site
+                          ]
+                        }
+                        <LinkIcon ml=".5rem" />
+                      </Button>
+                    </Link>
+                  </Flex>
+                )}
             </Flex>
           </Container>
         </Flex>
@@ -1171,130 +1231,26 @@ const EventPage = () => {
               {eventTickets &&
                 eventTicketMetadatas &&
                 eventTicketMetadatas.map((ticket, ticketIndex) => (
-                  <Flex
-                    direction={"column"}
-                    borderRadius="md"
-                    overflow={"hidden"}
-                    w={"22rem"}
-                    minW={"22rem"}
-                    h={"32rem"}
-                    minH={"32rem"}
-                    bg={"accentPrimaryContrast"}
-                    as={motion.div}
-                    initial={fadeRightSlideAnimation["false"]}
-                    animate={fadeRightSlideAnimation["true"]}
-                  >
-                    <Flex
-                      justify={"center"}
-                      position={"relative"}
-                      overflow={"hidden"}
-                      height={"12rem"}
-                    >
-                      <Box
-                        pos={"absolute"}
-                        mt={"0rem"}
-                        left={0}
-                        w={"100%"}
-                        h={"12rem"}
-                        zIndex={"base"}
-                        overflow={"hidden"}
-                      >
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={
-                            isEventPosterLoaded
-                              ? { opacity: 1 }
-                              : { opacity: 0 }
-                          }
-                        >
-                          <Image
-                            src={getIPFSUri(
-                              eventTicketMetadatas[ticketIndex]?.image
-                            )}
-                            w={"100%"}
-                            filter={"blur(40px)"}
-                          />
-                        </motion.div>
-                      </Box>
-                      <Box
-                        as={motion.div}
-                        initial={{ marginTop: "3rem" }}
-                        animate={
-                          isEventPosterLoaded && {
-                            marginTop: "2rem",
-                          }
-                        }
-                        whileHover={{ marginTop: "1rem" }}
-                        zIndex={"docked"}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <Image
-                          src={getIPFSUri(
-                            eventTicketMetadatas[ticketIndex]?.image
-                          )}
-                          borderRadius="lg"
-                          px={"1rem"}
-                          title={"show poster"}
-                          onClick={onOpenEventPosterModalOpen}
-                        />
-                      </Box>
-                    </Flex>
-                    <Flex
-                      direction={"column"}
-                      p={"1.5rem"}
-                      gap={"1rem"}
-                      flex={1}
-                      justifyContent={"space-between"}
-                    >
-                      <Flex direction={"column"} gap={"1rem"}>
-                        <Text
-                          fontSize="2xl"
-                          color="textContrast"
-                          fontWeight={"bold"}
-                        >
-                          {eventTicketMetadatas[ticketIndex].name}
-                        </Text>
-                        <Text fontSize="lg" color="textContrast">
-                          {eventTicketMetadatas[ticketIndex].description}
-                        </Text>
-                      </Flex>
-                      <Flex justifyContent={"space-between"} align={"flex-end"}>
-                        <Flex direction={"column"} gap={".5rem"}>
-                          <Text
-                            color="textContrast"
-                            fontSize={"sm"}
-                            fontWeight="medium"
-                          >
-                            Minting price
-                          </Text>
-                          <Flex gap={".25rem"} align={"flex-end"}>
-                            <Text
-                              color={"textAccent"}
-                              fontSize={"2xl"}
-                              fontWeight="bold"
-                            >
-                              {getEventTicketPriceLabel(ticketIndex)}
-                            </Text>
-                            <Text color={"textContrastSecondary"} fontSize="sm">
-                              {getEventTicketNativeCurrencyPriceLabel(
-                                ticketIndex
-                              )}
-                            </Text>
-                          </Flex>
-                        </Flex>
-                        <Button
-                          variant={"accent"}
-                          isDisabled={isBuyingATicket !== undefined}
-                          isLoading={isBuyingATicket == ticketIndex}
-                          onClick={() =>
-                            onBuyEventTicketButtonClick(ticketIndex)
-                          }
-                        >
-                          Buy
-                        </Button>
-                      </Flex>
-                    </Flex>
-                  </Flex>
+                  <EventTicket
+                    ticketData={{
+                      title: eventTicketMetadatas[ticketIndex].name,
+                      desc: eventTicketMetadatas[ticketIndex].description,
+                      image: getIPFSUri(
+                        eventTicketMetadatas[ticketIndex].image
+                      ),
+                      price: ethers.utils.formatEther(
+                        eventTickets[0][0][ticketIndex].price
+                      ),
+                      isFree: eventTickets[0][0][ticketIndex].price.eq(0),
+                    }}
+                    nativeCurrencyToUsdPrice={
+                      nativeCurrencyToUsdPrice[0].answer
+                    }
+                    isBuyingTicket={isBuyingATicket == ticketIndex}
+                    onBuyButtonClick={() =>
+                      onBuyEventTicketButtonClick(ticketIndex)
+                    }
+                  />
                 ))}
             </Container>
           </Flex>

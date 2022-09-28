@@ -92,7 +92,10 @@ const theme = extendTheme({
           px: "1rem",
         }),
         icon: {
+          py: "1.25rem",
+          px: "1.25rem",
           bg: "bg",
+          textTransform: "none",
           borderRadius: "sm",
         },
       },
@@ -285,9 +288,7 @@ const theme = extendTheme({
       },
     },
     Text: {
-      baseStyle: {
-        
-      },
+      baseStyle: {},
     },
     Highlight: {
       baseStyle: {
@@ -363,13 +364,13 @@ const theme = extendTheme({
         },
       },
     },
-		Modal: {
-			baseStyle: {
-				dialog: {
-					borderRadius: "lg"
-				}
-			}
-		}
+    Modal: {
+      baseStyle: {
+        dialog: {
+          borderRadius: "lg",
+        },
+      },
+    },
   },
 });
 

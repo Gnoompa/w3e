@@ -6,10 +6,7 @@ import React, {
   useContext,
   ReactElement,
 } from "react";
-import {
-  Flex,
-} from "@chakra-ui/react"
-import { NavigateBack } from "@components/indexx";
+import { Flex, Heading } from "@chakra-ui/react";
 import { useRouterQuery } from "helpers/hooks";
 import dynamic from "next/dynamic";
 import NextImage from "next/image";
@@ -17,6 +14,7 @@ import { Portal } from "react-portal";
 import { useRouter } from "next/router";
 import { formatWalletAddress } from "helpers/hooks";
 import { BigNumber, ethers } from "ethers";
+import EventTicket from "./eventTicket";
 
 const EventExplorer: React.FC = () => {
   enum Stage {
@@ -26,10 +24,8 @@ const EventExplorer: React.FC = () => {
   }
 
   const router = useRouter();
-  const context = useContext(AppContext);
-  const { web3APIProvider } = useContext(AppContext);
   const routerQuery = useRouterQuery(router);
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState([1, 2, 3, 4]);
 
   useEffect(() => {
     // fetchEvents()
@@ -39,14 +35,23 @@ const EventExplorer: React.FC = () => {
 
   return (
     <Flex
+      w="1105px"
       sx={{
         flexDirection: "column",
-        width: "22rem",
-        margin: "31rem auto",
-        transform: "translateY(-50%)",
+        margin: "2rem auto",
       }}
     >
-      explorer
+      <Heading fontWeight={"extrabold"} fontSize={"3rem"}>Event Explorer</Heading>
+      <Flex mt="2rem" gap={"1.5rem"} flexWrap={"wrap"} >
+        {events.map((event) => (
+          <EventTicket
+            ticketData={{
+              image:
+                "https://bafybeifqylhbj3ixirvr5yy2agrtyffpapz4axtsmitvbui6ccqmer3vuy.ipfs.nftstorage.link/Group%2073.png",
+            }}
+          />
+        ))}
+      </Flex>
     </Flex>
   );
 };

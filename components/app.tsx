@@ -17,6 +17,7 @@ import {
   useBreakpointValue,
   forwardRef,
   Badge,
+  Image,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { Routes } from "helpers/routes";
@@ -131,20 +132,30 @@ const App: React.FC = (props) => {
                         infrastructure
                       </Text>
                     </Flex>
-                    <ChevronRightIcon w={"1.5rem"} h="1.5rem" color={"textContrastSecondary"} />
+                    <ChevronRightIcon
+                      w={"1.5rem"}
+                      h="1.5rem"
+                      color={"textContrastSecondary"}
+                    />
                   </Flex>
                 </MenuItem>
               </MenuList>
             </Menu>
             <Flex align={"center"} gap=".5rem">
-              <Link>Explore events</Link>
-              <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
+              <NextLink href={Routes.EventExplorer}>
+                <Text fontSize={"md"} fontWeight="medium" cursor={"pointer"}>
+                  Explore events
+                </Text>
+                {/* <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
                 soon
-              </Badge>
+              </Badge> */}
+              </NextLink>
             </Flex>
             <Link href={Routes.FAQ}>
               <NextLink href={Routes.FAQ} passHref>
-                <Link>FAQ</Link>
+                <Text fontSize={"md"} fontWeight="medium" cursor={"pointer"}>
+                  FAQ
+                </Text>
               </NextLink>
             </Link>
           </Flex>
@@ -178,9 +189,10 @@ const App: React.FC = (props) => {
             display={["none", "none", "initial"]}
           >
             <Link href="/" float={"left"}>
-              <Flex align={"center"} gap={".5rem"}>
-                <Heading as={"h1"}>Web3Events</Heading>
-                <Badge variant={"solid"} color={"contrastPrimary"} bg={"bg"}>
+              <Flex align={"center"} gap={".75rem"}>
+                <Image src="/logo/logomd.png" w={"3rem"}></Image>
+                <Heading as={"h1"} fontSize={"1.5rem"} lineHeight="1em">Web3 <br></br> Events</Heading>
+                <Badge variant={"solid"} ml="1rem">
                   alpha
                 </Badge>
               </Flex>
@@ -197,7 +209,7 @@ const App: React.FC = (props) => {
           {props.children}
         </context.Provider>
       </Flex>
-      <Container mt="2rem" bg="accentPrimary" h={"10rem"} p="3rem 5rem">
+      <Container mt="2rem" bg="accentPrimary" p="3rem 5rem">
         <Flex
           flexDir={["column", "row"]}
           align="center"
