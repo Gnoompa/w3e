@@ -59,7 +59,10 @@ import {
   useWaitForTransaction,
 } from "wagmi";
 import { useModal } from "connectkit";
-import EventPreview, { EventProps as EventPreviewProps } from "./eventPreview";
+import EventPreview, {
+  EventProps as EventPreviewProps,
+  EventProps,
+} from "./eventPreview";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   selectInvalidFields,
@@ -72,10 +75,15 @@ import { default as TicketTab } from "./eventForm/tabs/tickets";
 import { default as PaymentTab } from "./eventForm/tabs/payment";
 import { default as SocialsTab } from "./eventForm/tabs/socials";
 import { default as useEventFormValidationHook } from "./eventForm/validationHook";
+import {
+  getEventTicketPriceRangeLabel,
+  getEventTicketTotalSupplyLabel,
+} from "./helpers/events";
+import { resolveObjectURL } from "buffer";
 
-const EventTicketImage = dynamic(() => import("./eventTicket"), {
-  ssr: false,
-});
+// const EventTicketImage = dynamic(() => import("./eventTicket"), {
+//   ssr: false,
+// });
 
 const EventForm = () => {
   enum FieldModalIds {
@@ -125,6 +133,8 @@ const EventForm = () => {
   const [eventPosterImageFile, setEventPosterImageFile] = useState<Blob>();
   const [eventTicketPosterImageFile, setEventTicketPosterImageFile] =
     useState<Blob>();
+  const defaultEventPosterImageFileUrl =
+    "https://bafybeifqylhbj3ixirvr5yy2agrtyffpapz4axtsmitvbui6ccqmer3vuy.ipfs.nftstorage.link/Group%2073.png";
   const [defaultEventPosterImageFile, setDefaultEventPosterImageFile] =
     useState<Blob>();
 
@@ -191,6 +201,13 @@ const EventForm = () => {
   } as {
     [key: number]: (keyof typeof eventPersistedFormData)[];
   };
+  const eventFormTabs = [
+    MainInfoTab,
+    VenueTab,
+    TicketTab,
+    PaymentTab,
+    SocialsTab,
+  ];
 
   useEffect(() => {
     init();
@@ -208,9 +225,6 @@ const EventForm = () => {
       ]
         .filter(Boolean)
         .join(", "),
-      eventTicketPriceLabel: eventPersistedFormData.ticketPrice[0]
-        ? "$" + eventPersistedFormData.ticketPrice[0]
-        : "",
       date: [
         eventPersistedFormData.eventStartDate
           ? date.format(
@@ -225,17 +239,36 @@ const EventForm = () => {
             )
           : "",
       ].filter(Boolean),
-      eventTicketsTotalSupply: `${
-        eventPersistedFormData.ticketSupply[0] || ""
-      }`,
       mediaLinks: eventPersistedFormData.eventMediaLinks,
-      isUnlimitedTicketSupply:
-        eventPersistedFormData.isUnlimitedTicketSupply[0],
-      isFreeTicketPrice: eventPersistedFormData.isFreeTicketPrice[0],
+      eventTicketPriceLabel: getEventTicketPriceRangeLabel(
+        Object.values(eventPersistedFormData.ticketPrice).map(
+          (price, index) => ({
+            price,
+            isFree: eventPersistedFormData.isFreeTicketPrice[index],
+          })
+        )
+      ),
+      eventTicketsSupplyLabel: getEventTicketTotalSupplyLabel(
+        Object.values(eventPersistedFormData.ticketSupply).map(
+          (supply, index) => ({
+            isUnlimitedSupply:
+              eventPersistedFormData.isUnlimitedTicketSupply[index],
+            supply,
+          })
+        )
+      ),
+      ticket:
+        eventFormTabs[eventPersistedFormData.tabIndex] == TicketTab
+          ? getTicketData(eventFormData.editingTicketIndex)
+          : undefined,
     });
 
     eventPersistedFormDataRef.current = eventPersistedFormData;
-  }, [eventPersistedFormData]);
+  }, [
+    eventPersistedFormData,
+    eventFormData.editingTicketIndex,
+    eventFormData.ticketPosters,
+  ]);
 
   useEffect(() => {
     eventFormFieldsRef.current = eventFormFields;
@@ -286,9 +319,7 @@ const EventForm = () => {
   }, [createEventWritePayloadToPrepare, createEventWrite]);
 
   const init = async () => {
-    fetch(
-      "https://bafybeifqylhbj3ixirvr5yy2agrtyffpapz4axtsmitvbui6ccqmer3vuy.ipfs.nftstorage.link/Group%2073.png"
-    )
+    fetch(defaultEventPosterImageFileUrl)
       .then((response) => response.blob())
       .then((blob) => setDefaultEventPosterImageFile(blob));
 
@@ -435,6 +466,19 @@ const EventForm = () => {
         onSimpleDialogOpen(),
         true);
 
+  const getTicketData = (ticketIndex?: number) =>
+    ticketIndex == undefined
+      ? undefined
+      : {
+          title: eventPersistedFormData.eventTicketName[ticketIndex],
+          image: eventFormData.ticketPosters?.[ticketIndex]
+            ? URL.createObjectURL(eventFormData.ticketPosters[ticketIndex]!)
+            : defaultEventPosterImageFileUrl,
+          desc: eventPersistedFormData.eventTicketDescription[ticketIndex],
+          price: eventPersistedFormData.ticketPrice[ticketIndex],
+          isFree: eventPersistedFormData.isFreeTicketPrice[ticketIndex],
+        };
+
   // todo prepare request before uploading to ipfs
   const prepareEventForCreation = async () => {
     const eventMetadata = getEventMetadata(eventPersistedFormData);
@@ -450,7 +494,7 @@ const EventForm = () => {
         ...(eventMetadata as EventMetadata),
         image: eventPosterImageFile! || defaultEventPosterImageFile,
       }).then((response) => (eventMetadataUrl = response)),
-      ...eventTicketMetadatas.map((metadata, ticketIndex) => {
+      ...eventTicketMetadatas.map((metadata, ticketIndex) =>
         uploadMetadata({
           ...(metadata as EventTicketMetadata),
           image:
@@ -458,8 +502,8 @@ const EventForm = () => {
             defaultEventPosterImageFile!,
         })
           .then((response) => ticketMetadataUrls.push(response))
-          .catch(console.error);
-      }),
+          .catch(console.error)
+      ),
     ]);
 
     let ticketsData = eventPersistedFormData.addedTickets?.map(
@@ -535,10 +579,10 @@ const EventForm = () => {
 
   return (
     <Flex sx={{ flexDirection: "column" }}>
-      <EventTicketImage
+      {/* <EventTicketImage
         eventTitle={ticketEventTitle}
         onImageGenerated={setTicketEventImageResult}
-      />
+      /> */}
       <Flex
         gap={"2rem"}
         maxW={"100vw"}
@@ -581,21 +625,19 @@ const EventForm = () => {
             onChange={onEventFormTabChange}
           >
             <TabPanels>
-              {[MainInfoTab, VenueTab, TicketTab, PaymentTab, SocialsTab].map(
-                (Tab, index) => (
-                  <TabPanel
-                    key={index}
-                    as={motion.div}
-                    animate={
-                      tabPanelAnimation[
-                        `${eventPersistedFormData.tabIndex == index}`
-                      ]
-                    }
-                  >
-                    <Tab />
-                  </TabPanel>
-                )
-              )}
+              {eventFormTabs.map((Tab, index) => (
+                <TabPanel
+                  key={index}
+                  as={motion.div}
+                  animate={
+                    tabPanelAnimation[
+                      `${eventPersistedFormData.tabIndex == index}`
+                    ]
+                  }
+                >
+                  <Tab />
+                </TabPanel>
+              ))}
             </TabPanels>
             <Flex mt={"4rem"} justifyContent={"space-between"}>
               <Flex align={"center"}>

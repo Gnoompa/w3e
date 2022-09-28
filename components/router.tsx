@@ -39,10 +39,6 @@ const Router: React.FC = () => {
     setRoutePath(router.asPath.split("?")[0] as Routes);
   }, [router.asPath]);
 
-  useEffect(() => {
-    console.log(routePath);
-  }, [routePath]);
-
   const RouteToComponentMap = {
     [Routes.StartPage]: () => <StartPage />,
     [Routes.EventForm]: () => <EventForm />,

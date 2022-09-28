@@ -3,6 +3,11 @@ import { MouseEventHandler, Ref, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { TypedUseSelectorHook } from "react-redux";
 import type { RootState, AppDispatch } from "../app/store";
+import TwitterIcon from "../public/icons/twitter";
+import FacebookIcon from "../public/icons/facebook";
+import InstagramIcon from "../public/icons/insta";
+import TelegramIcon from "../public/icons/tg";
+import SiteIcon from "../public/icons/site";
 
 export const defaultDateFormat = "ddd, MMM DD YYYY";
 export const defaulyIPFSgateway = "https://nftstorage.link/ipfs/";
@@ -14,6 +19,14 @@ export enum SocialMediaIds {
   Telegram = "telegram",
   Site = "site",
 }
+
+export const socialMediaIdToComponentMap = {
+  [SocialMediaIds.Twitter]: <TwitterIcon />,
+  [SocialMediaIds.Instagram]: <InstagramIcon />,
+  [SocialMediaIds.Facebook]: <FacebookIcon />,
+  [SocialMediaIds.Telegram]: <TelegramIcon width="1.25rem" />,
+  [SocialMediaIds.Site]: <SiteIcon width="1.25rem" />,
+};
 
 export function useDebounce<T>(value: T, delay?: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);

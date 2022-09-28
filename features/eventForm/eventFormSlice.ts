@@ -7,10 +7,12 @@ export interface State {
   fields: { name: string; tabId: number | undefined; isInvalid: boolean }[];
   eventPoster?: Blob;
   ticketPosters?: { [key: number]: Blob };
+  editingTicketIndex?: number;
 }
 
 export const initialState: State = {
   fields: [],
+  editingTicketIndex: undefined,
 };
 
 export const slice = createSlice({
@@ -30,12 +32,23 @@ export const slice = createSlice({
     ) => {
       state.ticketPosters = action.payload;
     },
+    setEditingTicketIndex: (
+      state,
+      action: PayloadAction<State["editingTicketIndex"]>
+    ) => {
+      state.editingTicketIndex = action.payload;
+    },
     resetState: () => initialState,
   },
 });
 
-export const { setFields, resetState, setEventPoster, setTicketPosters } =
-  slice.actions;
+export const {
+  setFields,
+  resetState,
+  setEventPoster,
+  setTicketPosters,
+  setEditingTicketIndex,
+} = slice.actions;
 
 export const selectInvalidFields = (state: RootState) =>
   state.eventForm.fields.filter(({ isInvalid }) => isInvalid);

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { RefObject, useEffect, useRef } from "react";
 import {
   Flex,
   Box,
@@ -8,9 +8,14 @@ import {
   Heading,
   IconButton,
   Link,
+  Modal,
+  ModalOverlay,
+  ModalBody,
+  ModalContent,
+  Button,
 } from "@chakra-ui/react";
-import { ArrowForwardIcon } from "@chakra-ui/icons";
-import { SocialMediaIds } from "helpers/hooks";
+import { ArrowForwardIcon, LinkIcon } from "@chakra-ui/icons";
+import { SocialMediaIds, socialMediaIdToComponentMap } from "helpers/hooks";
 import TwitterIcon from "../public/icons/twitter";
 import FacebookIcon from "../public/icons/facebook";
 import InstagramIcon from "../public/icons/insta";
@@ -18,6 +23,7 @@ import TelegramIcon from "../public/icons/tg";
 import SiteIcon from "../public/icons/site";
 import { fadeRightSlideAnimation } from "styles/theme";
 import { motion } from "framer-motion";
+import EventTicket, { PropsType } from "./eventTicket";
 
 export type EventProps = {
   name?: string | JSX.Element;
@@ -26,14 +32,15 @@ export type EventProps = {
   image?: string | JSX.Element;
   location?: string | JSX.Element;
   date?: (string | JSX.Element)[];
-  eventTicketPriceLabel?: string | JSX.Element;
-  eventTicketsTotalSupply?: string | JSX.Element;
   mediaLinks?: { [key in SocialMediaIds]?: string };
-  isUnlimitedTicketSupply?: boolean;
-  isFreeTicketPrice?: boolean;
+  eventTicketPriceLabel?: string | JSX.Element;
+  eventTicketsSupplyLabel?: string | number | JSX.Element;
+  ticket?: PropsType["ticketData"];
 };
 
 const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
+  const previewContainerRef = useRef() as RefObject<HTMLDivElement>;
+
   return (
     <Container
       variant={"contrast"}
@@ -45,6 +52,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
       minH={"41rem"}
       overflow={"hidden"}
       h={"100%"}
+      ref={previewContainerRef}
     >
       <Box
         w={"4rem"}
@@ -57,6 +65,34 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
         zIndex={"overlay"}
         borderRadius={"100%"}
       ></Box>
+      <Modal
+        isOpen={!!eventData.ticket}
+        onClose={() => {}}
+        portalProps={{ containerRef: previewContainerRef }}
+        blockScrollOnMount={false}
+        trapFocus={false}
+      >
+        <ModalOverlay
+          w={"100%"}
+          h={"100%"}
+          pos={"absolute"}
+          zIndex={"banner"}
+        />
+        <ModalContent
+          w={"auto"}
+          h={"100%"}
+          bg={"transparent"}
+          position={"fixed"}
+          left={"50%"}
+          top={"10%"}
+          boxShadow={"none"}
+          transform={"translateX(-50%) !important"}
+        >
+          <ModalBody>
+            <EventTicket isAbleToBuy={false} ticketData={eventData.ticket!} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
       <Container
         h={"20rem"}
         pos={"relative"}
@@ -117,9 +153,11 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
           >
             {Object.keys(eventData.mediaLinks).map(
               (mediaLinkId) =>
-                eventData.mediaLinks?.[mediaLinkId as SocialMediaIds] && (
+                mediaLinkId != SocialMediaIds.Site &&
+                eventData.mediaLinks?.[mediaLinkId as SocialMediaIds] &&
+                socialMediaIdToComponentMap[mediaLinkId as SocialMediaIds] && (
                   <Link
-                    href={eventData.mediaLinks[mediaLinkId]}
+                    href={eventData.mediaLinks[mediaLinkId]!}
                     target={"_blank"}
                   >
                     <IconButton
@@ -128,17 +166,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
                       aria-label={mediaLinkId}
                       initial={fadeRightSlideAnimation["false"]}
                       animate={fadeRightSlideAnimation["true"]}
-                      icon={
-                        {
-                          [SocialMediaIds.Twitter]: <TwitterIcon />,
-                          [SocialMediaIds.Instagram]: <InstagramIcon />,
-                          [SocialMediaIds.Facebook]: <FacebookIcon />,
-                          [SocialMediaIds.Telegram]: (
-                            <TelegramIcon width="1.25rem" />
-                          ),
-                          // [SocialMediaIds.Site]: <SiteIcon width="1.25rem" />,
-                        }[mediaLinkId]
-                      }
+                      icon={socialMediaIdToComponentMap[mediaLinkId]!}
                     />
                   </Link>
                 )
@@ -159,11 +187,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
           pos={"relative"}
           gap={"2rem"}
         >
-          <Container
-            pos={"absolute"}
-            top={"-.5rem"}
-            zIndex={"overlay"}
-          >
+          <Container pos={"absolute"} top={"-.5rem"} zIndex={"overlay"}>
             <Flex
               pos={"absolute"}
               bottom={"1rem"}
@@ -242,9 +266,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
                       fontSize={"3xl"}
                       fontWeight="bold"
                     >
-                      {eventData?.isFreeTicketPrice
-                        ? "FREE"
-                        : eventData?.eventTicketPriceLabel || "-"}
+                      {eventData?.eventTicketPriceLabel}
                     </Text>
                   </Flex>
                 </Flex>
@@ -261,9 +283,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
                     fontSize={"3xl"}
                     fontWeight="bold"
                   >
-                    {eventData.isUnlimitedTicketSupply
-                      ? "∞"
-                      : eventData?.eventTicketsTotalSupply || "-"}
+                    {eventData?.eventTicketsSupplyLabel}
                   </Text>
                 </Flex>
               </Flex>
@@ -292,6 +312,35 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
             <Text color={"textContrast"} mt={".5rem"}>
               {eventData?.longDescription || "-"}
             </Text>
+          </Flex>
+          <Flex direction={"column"} px={"1rem"}>
+            <Heading
+              fontSize={"md"}
+              color={"textContrastSecondary"}
+              fontWeight={"md"}
+            >
+              Contact Information
+            </Heading>
+            {eventData?.mediaLinks?.[SocialMediaIds.Site] ? (
+              <Link
+                mt="1rem"
+                href={eventData.mediaLinks[SocialMediaIds.Site]!}
+                target={"_blank"}
+              >
+                <Button
+                  variant={"icon"}
+                  p={"1rem"}
+                  as={motion.div}
+                  initial={fadeRightSlideAnimation["false"]}
+                  animate={fadeRightSlideAnimation["true"]}
+                >
+                  {eventData.mediaLinks[SocialMediaIds.Site]}
+                  <LinkIcon ml=".5rem" />
+                </Button>
+              </Link>
+            ) : (
+              "-"
+            )}
           </Flex>
         </Flex>
       </Container>
