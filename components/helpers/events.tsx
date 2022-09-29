@@ -3,7 +3,7 @@ import { BigNumber, BigNumberish, ethers } from "ethers";
 export const getEventTicketPriceRangeLabel = (
   tickets: { price: number | string | undefined; isFree: boolean }[]
 ): string =>
-  tickets && tickets.length
+  console.log(tickets) || tickets && tickets.length
     ? tickets.length > 1
       ? "TIERED"
       : getEventTicketPriceLabel(tickets[0])

@@ -17,8 +17,6 @@ export const FileUploader = (props: FileUploaderProps) => {
   const [preview, setPreview] = useState<string>();
 
   useEffect(() => {
-    files && props.onChange?.(files);
-
     setPreview(
       files && files.length == 1 && files[0].type.match(/image|video/)
         ? URL.createObjectURL(files[0])
@@ -26,8 +24,14 @@ export const FileUploader = (props: FileUploaderProps) => {
     );
   }, [files]);
 
+  useEffect(() => {
+    setFiles(props.value);
+  }, [props.value]);
+
   const onDrop = useCallback((acceptedFiles) => {
     setFiles([...acceptedFiles]);
+
+    props.onChange?.([...acceptedFiles]);
   }, []);
 
   const { getRootProps, getInputProps, open } = useDropzone({
@@ -44,6 +48,8 @@ export const FileUploader = (props: FileUploaderProps) => {
 
   const removeAll = () => {
     setFiles([]);
+
+    props.onChange?.([]);
   };
 
   return (

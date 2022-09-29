@@ -33,6 +33,8 @@ interface MainV2testInterface extends ethers.utils.Interface {
     "getEventManagers(uint256)": FunctionFragment;
     "getEventTickets(uint256[])": FunctionFragment;
     "getEvents(uint256[])": FunctionFragment;
+    "getFeeCollector()": FunctionFragment;
+    "getFeeRate()": FunctionFragment;
     "getTickets(uint256[])": FunctionFragment;
     "initialize(address,address)": FunctionFragment;
     "initializeV2()": FunctionFragment;
@@ -41,6 +43,9 @@ interface MainV2testInterface extends ethers.utils.Interface {
     "prolongSubscription(uint256)": FunctionFragment;
     "proxiableUUID()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
+    "setFeeCollector(address)": FunctionFragment;
+    "setFeeRate(uint8)": FunctionFragment;
+    "setSlippageRate(uint8)": FunctionFragment;
     "setTokenContract(address)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "upgradeTo(address)": FunctionFragment;
@@ -104,6 +109,14 @@ interface MainV2testInterface extends ethers.utils.Interface {
     values: [BigNumberish[]]
   ): string;
   encodeFunctionData(
+    functionFragment: "getFeeCollector",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getFeeRate",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getTickets",
     values: [BigNumberish[]]
   ): string;
@@ -131,6 +144,18 @@ interface MainV2testInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setFeeCollector",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setFeeRate",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setSlippageRate",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setTokenContract",
@@ -185,6 +210,11 @@ interface MainV2testInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getEvents", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getFeeCollector",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "getFeeRate", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getTickets", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(
@@ -206,6 +236,15 @@ interface MainV2testInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setFeeCollector",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "setFeeRate", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setSlippageRate",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -413,6 +452,10 @@ export class MainV2test extends BaseContract {
       ]
     >;
 
+    getFeeCollector(overrides?: CallOverrides): Promise<[string]>;
+
+    getFeeRate(overrides?: CallOverrides): Promise<[number]>;
+
     getTickets(
       ticketIds: BigNumberish[],
       overrides?: CallOverrides
@@ -460,6 +503,21 @@ export class MainV2test extends BaseContract {
     proxiableUUID(overrides?: CallOverrides): Promise<[string]>;
 
     renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setFeeCollector(
+      newFeeCollector: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setFeeRate(
+      newFeeRate: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setSlippageRate(
+      newSlippageRate: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -564,6 +622,10 @@ export class MainV2test extends BaseContract {
     })[]
   >;
 
+  getFeeCollector(overrides?: CallOverrides): Promise<string>;
+
+  getFeeRate(overrides?: CallOverrides): Promise<number>;
+
   getTickets(
     ticketIds: BigNumberish[],
     overrides?: CallOverrides
@@ -609,6 +671,21 @@ export class MainV2test extends BaseContract {
   proxiableUUID(overrides?: CallOverrides): Promise<string>;
 
   renounceOwnership(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setFeeCollector(
+    newFeeCollector: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setFeeRate(
+    newFeeRate: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setSlippageRate(
+    newSlippageRate: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -713,6 +790,10 @@ export class MainV2test extends BaseContract {
       })[]
     >;
 
+    getFeeCollector(overrides?: CallOverrides): Promise<string>;
+
+    getFeeRate(overrides?: CallOverrides): Promise<number>;
+
     getTickets(
       ticketIds: BigNumberish[],
       overrides?: CallOverrides
@@ -756,6 +837,21 @@ export class MainV2test extends BaseContract {
     proxiableUUID(overrides?: CallOverrides): Promise<string>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
+    setFeeCollector(
+      newFeeCollector: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setFeeRate(
+      newFeeRate: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setSlippageRate(
+      newSlippageRate: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     setTokenContract(
       tokenContractAddress: string,
@@ -962,6 +1058,10 @@ export class MainV2test extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    getFeeCollector(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getFeeRate(overrides?: CallOverrides): Promise<BigNumber>;
+
     getTickets(
       ticketIds: BigNumberish[],
       overrides?: CallOverrides
@@ -989,6 +1089,21 @@ export class MainV2test extends BaseContract {
     proxiableUUID(overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setFeeCollector(
+      newFeeCollector: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setFeeRate(
+      newFeeRate: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setSlippageRate(
+      newSlippageRate: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1077,6 +1192,10 @@ export class MainV2test extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    getFeeCollector(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getFeeRate(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     getTickets(
       ticketIds: BigNumberish[],
       overrides?: CallOverrides
@@ -1104,6 +1223,21 @@ export class MainV2test extends BaseContract {
     proxiableUUID(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setFeeCollector(
+      newFeeCollector: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setFeeRate(
+      newFeeRate: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setSlippageRate(
+      newSlippageRate: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

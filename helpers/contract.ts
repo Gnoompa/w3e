@@ -40,11 +40,11 @@ const chainIdToChainlinkPriceOracleContractAddressMap = {
 };
 
 const chainIdToMainContractAddressMap = {
-  [chain.polygonMumbai.id]: "0x0Cfe5738d738d7230121c4e7975f3925f766a288",
+  [chain.polygonMumbai.id]: "0x3582E766340a10C3Cf63A986B40D2eF3f155958F",
 };
 
 const chainIdToTokenContractAddressMap = {
-  [chain.polygonMumbai.id]: "0x94b9f3d24B81d3047ECB13562ED89f3d5F59B36d",
+  [chain.polygonMumbai.id]: "0x089f4EDb1B5a3FFE1a9a3257178c9C6f2B5EA6b8",
 };
 
 const chainIdToMainContractMap = {

@@ -54,7 +54,7 @@ const EventTicket = (props: PropsType) => {
       borderRadius="md"
       overflow={"hidden"}
       w={"22rem"}
-      minW={"22rem"}
+      minW={["20rem", "22rem"]}
       h={"32rem"}
       minH={"32rem"}
       bg={"accentPrimaryContrast"}
@@ -164,7 +164,7 @@ const EventTicket = (props: PropsType) => {
           <Button
             variant={props.isAbleToBuy ? "accent" : "outlineAccent"}
             pointerEvents={props.isAbleToBuy ? "initial" : "none"}
-            isDisabled={props.isAbleToBuy || props.isBuyingTicket}
+            isDisabled={!props.isAbleToBuy || props.isBuyingTicket}
             isLoading={props.isBuyingTicket}
             onClick={props.onBuyButtonClick}
           >

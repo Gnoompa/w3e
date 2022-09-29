@@ -35,14 +35,17 @@ const EventExplorer: React.FC = () => {
 
   return (
     <Flex
-      w="1105px"
+      w={["355px", "355px", "730px", "1105px"]}
+      maxW={"calc(100vw - 2rem)"}
       sx={{
         flexDirection: "column",
         margin: "2rem auto",
       }}
     >
-      <Heading fontWeight={"extrabold"} fontSize={"3rem"}>Event Explorer</Heading>
-      <Flex mt="2rem" gap={"1.5rem"} flexWrap={"wrap"} >
+      <Heading fontWeight={"extrabold"} fontSize={["2rem", "2rem", "3rem"]} color={["textContrast", "text"]}>
+        Event Explorer
+      </Heading>
+      <Flex mt="2rem" gap={"1.5rem"} flexWrap={"wrap"}>
         {events.map((event) => (
           <EventTicket
             ticketData={{

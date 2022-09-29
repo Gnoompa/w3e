@@ -241,21 +241,23 @@ const EventForm = () => {
       ].filter(Boolean),
       mediaLinks: eventPersistedFormData.eventMediaLinks,
       eventTicketPriceLabel: getEventTicketPriceRangeLabel(
-        Object.values(eventPersistedFormData.ticketPrice).map(
-          (price, index) => ({
-            price,
-            isFree: eventPersistedFormData.isFreeTicketPrice[index],
-          })
-        )
+        Object.values({
+          ...eventPersistedFormData.isFreeTicketPrice,
+          ...eventPersistedFormData.ticketPrice,
+        }).map((price, index) => ({
+          price: +(price || 0),
+          isFree: eventPersistedFormData.isFreeTicketPrice[index],
+        }))
       ),
       eventTicketsSupplyLabel: getEventTicketTotalSupplyLabel(
-        Object.values(eventPersistedFormData.ticketSupply).map(
-          (supply, index) => ({
-            isUnlimitedSupply:
-              eventPersistedFormData.isUnlimitedTicketSupply[index],
-            supply,
-          })
-        )
+        Object.values({
+          ...eventPersistedFormData.isUnlimitedTicketSupply,
+          ...eventPersistedFormData.ticketSupply,
+        }).map((supply, index) => ({
+          isUnlimitedSupply:
+            eventPersistedFormData.isUnlimitedTicketSupply[index],
+          supply: +(supply || 0),
+        }))
       ),
       ticket:
         eventFormTabs[eventPersistedFormData.tabIndex] == TicketTab

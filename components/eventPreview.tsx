@@ -339,7 +339,9 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
                 </Button>
               </Link>
             ) : (
-              "-"
+              <Text color={"textContrast"} mt={".5rem"}>
+                -
+              </Text>
             )}
           </Flex>
         </Flex>

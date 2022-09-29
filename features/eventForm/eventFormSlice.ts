@@ -13,6 +13,7 @@ export interface State {
 export const initialState: State = {
   fields: [],
   editingTicketIndex: undefined,
+  ticketPosters: {},
 };
 
 export const slice = createSlice({

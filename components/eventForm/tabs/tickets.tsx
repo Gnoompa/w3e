@@ -23,6 +23,7 @@ import {
   Switch,
   Box,
   Container,
+  IconButton,
 } from "@chakra-ui/react";
 import FileUploader from "../../ui/fileUploader";
 import { useAppSelector, useDebounce } from "helpers/hooks";
@@ -33,7 +34,7 @@ import {
   setEditingTicketIndex as setEditingTicketIndexAction,
 } from "features/eventForm/eventFormSlice";
 import { useAppDispatch } from "helpers/hooks";
-import { AddIcon, QuestionIcon } from "@chakra-ui/icons";
+import { AddIcon, DeleteIcon, QuestionIcon } from "@chakra-ui/icons";
 import EditIcon from "../../../public/icons/edit";
 import { default as TabContainer } from "./container";
 import { setEventData as setEventPreviewData } from "features/eventForm/eventPreviewSlice";
@@ -190,6 +191,57 @@ const TicketsTab = () => {
     setEditingTicketIndex(undefined);
   };
 
+  const removeAddedTicket = (ticketIndex: number) => {
+    confirm("Are you sure?") &&
+      (dispatch(
+        setAddedTickets(
+          eventPersistedFormData.addedTickets.filter(
+            (ticket) => ticket !== ticketIndex
+          )
+        )
+      ),
+      dispatch(
+        upsertEvent(
+          (
+            [
+              "ticketPrice",
+              "ticketSupply",
+              "eventTicketDescription",
+              "eventTicketName",
+              "isFreeTicketPrice",
+              "isUnlimitedTicketSupply",
+            ] as (keyof typeof eventPersistedFormData)[]
+          )
+            .map((ticketField) => ({
+              [ticketField]: Object.keys(eventPersistedFormData[ticketField]!)
+                .map(
+                  (key) =>
+                    key != ticketIndex && {
+                      [key]: eventPersistedFormData[ticketField]![key]!,
+                    }
+                )
+                .reduce((a, b) => ({ ...a, ...b }), {}),
+            }))
+            .reduce((a, b) => ({ ...a, ...b }), {})
+        )
+      ),
+      dispatch(
+        setTicketPosters(
+          Object.keys(eventFormData.ticketPosters)
+            .filter((key) => key != ticketIndex)
+            .map((key) => ({ [key]: eventFormData.ticketPosters[key] }))
+            .reduce((a, b) => ({ ...a, ...b }), {})
+        )
+      ),
+      setEditingTicketIndex(
+        eventPersistedFormData.addedTickets.length - 1 > 0 ? undefined : 0
+      ));
+  };
+
+  useEffect(() => {
+    console.log(eventFormData.ticketPosters);
+  }, [eventFormData.ticketPosters]);
+
   return (
     <TabContainer title={"Tickets"}>
       {editingTicketIndex !== undefined && (
@@ -201,7 +253,9 @@ const TicketsTab = () => {
             isInvalid={getIsFieldInvalid("eventTicketName")}
           >
             <Input
-              value={eventPersistedFormData.eventTicketName[editingTicketIndex]}
+              value={
+                eventPersistedFormData.eventTicketName[editingTicketIndex] || ""
+              }
               autoFocus
               placeholder=" "
               onChange={(event) =>
@@ -229,7 +283,9 @@ const TicketsTab = () => {
               <InputGroup>
                 <InputLeftAddon children="$" />
                 <Input
-                  value={eventPersistedFormData.ticketPrice[editingTicketIndex]}
+                  value={
+                    eventPersistedFormData.ticketPrice[editingTicketIndex] || ""
+                  }
                   isDisabled={
                     eventPersistedFormData.isFreeTicketPrice[editingTicketIndex]
                   }
@@ -319,7 +375,9 @@ const TicketsTab = () => {
               isInvalid={getIsFieldInvalid("ticketSupply")}
             >
               <Input
-                value={eventPersistedFormData.ticketSupply[editingTicketIndex]}
+                value={
+                  eventPersistedFormData.ticketSupply[editingTicketIndex] || ""
+                }
                 placeholder=" "
                 type="number"
                 min={1}
@@ -410,6 +468,7 @@ const TicketsTab = () => {
                   </Highlight>
                 }
                 value={
+                  eventFormData.ticketPosters &&
                   eventFormData.ticketPosters?.[editingTicketIndex]
                     ? [eventFormData.ticketPosters?.[editingTicketIndex]]
                     : undefined
@@ -479,7 +538,7 @@ const TicketsTab = () => {
                   value={
                     eventPersistedFormData.eventTicketDescription[
                       editingTicketIndex
-                    ]
+                    ] || ""
                   }
                   placeholder=" "
                   onChange={(event) =>
@@ -519,14 +578,27 @@ const TicketsTab = () => {
             }
             gap={"2rem"}
           >
-            {!!eventPersistedFormData.addedTickets?.length && (
-              <Button
-                variant={"solid"}
-                onClick={() => setEditingTicketIndex(undefined)}
-              >
-                Cancel
-              </Button>
-            )}
+            <Flex gap=".5rem">
+              {!!eventPersistedFormData.addedTickets?.length && (
+                <Button
+                  variant={"solid"}
+                  onClick={() => setEditingTicketIndex(undefined)}
+                >
+                  Cancel
+                </Button>
+              )}
+              {!!eventPersistedFormData.addedTickets?.length &&
+                eventPersistedFormData.addedTickets?.includes(
+                  editingTicketIndex
+                ) && (
+                  <Button
+                    variant={"solid"}
+                    onClick={() => removeAddedTicket(editingTicketIndex)}
+                  >
+                    <DeleteIcon />
+                  </Button>
+                )}
+            </Flex>
             <Button
               variant={"accent"}
               isDisabled={!isTicketFormValid}
@@ -546,7 +618,7 @@ const TicketsTab = () => {
         </>
       )}
       {editingTicketIndex == undefined &&
-        eventPersistedFormData.addedTickets?.length && (
+        !!eventPersistedFormData.addedTickets?.length && (
           <Flex direction="column" gap={"1rem"} overflowX={"hidden"}>
             <Container
               as={Flex}
