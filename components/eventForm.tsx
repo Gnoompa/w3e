@@ -196,7 +196,7 @@ const EventForm = () => {
   const eventFormFieldsRef = useRef(eventFormFields);
   const eventFormTabIdToFieldNameMap = {
     0: ["eventTitle", "eventShortDescription"],
-    2: ["ticketPrice", "ticketSupply"],
+    2: ["ticketPrice", "ticketSupply", "addedTickets"],
     3: ["beneficiary"],
   } as {
     [key: number]: (keyof typeof eventPersistedFormData)[];
@@ -303,7 +303,7 @@ const EventForm = () => {
         "/#event?id=" +
           parseTransactionLogs(createEventWriteReceipt.logs).filter(
             (log) => log.name == "EventCreated"
-          )[0].args.tokenId
+          )[0].args.eventTokenId
       ),
       dispatch(resetEventAction()));
   }, [createEventWriteReceipt, isSuccessCreateEventWrite]);
@@ -519,7 +519,7 @@ const EventForm = () => {
         params: BigNumber.from(
           1 <<
             (eventPersistedFormData.isUnlimitedTicketSupply[ticketIndex]
-              ? 2
+              ? 3
               : 0)
         ),
         subscriptionDuration:
@@ -546,10 +546,7 @@ const EventForm = () => {
     setCreateEventWritePayloadToPrepare({
       ticketSupply: ticketsData.map(({ ticketSupply }) => ticketSupply),
       ticketPrice: ticketsData.map(({ ticketPrice }) => ticketPrice),
-      params: ticketsData.map(({ params }) => params),
-      subscriptionDuration: ticketsData.map(
-        ({ subscriptionDuration }) => subscriptionDuration
-      ),
+      ticketParams: ticketsData.map(({ params }) => params),
       beneficiary: eventPersistedFormData.beneficiary,
       managers: [eventPersistedFormData.beneficiary],
       eventMetadataUri: eventMetadataUrl?.url,
@@ -581,10 +578,6 @@ const EventForm = () => {
 
   return (
     <Flex sx={{ flexDirection: "column" }}>
-      {/* <EventTicketImage
-        eventTitle={ticketEventTitle}
-        onImageGenerated={setTicketEventImageResult}
-      /> */}
       <Flex
         gap={"2rem"}
         maxW={"100vw"}

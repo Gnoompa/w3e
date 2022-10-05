@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "helpers/hooks";
 import React, { useEffect, useRef } from "react";
-import yup, { object, string } from "yup";
+import yup, { array, object, string } from "yup";
 import { State as IEventFormState } from "features/eventForm/eventPersistedFormSlice";
 import {
   selectInvalidFields,
@@ -52,6 +52,7 @@ export default () => {
           ) as boolean
       ),
       beneficiary: string().required(),
+      addedTickets: array().min(1),
     } as { [key in keyof IEventFormState]: any });
 
   const validateField = ({

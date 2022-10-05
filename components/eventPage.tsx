@@ -59,11 +59,14 @@ import {
 } from "wagmi";
 import {
   buyEventTicket,
+  spendEventTickets,
+  prepareSpendEventTicket,
   defaultChainId,
   getBalanceOfToken,
   getEventManagers,
   getEvents,
   getEventTickets,
+  getEventTicketTiers,
   getNativeCurrencyToUsdPrice,
   getOwnerOfToken,
   getTokenMetadataUris,
@@ -76,6 +79,7 @@ import {
   CheckIcon,
   ExternalLinkIcon,
   LinkIcon,
+  WarningIcon,
 } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
 import { fadeRightSlideAnimation } from "styles/theme";
@@ -115,7 +119,9 @@ const EventPage = () => {
   const [currentStage, setCurrentStage] = useState<Stage>(Stage.LoadingEvent);
   const [eventTokenId, setEventTokenId] = useState<string>();
   const [event, setEvent] = useState<Partial<OnchainEvent>>();
-  const [scannedTickets, setScannedTickets] = useState<Array<object>>([]);
+  const [scannedTickets, setScannedTickets] = useState<
+    Array<{ ticketTokenId: string; ownerAddress: string }>
+  >([]);
   const [isBuyingATicket, setIsBuyingATicket] = useState<number>();
   const [isVerifyingATicket, setIsVerifyingATicket] = useState(false);
   const [eventTicketStartingPrice, setEventTicketStartingPrice] =
@@ -192,9 +198,10 @@ const EventPage = () => {
   const [isEventPosterLoaded, setIsEventPosterLoaded] = useState(false);
   const { data: events } = getEvents([{ args: [[eventId]] }]);
   const { data: eventManagers } = getEventManagers([{ args: [eventId] }]);
-  const { data: eventTickets } = getEventTickets([{ args: [[eventId]] }]);
+  const { data: eventTicketTiers } = getEventTicketTiers([{ args: [eventId] }]);
+  const eventTicketTiersRef = useRef([]);
   const [verifyingTicketTokenId, setVerifyingTicketTokenId] =
-    useState<BigNumberish>();
+    useState<string>();
   const [verifiedTicketWalletAddress, setVerifiedTicketWalletAddress] =
     useState<string>();
   const {
@@ -235,6 +242,41 @@ const EventPage = () => {
     hash: buyEventTicketWriteResponse?.hash,
     wait: buyEventTicketWriteResponse?.wait,
   });
+
+  // SPEND EVENT TICKETS
+
+  const [
+    spendEventTicketWriteConfigToPrepare,
+    setSpendEventTicketWriteConfigToPrepare,
+  ] = useState<{
+    args: Parameters<typeof prepareSpendEventTicket>[0]["args"];
+  }>();
+  // // todo handle write request errors
+  const {
+    config: preparedSpendEventTicketWriteConfig,
+    refetch: refetchPreparedSpendEventTicketWriteConfig,
+    isLoading: isLoadingPreparedSpendEventTicket,
+    error: preparedSpendEventTicketWriteConfigError,
+  } = prepareSpendEventTicket({
+    ...spendEventTicketWriteConfigToPrepare,
+    enabled: false,
+  });
+  // // todo handle transaction signing rejection
+  const { data: spendEventTicketWriteResponse, write: spendEventTicketWrite } =
+    spendEventTickets(preparedSpendEventTicketWriteConfig);
+  const {
+    isLoading: isLoadingSpendEventTicketWrite,
+    data: spendEventTicketWriteData,
+    isSuccess: isSuccessSpendEventTicketWrite,
+    isError: isErrorSpendEventTicketWrite,
+    error: spendEventTicketWriteError,
+  } = useWaitForTransaction({
+    hash: spendEventTicketWriteResponse?.hash,
+    wait: spendEventTicketWriteResponse?.wait,
+  });
+
+  //! SPEND EVENT TICKETS
+
   const { data: eventTicketsCreatedEvents } = useMainContractEvents({
     eventName: "TicketsCreated",
     filters: {
@@ -254,7 +296,7 @@ const EventPage = () => {
     },
   ]);
   const { data: eventTicketMetadatas } = useTokenMetadataFetch({
-    dids: eventTicketMetadataUri?.[0],
+    dids: eventTicketTiersRef.current,
   }) as { data: EventTicketMetadata[] | undefined };
   const {
     data: eventTicketBoughtEvents,
@@ -263,25 +305,19 @@ const EventPage = () => {
   } = useMainContractEvents({
     eventName: "TicketBought",
     filters: {
-      [defaultChainId]: [BigNumber.from(routerQuery.id).toHexString()],
+      [defaultChainId]: [
+        BigNumber.from(routerQuery.id).toHexString(),
+        null,
+        connectedWalletAddress,
+      ],
     },
-    provider,
-  });
-  const { data: eventTicketUsedEvents } = useMainContractEvents({
-    eventName: "TicketUsed",
     provider,
   });
   const {
     data: nativeCurrencyToUsdPrice,
     refetch: refetchNativeCurrencyToUsdPrice,
   } = getNativeCurrencyToUsdPrice();
-  const connectedWalletOwnedTickets = eventTicketBoughtEvents?.[0]
-    .filter((event) => event.args?.buyer == connectedWalletAddress)
-    .map((connectedWalletOwnedTicket) =>
-      eventTicketsCreatedEvents?.[0].filter((ticket) =>
-        connectedWalletOwnedTicket.args?.tokenId.eq(ticket.args?.tokenId)
-      )
-    );
+  const connectedWalletOwnedTickets = eventTicketBoughtEvents?.[0];
   const canShowTicketQr = !!connectedWalletOwnedTickets?.length;
   const isConnectedWalletAnEventManager =
     connectedWalletAddress &&
@@ -292,6 +328,14 @@ const EventPage = () => {
   useEffect(() => {
     eventId ? initEvent(eventId) : router.push("/app");
   }, []);
+
+  useEffect(() => {
+    eventTicketTiers &&
+      !eventTicketTiersRef.current.length &&
+      (eventTicketTiersRef.current = eventTicketTiers?.[0]?.map(
+        ({ metadataUri }) => metadataUri
+      ));
+  }, [eventId, eventTicketTiers]);
 
   useEffect(() => {
     event &&
@@ -311,29 +355,29 @@ const EventPage = () => {
   }, [events]);
 
   useEffect(() => {
-    eventTickets?.[0]?.[0] &&
+    eventTicketTiers?.[0]?.[0] &&
       setEventTicketPriceLabel(
         getEventTicketPriceRangeLabel(
-          eventTickets[0][0].map((ticket) => ({
-            price: ethers.utils.formatEther(ticket.price),
-            isFree: ticket.price.eq(0),
+          eventTicketTiers[0].map((ticketTier) => ({
+            price: ethers.utils.formatEther(ticketTier.ticketPrice),
+            isFree: ticketTier.ticketPrice.eq(0),
           }))
         )
       );
-  }, [eventTickets]);
+  }, [eventTicketTiers]);
 
   useEffect(() => {
-    eventTickets?.[0]?.[0] &&
-      (setEventTicketStartingPrice(eventTickets[0][0][0].price),
+    eventTicketTiers?.[0]?.[0] &&
+      (setEventTicketStartingPrice(eventTicketTiers[0][0].ticketPrice),
       setEventTicketsTotalSupply(
         getEventTicketTotalSupplyLabel(
-          eventTickets[0][0].map((ticket) => ({
-            supply: +ticket.supply,
-            isUnlimitedSupply: !!(ticket.params & (1 << 2)),
+          eventTicketTiers[0].map((ticketTier) => ({
+            supply: +ticketTier.ticketSupply,
+            isUnlimitedSupply: !!(ticketTier.ticketParams & (1 << 3)),
           }))
         )
       ));
-  }, [eventTickets]);
+  }, [eventTicketTiers]);
 
   useEffect(() => {
     eventTicketBoughtEvents &&
@@ -383,6 +427,31 @@ const EventPage = () => {
   }, [buyEventTicketWriteData, isSuccessBuyEventTicketWrite]);
 
   useEffect(() => {
+    spendEventTicketWriteConfigToPrepare &&
+      (spendEventTicketWrite
+        ? spendEventTicketWrite()
+        : refetchPreparedSpendEventTicketWriteConfig());
+  }, [spendEventTicketWriteConfigToPrepare, spendEventTicketWrite]);
+
+  useEffect(() => {
+    spendEventTicketWriteData &&
+      (isSuccessSpendEventTicketWrite &&
+        (onTicketVerificationModalClose(),
+        toast({
+          title: "Scanned tickets has been verified!",
+          status: "success",
+          isClosable: true,
+        })),
+      isErrorBuyEventTicketWrite &&
+        (toast({
+          title: "Couldn't verify scanned tickets",
+          status: "error",
+          isClosable: true,
+        }),
+        console.error(spendEventTicketWriteError)));
+  }, [spendEventTicketWriteData, isSuccessSpendEventTicketWrite]);
+
+  useEffect(() => {
     ticketMessageSigningData &&
       isTicketMessageSigningSuccess &&
       (prepareTicketQrData(ticketMessageSigningData),
@@ -396,15 +465,24 @@ const EventPage = () => {
   }, [isTicketMessageSigningError]);
 
   useEffect(() => {
+    console.log(verifiedTicketWalletAddress, verifyingTicketTokenId);
     verifyingTicketTokenId && refetchBalanceOfVerifyingTicket();
   }, [verifyingTicketTokenId]);
 
   useEffect(() => {
+    console.log(balanceOfVerifyingTicketData);
     balanceOfVerifyingTicketData &&
       balanceOfVerifyingTicketData[0] &&
       (setIsTicketVerificationSuccessful(
         balanceOfVerifyingTicketData[0].gte(1)
       ),
+      setScannedTickets([
+        ...scannedTickets,
+        {
+          ticketTokenId: verifyingTicketTokenId!,
+          ownerAddress: verifiedTicketWalletAddress!,
+        },
+      ]),
       setTimeout(
         () => (
           setIsTicketVerificationSuccessful(undefined),
@@ -446,28 +524,30 @@ const EventPage = () => {
 
   const getEventTicketPrice = (ticketIndex: number, inNativeCurrency = false) =>
     inNativeCurrency
-      ? eventTickets[0][0][ticketIndex].price
+      ? eventTicketTiers[0][ticketIndex].ticketPrice
       : nativeCurrencyToUsdPrice[0].answer
           .mul(10 ** 10)
           .mul(
-            +ethers.utils.formatEther(eventTickets[0][0][0].price.toString())
+            +ethers.utils.formatEther(
+              eventTicketTiers[0][0].ticketPrice.toString()
+            )
           );
 
   const getEventTicketPriceLabel = (ticketIndex: number) =>
-    eventTickets?.[0]?.[0]?.[ticketIndex] &&
-    BigNumber.from(eventTickets[0][0][ticketIndex].price).eq(0)
+    eventTicketTiers?.[0]?.[ticketIndex] &&
+    BigNumber.from(eventTicketTiers[0][ticketIndex].ticketPrice).eq(0)
       ? "FREE"
       : `$${(+ethers.utils.formatEther(
-          eventTickets[0][0][ticketIndex].price.toString()
+          eventTicketTiers[0][ticketIndex].ticketPrice.toString()
         )).toFixed(2)}`;
 
   const getEventTicketNativeCurrencyPriceLabel = (ticketIndex: number) =>
-    eventTickets?.[0]?.[0]?.[ticketIndex] &&
+    eventTicketTiers?.[0]?.[ticketIndex] &&
     nativeCurrencyToUsdPrice &&
-    !BigNumber.from(eventTickets[0][0][ticketIndex].price).eq(0)
+    !BigNumber.from(eventTicketTiers[0][ticketIndex].ticketPrice).eq(0)
       ? `~${(+ethers.utils.formatUnits(
           nativeCurrencyToUsdPrice[0].answer
-            .mul(eventTickets[0][0][ticketIndex].price)
+            .mul(eventTicketTiers[0][ticketIndex].ticketPrice)
             .toString(),
           26
         )).toFixed(4)} MATIC`
@@ -479,15 +559,15 @@ const EventPage = () => {
         const { ticketTokenId, signedMessage } = JSON.parse(
           scannedTicketQrDataJSON
         );
-        const address =
+        const ownerAddress =
           signedMessage &&
           ethers.utils.verifyMessage(ticketSigningMessage, signedMessage);
 
         ticketTokenId &&
-          address &&
+          ownerAddress &&
           (setIsVerifyingATicket(true),
           setVerifyingTicketTokenId(ticketTokenId),
-          setVerifiedTicketWalletAddress(address));
+          setVerifiedTicketWalletAddress(ownerAddress));
       } catch (error) {
         handleError(error as Error, {
           title: "Ivalid ticket QR code",
@@ -522,22 +602,24 @@ const EventPage = () => {
   };
 
   const getTicketTokenId = (ticketIndex: number): BigNumberish | undefined =>
-    eventTicketsCreatedEvents
-      ? eventTicketsCreatedEvents[0][ticketIndex].args?.tokenId
+    eventTicketBoughtEvents
+      ? eventTicketBoughtEvents[0][ticketIndex].args?.ticketTokenId
       : undefined;
 
-  const onBuyEventTicketButtonClick = (ticketIndex: number) => {
-    setIsBuyingATicket(ticketIndex);
+  const onBuyEventTicketButtonClick = (ticketTierId: number) => {
+    setIsBuyingATicket(ticketTierId);
 
     if (isWalletConnected && !isLoadingBuyEventTicketWrite) {
       try {
-        const ticketTokenId = getTicketTokenId(ticketIndex);
-
-        ticketTokenId
+        eventTicketTiers?.[0]?.[ticketTierId]
           ? setBuyEventTicketWriteConfigToPrepare({
-              args: [ticketTokenId, connectedWalletAddress!],
+              args: [
+                eventTicketTiers[0][ticketTierId].eventTokenId,
+                ticketTierId,
+                [connectedWalletAddress!],
+              ],
               overrides: {
-                value: getEventTicketPrice(ticketIndex, true),
+                value: getEventTicketPrice(ticketTierId, true),
               },
             })
           : handleError(new Error("Unable to prepare write config"));
@@ -549,25 +631,28 @@ const EventPage = () => {
     }
   };
 
-  const onTicketPreviewModalOpenButtonClick = () => {
-    setSimpleAlertData({
-      title: <Text>Prove ticket ownership by signing</Text>,
-      description: (
-        <Highlight
-          query={["free"]}
-          styles={{
-            bg: "accentSecondary",
-            borderRadius: "5px",
-            color: "textContrast",
-            p: ".25em .5em",
-          }}
-        >
-          It is free and for security reasons only
-        </Highlight>
-      ),
-    });
+  const mbConnectWallet = () =>
+    isWalletConnected ? false : (setOpenWalletConnectModal(true), true);
 
-    setTimeout(onSimpleAlertOpen);
+  const onTicketPreviewModalOpenButtonClick = () => {
+    mbConnectWallet() ||
+      (setSimpleAlertData({
+        title: <Text>Prove ticket ownership by signing</Text>,
+        description: (
+          <Highlight
+            query={["free"]}
+            styles={{
+              bg: "accentSecondary",
+              borderRadius: "5px",
+              color: "textContrast",
+              p: ".25em .5em",
+            }}
+          >
+            It is free and for security reasons only
+          </Highlight>
+        ),
+      }),
+      setTimeout(onSimpleAlertOpen));
   };
 
   const onTicketSignButtonClick = () => {
@@ -581,6 +666,15 @@ const EventPage = () => {
         signedMessage,
       })
     );
+
+  const onCompleteEventTicketVerificationButtonClick = () =>
+    setSpendEventTicketWriteConfigToPrepare({
+      args: [
+        eventId,
+        scannedTickets.map(({ ticketTokenId }) => ticketTokenId),
+        scannedTickets.map(({ ownerAddress }) => ownerAddress),
+      ],
+    });
 
   const handleError = (
     error: Error | null,
@@ -938,7 +1032,7 @@ const EventPage = () => {
                       <Button
                         variant={"accent"}
                         onClick={() =>
-                          eventTickets[0][0].length > 1
+                          eventTicketTiers[0].length > 1
                             ? onOpenEventTicketsModalOpen()
                             : onBuyEventTicketButtonClick(0)
                         }
@@ -1061,7 +1155,7 @@ const EventPage = () => {
                                 <Text fontWeight={"bold"}>
                                   ticket is not valid
                                 </Text>
-                                <AlertIcon color={"red"} />
+                                <WarningIcon color={"red"} />
                               </Flex>
                             ))
                           ) : (
@@ -1072,7 +1166,15 @@ const EventPage = () => {
                       <ModalFooter>
                         <Button
                           variant={"accent"}
-                          onClick={onTicketVerificationModalClose}
+                          isLoading={
+                            isLoadingPreparedSpendEventTicket ||
+                            isLoadingSpendEventTicketWrite
+                          }
+                          isDisabled={
+                            isLoadingPreparedSpendEventTicket ||
+                            isLoadingSpendEventTicketWrite
+                          }
+                          onClick={onCompleteEventTicketVerificationButtonClick}
                           m={"0 auto"}
                         >
                           Complete Verification
@@ -1228,7 +1330,7 @@ const EventPage = () => {
                 paddingLeft: "2rem",
               }}
             >
-              {eventTickets &&
+              {eventTicketTiers &&
                 eventTicketMetadatas &&
                 eventTicketMetadatas.map((ticket, ticketIndex) => (
                   <EventTicket
@@ -1239,9 +1341,10 @@ const EventPage = () => {
                         eventTicketMetadatas[ticketIndex].image
                       ),
                       price: ethers.utils.formatEther(
-                        eventTickets[0][0][ticketIndex].price
+                        eventTicketTiers[0][ticketIndex].ticketPrice
                       ),
-                      isFree: eventTickets[0][0][ticketIndex].price.eq(0),
+                      isFree:
+                        eventTicketTiers[0][ticketIndex].ticketPrice.eq(0),
                     }}
                     nativeCurrencyToUsdPrice={
                       nativeCurrencyToUsdPrice[0].answer

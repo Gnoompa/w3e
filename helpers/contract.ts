@@ -40,11 +40,11 @@ const chainIdToChainlinkPriceOracleContractAddressMap = {
 };
 
 const chainIdToMainContractAddressMap = {
-  [chain.polygonMumbai.id]: "0x3582E766340a10C3Cf63A986B40D2eF3f155958F",
+  [chain.polygonMumbai.id]: "0xfA712DEa7e68f19C2D6562763b535Efe37183Fb8",
 };
 
 const chainIdToTokenContractAddressMap = {
-  [chain.polygonMumbai.id]: "0x089f4EDb1B5a3FFE1a9a3257178c9C6f2B5EA6b8",
+  [chain.polygonMumbai.id]: "0x00C6b703bd5100706E3523b174d2b04F3557b012",
 };
 
 const chainIdToMainContractMap = {
@@ -148,6 +148,48 @@ export const useTokenContractEvents = ({
     ...args,
   });
 
+export const getEvents = (
+  configs: (Partial<Parameters<typeof useContractRead>[0]> & {
+    args: Parameters<typeof MainContractTypechain.prototype.getEvents>[0];
+  })[],
+  chainIds: Chain["id"][] = [defaultChainId]
+) =>
+  useContractReads({
+    contracts: chainIds.map((chainId, i) => ({
+      addressOrName: chainIdToMainContractAddressMap[chainId],
+      contractInterface: MainContractABI.abi,
+      functionName: "getEvents",
+      chainId,
+      ...configs[i],
+    })),
+  }) as ReturnType<typeof useContractReads> & {
+    data: Awaited<
+      ReturnType<typeof MainContractTypechain.prototype.getEvents>
+    >[];
+  };
+
+export const getEventTicketTiers = (
+  configs: (Omit<Partial<Parameters<typeof useContractRead>[0]>, "args"> & {
+    args: Parameters<
+      typeof MainContractTypechain.prototype.getEventTicketTiers
+    >[0][];
+  })[],
+  chainIds: Chain["id"][] = [defaultChainId]
+) =>
+  useContractReads({
+    contracts: chainIds.map((chainId, i) => ({
+      addressOrName: chainIdToMainContractAddressMap[chainId],
+      contractInterface: MainContractABI.abi,
+      functionName: "getEventTicketTiers",
+      chainId,
+      ...configs[i],
+    })),
+  }) as ReturnType<typeof useContractReads> & {
+    data: Awaited<
+      ReturnType<typeof MainContractTypechain.prototype.getEventTicketTiers>[]
+    >;
+  };
+
 export const getEventTickets = (
   configs: (Omit<Partial<Parameters<typeof useContractRead>[0]>, "args"> & {
     args: Parameters<
@@ -168,26 +210,6 @@ export const getEventTickets = (
     data: Awaited<
       ReturnType<typeof MainContractTypechain.prototype.getEventTickets>[]
     >;
-  };
-
-export const getEvents = (
-  configs: (Partial<Parameters<typeof useContractRead>[0]> & {
-    args: Parameters<typeof MainContractTypechain.prototype.getEvents>[0];
-  })[],
-  chainIds: Chain["id"][] = [defaultChainId]
-) =>
-  useContractReads({
-    contracts: chainIds.map((chainId, i) => ({
-      addressOrName: chainIdToMainContractAddressMap[chainId],
-      contractInterface: MainContractABI.abi,
-      functionName: "getEvents",
-      chainId,
-      ...configs[i],
-    })),
-  }) as ReturnType<typeof useContractReads> & {
-    data: Awaited<
-      ReturnType<typeof MainContractTypechain.prototype.getEvents>
-    >[];
   };
 
 export const prepareCreateEvent = ({
@@ -238,6 +260,31 @@ export const buyEventTicket = ({
   | ReturnType<typeof usePrepareContractWrite>["config"]
   | (Parameters<typeof useContractWrite>[0] & {
       args: Parameters<typeof MainContractTypechain.prototype.buyTickets>;
+    })) => useContractWrite(config);
+
+export const prepareSpendEventTicket = ({
+  chainId = defaultChainId,
+  ...config
+}: Omit<Partial<Parameters<typeof usePrepareContractWrite>[0]>, "args"> & {
+  args?:
+    | Parameters<typeof MainContractTypechain.prototype.spendTickets>
+    | undefined;
+}) =>
+  usePrepareContractWrite({
+    addressOrName: chainIdToMainContractAddressMap[chainId],
+    contractInterface: MainContractABI.abi,
+    functionName: "spendTickets",
+    chainId,
+    ...config,
+  });
+
+export const spendEventTickets = ({
+  chainId = defaultChainId,
+  ...config
+}:
+  | ReturnType<typeof usePrepareContractWrite>["config"]
+  | (Parameters<typeof useContractWrite>[0] & {
+      args: Parameters<typeof MainContractTypechain.prototype.spendTickets>;
     })) => useContractWrite(config);
 
 export const getEventManagers = (

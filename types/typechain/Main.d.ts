@@ -22,29 +22,33 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface MainInterface extends ethers.utils.Interface {
   functions: {
-    "INFINITE_SUPPLY_TICKET_BIT()": FunctionFragment;
-    "OFFLINE_TICKET_TYPE_BIT()": FunctionFragment;
-    "ONLINE_TICKET_TYPE_BIT()": FunctionFragment;
-    "SUBSCRIPTION_TICKET_TYPE_BIT()": FunctionFragment;
-    "USED_TICKET_BIT()": FunctionFragment;
-    "buyTickets(uint256,address)": FunctionFragment;
-    "commitVerifiedTickets(uint256,uint256[],address[])": FunctionFragment;
-    "createEvent((uint256[],uint256[],uint256[],uint256[],address,address[],string,string[]))": FunctionFragment;
+    "TICKET_BOUGHT_BIT()": FunctionFragment;
+    "TICKET_SPENT_BIT()": FunctionFragment;
+    "TICKET_TIER_EARLYBIRD_BIT()": FunctionFragment;
+    "TICKET_TIER_OFFLINE_BIT()": FunctionFragment;
+    "TICKET_TIER_ONLINE_BIT()": FunctionFragment;
+    "TICKET_TIER_SUBSCRIPTION_BIT()": FunctionFragment;
+    "TICKET_TIER_TEAM_BIT()": FunctionFragment;
+    "TICKET_TIER_UNLIMITED_SUPPLY_BIT()": FunctionFragment;
+    "buyTickets(uint256,uint256,address[])": FunctionFragment;
+    "createEvent((uint256[],uint256[],uint256[],address,address[],string,string[]))": FunctionFragment;
     "getEventManagers(uint256)": FunctionFragment;
+    "getEventTicketTiers(uint256)": FunctionFragment;
     "getEventTickets(uint256[])": FunctionFragment;
     "getEvents(uint256[])": FunctionFragment;
     "getFeeCollector()": FunctionFragment;
     "getFeeRate()": FunctionFragment;
-    "getTickets(uint256[])": FunctionFragment;
+    "getOwnedEventTicket(address,uint256)": FunctionFragment;
+    "getSlippageRate()": FunctionFragment;
     "initialize(address,address)": FunctionFragment;
     "owner()": FunctionFragment;
-    "prolongSubscription(uint256)": FunctionFragment;
     "proxiableUUID()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "setFeeCollector(address)": FunctionFragment;
     "setFeeRate(uint8)": FunctionFragment;
     "setSlippageRate(uint8)": FunctionFragment;
     "setTokenContract(address)": FunctionFragment;
+    "spendTickets(uint256,uint256[],address[])": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "upgradeTo(address)": FunctionFragment;
     "upgradeToAndCall(address,bytes)": FunctionFragment;
@@ -52,32 +56,40 @@ interface MainInterface extends ethers.utils.Interface {
   };
 
   encodeFunctionData(
-    functionFragment: "INFINITE_SUPPLY_TICKET_BIT",
+    functionFragment: "TICKET_BOUGHT_BIT",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "OFFLINE_TICKET_TYPE_BIT",
+    functionFragment: "TICKET_SPENT_BIT",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "ONLINE_TICKET_TYPE_BIT",
+    functionFragment: "TICKET_TIER_EARLYBIRD_BIT",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "SUBSCRIPTION_TICKET_TYPE_BIT",
+    functionFragment: "TICKET_TIER_OFFLINE_BIT",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "USED_TICKET_BIT",
+    functionFragment: "TICKET_TIER_ONLINE_BIT",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "TICKET_TIER_SUBSCRIPTION_BIT",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "TICKET_TIER_TEAM_BIT",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "TICKET_TIER_UNLIMITED_SUPPLY_BIT",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "buyTickets",
-    values: [BigNumberish, string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "commitVerifiedTickets",
-    values: [BigNumberish, BigNumberish[], string[]]
+    values: [BigNumberish, BigNumberish, string[]]
   ): string;
   encodeFunctionData(
     functionFragment: "createEvent",
@@ -85,8 +97,7 @@ interface MainInterface extends ethers.utils.Interface {
       {
         ticketSupply: BigNumberish[];
         ticketPrice: BigNumberish[];
-        subscriptionDuration: BigNumberish[];
-        params: BigNumberish[];
+        ticketParams: BigNumberish[];
         beneficiary: string;
         managers: string[];
         eventMetadataUri: string;
@@ -96,6 +107,10 @@ interface MainInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getEventManagers",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getEventTicketTiers",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -115,18 +130,18 @@ interface MainInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getTickets",
-    values: [BigNumberish[]]
+    functionFragment: "getOwnedEventTicket",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getSlippageRate",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "initialize",
     values: [string, string]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "prolongSubscription",
-    values: [BigNumberish]
-  ): string;
   encodeFunctionData(
     functionFragment: "proxiableUUID",
     values?: undefined
@@ -152,6 +167,10 @@ interface MainInterface extends ethers.utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(
+    functionFragment: "spendTickets",
+    values: [BigNumberish, BigNumberish[], string[]]
+  ): string;
+  encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
@@ -163,36 +182,48 @@ interface MainInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "version", values?: undefined): string;
 
   decodeFunctionResult(
-    functionFragment: "INFINITE_SUPPLY_TICKET_BIT",
+    functionFragment: "TICKET_BOUGHT_BIT",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "OFFLINE_TICKET_TYPE_BIT",
+    functionFragment: "TICKET_SPENT_BIT",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "ONLINE_TICKET_TYPE_BIT",
+    functionFragment: "TICKET_TIER_EARLYBIRD_BIT",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "SUBSCRIPTION_TICKET_TYPE_BIT",
+    functionFragment: "TICKET_TIER_OFFLINE_BIT",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "USED_TICKET_BIT",
+    functionFragment: "TICKET_TIER_ONLINE_BIT",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "TICKET_TIER_SUBSCRIPTION_BIT",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "TICKET_TIER_TEAM_BIT",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "TICKET_TIER_UNLIMITED_SUPPLY_BIT",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "buyTickets", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "commitVerifiedTickets",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "createEvent",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "getEventManagers",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getEventTicketTiers",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -205,13 +236,16 @@ interface MainInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getFeeRate", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getTickets", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "prolongSubscription",
+    functionFragment: "getOwnedEventTicket",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "getSlippageRate",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "proxiableUUID",
     data: BytesLike
@@ -234,6 +268,10 @@ interface MainInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "spendTickets",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
@@ -251,8 +289,8 @@ interface MainInterface extends ethers.utils.Interface {
     "Initialized(uint8)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "TicketBought(uint256,uint256,address)": EventFragment;
-    "TicketUsed(uint256,uint256,address)": EventFragment;
-    "TicketsCreated(uint256,uint256,address)": EventFragment;
+    "TicketSpent(uint256,uint256,address)": EventFragment;
+    "TicketTierCreated(uint256,uint256)": EventFragment;
     "Upgraded(address)": EventFragment;
   };
 
@@ -262,8 +300,8 @@ interface MainInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TicketBought"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "TicketUsed"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "TicketsCreated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "TicketSpent"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "TicketTierCreated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
@@ -274,7 +312,7 @@ export type AdminChangedEvent = TypedEvent<
 export type BeaconUpgradedEvent = TypedEvent<[string] & { beacon: string }>;
 
 export type EventCreatedEvent = TypedEvent<
-  [BigNumber, string] & { tokenId: BigNumber; organizer: string }
+  [BigNumber, string] & { eventTokenId: BigNumber; organizer: string }
 >;
 
 export type InitializedEvent = TypedEvent<[number] & { version: number }>;
@@ -286,25 +324,21 @@ export type OwnershipTransferredEvent = TypedEvent<
 export type TicketBoughtEvent = TypedEvent<
   [BigNumber, BigNumber, string] & {
     eventTokenId: BigNumber;
-    tokenId: BigNumber;
-    buyer: string;
+    ticketTokenId: BigNumber;
+    ticketOwner: string;
   }
 >;
 
-export type TicketUsedEvent = TypedEvent<
+export type TicketSpentEvent = TypedEvent<
   [BigNumber, BigNumber, string] & {
-    tokenId: BigNumber;
     eventTokenId: BigNumber;
-    owner: string;
+    ticketTokenId: BigNumber;
+    ticketOwner: string;
   }
 >;
 
-export type TicketsCreatedEvent = TypedEvent<
-  [BigNumber, BigNumber, string] & {
-    tokenId: BigNumber;
-    eventTokenId: BigNumber;
-    organizer: string;
-  }
+export type TicketTierCreatedEvent = TypedEvent<
+  [BigNumber, BigNumber] & { eventTokenId: BigNumber; ticketTierId: BigNumber }
 >;
 
 export type UpgradedEvent = TypedEvent<[string] & { implementation: string }>;
@@ -353,35 +387,36 @@ export class Main extends BaseContract {
   interface: MainInterface;
 
   functions: {
-    INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<[number]>;
+    TICKET_BOUGHT_BIT(overrides?: CallOverrides): Promise<[number]>;
 
-    OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<[number]>;
+    TICKET_SPENT_BIT(overrides?: CallOverrides): Promise<[number]>;
 
-    ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<[number]>;
+    TICKET_TIER_EARLYBIRD_BIT(overrides?: CallOverrides): Promise<[number]>;
 
-    SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<[number]>;
+    TICKET_TIER_OFFLINE_BIT(overrides?: CallOverrides): Promise<[number]>;
 
-    USED_TICKET_BIT(overrides?: CallOverrides): Promise<[number]>;
+    TICKET_TIER_ONLINE_BIT(overrides?: CallOverrides): Promise<[number]>;
+
+    TICKET_TIER_SUBSCRIPTION_BIT(overrides?: CallOverrides): Promise<[number]>;
+
+    TICKET_TIER_TEAM_BIT(overrides?: CallOverrides): Promise<[number]>;
+
+    TICKET_TIER_UNLIMITED_SUPPLY_BIT(
+      overrides?: CallOverrides
+    ): Promise<[number]>;
 
     buyTickets(
-      ticketId: BigNumberish,
-      _for: string,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    commitVerifiedTickets(
       eventTokenId: BigNumberish,
-      ticketIds: BigNumberish[],
-      owners: string[],
-      overrides?: Overrides & { from?: string | Promise<string> }
+      ticketTierId: BigNumberish,
+      _for: string[],
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     createEvent(
       payload: {
         ticketSupply: BigNumberish[];
         ticketPrice: BigNumberish[];
-        subscriptionDuration: BigNumberish[];
-        params: BigNumberish[];
+        ticketParams: BigNumberish[];
         beneficiary: string;
         managers: string[];
         eventMetadataUri: string;
@@ -391,45 +426,49 @@ export class Main extends BaseContract {
     ): Promise<ContractTransaction>;
 
     getEventManagers(
-      eventId: BigNumberish,
+      eventTokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string[]]>;
 
-    getEventTickets(
-      eventIds: BigNumberish[],
+    getEventTicketTiers(
+      eventTokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
       [
-        ([
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber
-        ] & {
+        ([BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, string] & {
+          eventTokenId: BigNumber;
+          ticketParams: BigNumber;
+          ticketPrice: BigNumber;
+          ticketSupply: BigNumber;
+          tier: BigNumber;
+          metadataUri: string;
+        })[]
+      ]
+    >;
+
+    getEventTickets(
+      ticketTokenIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        ([BigNumber, BigNumber, BigNumber, BigNumber] & {
           eventTokenId: BigNumber;
           params: BigNumber;
           price: BigNumber;
-          supply: BigNumber;
-          subscriptionDuration: BigNumber;
-          subscriptionActivatedAt: BigNumber;
           tier: BigNumber;
-        })[][]
+        })[]
       ]
     >;
 
     getEvents(
-      eventIds: BigNumberish[],
+      eventTokenIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<
       [
-        ([string, string, string[], BigNumber[]] & {
+        ([string, string, string[]] & {
           organizer: string;
           beneficiary: string;
           managers: string[];
-          ticketIds: BigNumber[];
         })[]
       ]
     >;
@@ -438,30 +477,24 @@ export class Main extends BaseContract {
 
     getFeeRate(overrides?: CallOverrides): Promise<[number]>;
 
-    getTickets(
-      ticketIds: BigNumberish[],
+    getOwnedEventTicket(
+      ticketOwner: string,
+      ticketTokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
       [
-        ([
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber
-        ] & {
+        [BigNumber, BigNumber, BigNumber, BigNumber] & {
           eventTokenId: BigNumber;
           params: BigNumber;
           price: BigNumber;
-          supply: BigNumber;
-          subscriptionDuration: BigNumber;
-          subscriptionActivatedAt: BigNumber;
           tier: BigNumber;
-        })[]
+        }
       ]
     >;
+
+    getSlippageRate(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     initialize(
       storageAddress: string,
@@ -470,11 +503,6 @@ export class Main extends BaseContract {
     ): Promise<ContractTransaction>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
-
-    prolongSubscription(
-      ticketId: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
 
     proxiableUUID(overrides?: CallOverrides): Promise<[string]>;
 
@@ -502,6 +530,13 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    spendTickets(
+      eventTokenId: BigNumberish,
+      ticketTokenIds: BigNumberish[],
+      ticketOwners: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -521,35 +556,34 @@ export class Main extends BaseContract {
     version(overrides?: CallOverrides): Promise<[number]>;
   };
 
-  INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<number>;
+  TICKET_BOUGHT_BIT(overrides?: CallOverrides): Promise<number>;
 
-  OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
+  TICKET_SPENT_BIT(overrides?: CallOverrides): Promise<number>;
 
-  ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
+  TICKET_TIER_EARLYBIRD_BIT(overrides?: CallOverrides): Promise<number>;
 
-  SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
+  TICKET_TIER_OFFLINE_BIT(overrides?: CallOverrides): Promise<number>;
 
-  USED_TICKET_BIT(overrides?: CallOverrides): Promise<number>;
+  TICKET_TIER_ONLINE_BIT(overrides?: CallOverrides): Promise<number>;
+
+  TICKET_TIER_SUBSCRIPTION_BIT(overrides?: CallOverrides): Promise<number>;
+
+  TICKET_TIER_TEAM_BIT(overrides?: CallOverrides): Promise<number>;
+
+  TICKET_TIER_UNLIMITED_SUPPLY_BIT(overrides?: CallOverrides): Promise<number>;
 
   buyTickets(
-    ticketId: BigNumberish,
-    _for: string,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  commitVerifiedTickets(
     eventTokenId: BigNumberish,
-    ticketIds: BigNumberish[],
-    owners: string[],
-    overrides?: Overrides & { from?: string | Promise<string> }
+    ticketTierId: BigNumberish,
+    _for: string[],
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   createEvent(
     payload: {
       ticketSupply: BigNumberish[];
       ticketPrice: BigNumberish[];
-      subscriptionDuration: BigNumberish[];
-      params: BigNumberish[];
+      ticketParams: BigNumberish[];
       beneficiary: string;
       managers: string[];
       eventMetadataUri: string;
@@ -559,42 +593,44 @@ export class Main extends BaseContract {
   ): Promise<ContractTransaction>;
 
   getEventManagers(
-    eventId: BigNumberish,
+    eventTokenId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string[]>;
 
-  getEventTickets(
-    eventIds: BigNumberish[],
+  getEventTicketTiers(
+    eventTokenId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    ([
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber
-    ] & {
+    ([BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, string] & {
+      eventTokenId: BigNumber;
+      ticketParams: BigNumber;
+      ticketPrice: BigNumber;
+      ticketSupply: BigNumber;
+      tier: BigNumber;
+      metadataUri: string;
+    })[]
+  >;
+
+  getEventTickets(
+    ticketTokenIds: BigNumberish[],
+    overrides?: CallOverrides
+  ): Promise<
+    ([BigNumber, BigNumber, BigNumber, BigNumber] & {
       eventTokenId: BigNumber;
       params: BigNumber;
       price: BigNumber;
-      supply: BigNumber;
-      subscriptionDuration: BigNumber;
-      subscriptionActivatedAt: BigNumber;
       tier: BigNumber;
-    })[][]
+    })[]
   >;
 
   getEvents(
-    eventIds: BigNumberish[],
+    eventTokenIds: BigNumberish[],
     overrides?: CallOverrides
   ): Promise<
-    ([string, string, string[], BigNumber[]] & {
+    ([string, string, string[]] & {
       organizer: string;
       beneficiary: string;
       managers: string[];
-      ticketIds: BigNumber[];
     })[]
   >;
 
@@ -602,28 +638,22 @@ export class Main extends BaseContract {
 
   getFeeRate(overrides?: CallOverrides): Promise<number>;
 
-  getTickets(
-    ticketIds: BigNumberish[],
+  getOwnedEventTicket(
+    ticketOwner: string,
+    ticketTokenId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    ([
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber
-    ] & {
+    [BigNumber, BigNumber, BigNumber, BigNumber] & {
       eventTokenId: BigNumber;
       params: BigNumber;
       price: BigNumber;
-      supply: BigNumber;
-      subscriptionDuration: BigNumber;
-      subscriptionActivatedAt: BigNumber;
       tier: BigNumber;
-    })[]
+    }
   >;
+
+  getSlippageRate(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   initialize(
     storageAddress: string,
@@ -632,11 +662,6 @@ export class Main extends BaseContract {
   ): Promise<ContractTransaction>;
 
   owner(overrides?: CallOverrides): Promise<string>;
-
-  prolongSubscription(
-    ticketId: BigNumberish,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
 
   proxiableUUID(overrides?: CallOverrides): Promise<string>;
 
@@ -664,6 +689,13 @@ export class Main extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  spendTickets(
+    eventTokenId: BigNumberish,
+    ticketTokenIds: BigNumberish[],
+    ticketOwners: string[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   transferOwnership(
     newOwner: string,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -683,26 +715,28 @@ export class Main extends BaseContract {
   version(overrides?: CallOverrides): Promise<number>;
 
   callStatic: {
-    INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<number>;
+    TICKET_BOUGHT_BIT(overrides?: CallOverrides): Promise<number>;
 
-    OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
+    TICKET_SPENT_BIT(overrides?: CallOverrides): Promise<number>;
 
-    ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
+    TICKET_TIER_EARLYBIRD_BIT(overrides?: CallOverrides): Promise<number>;
 
-    SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<number>;
+    TICKET_TIER_OFFLINE_BIT(overrides?: CallOverrides): Promise<number>;
 
-    USED_TICKET_BIT(overrides?: CallOverrides): Promise<number>;
+    TICKET_TIER_ONLINE_BIT(overrides?: CallOverrides): Promise<number>;
+
+    TICKET_TIER_SUBSCRIPTION_BIT(overrides?: CallOverrides): Promise<number>;
+
+    TICKET_TIER_TEAM_BIT(overrides?: CallOverrides): Promise<number>;
+
+    TICKET_TIER_UNLIMITED_SUPPLY_BIT(
+      overrides?: CallOverrides
+    ): Promise<number>;
 
     buyTickets(
-      ticketId: BigNumberish,
-      _for: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    commitVerifiedTickets(
       eventTokenId: BigNumberish,
-      ticketIds: BigNumberish[],
-      owners: string[],
+      ticketTierId: BigNumberish,
+      _for: string[],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -710,8 +744,7 @@ export class Main extends BaseContract {
       payload: {
         ticketSupply: BigNumberish[];
         ticketPrice: BigNumberish[];
-        subscriptionDuration: BigNumberish[];
-        params: BigNumberish[];
+        ticketParams: BigNumberish[];
         beneficiary: string;
         managers: string[];
         eventMetadataUri: string;
@@ -721,42 +754,44 @@ export class Main extends BaseContract {
     ): Promise<void>;
 
     getEventManagers(
-      eventId: BigNumberish,
+      eventTokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string[]>;
 
-    getEventTickets(
-      eventIds: BigNumberish[],
+    getEventTicketTiers(
+      eventTokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      ([
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber
-      ] & {
+      ([BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, string] & {
+        eventTokenId: BigNumber;
+        ticketParams: BigNumber;
+        ticketPrice: BigNumber;
+        ticketSupply: BigNumber;
+        tier: BigNumber;
+        metadataUri: string;
+      })[]
+    >;
+
+    getEventTickets(
+      ticketTokenIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<
+      ([BigNumber, BigNumber, BigNumber, BigNumber] & {
         eventTokenId: BigNumber;
         params: BigNumber;
         price: BigNumber;
-        supply: BigNumber;
-        subscriptionDuration: BigNumber;
-        subscriptionActivatedAt: BigNumber;
         tier: BigNumber;
-      })[][]
+      })[]
     >;
 
     getEvents(
-      eventIds: BigNumberish[],
+      eventTokenIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<
-      ([string, string, string[], BigNumber[]] & {
+      ([string, string, string[]] & {
         organizer: string;
         beneficiary: string;
         managers: string[];
-        ticketIds: BigNumber[];
       })[]
     >;
 
@@ -764,28 +799,20 @@ export class Main extends BaseContract {
 
     getFeeRate(overrides?: CallOverrides): Promise<number>;
 
-    getTickets(
-      ticketIds: BigNumberish[],
+    getOwnedEventTicket(
+      ticketOwner: string,
+      ticketTokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      ([
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber
-      ] & {
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
         eventTokenId: BigNumber;
         params: BigNumber;
         price: BigNumber;
-        supply: BigNumber;
-        subscriptionDuration: BigNumber;
-        subscriptionActivatedAt: BigNumber;
         tier: BigNumber;
-      })[]
+      }
     >;
+
+    getSlippageRate(overrides?: CallOverrides): Promise<number>;
 
     initialize(
       storageAddress: string,
@@ -794,11 +821,6 @@ export class Main extends BaseContract {
     ): Promise<void>;
 
     owner(overrides?: CallOverrides): Promise<string>;
-
-    prolongSubscription(
-      ticketId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     proxiableUUID(overrides?: CallOverrides): Promise<string>;
 
@@ -821,6 +843,13 @@ export class Main extends BaseContract {
 
     setTokenContract(
       tokenContractAddress: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    spendTickets(
+      eventTokenId: BigNumberish,
+      ticketTokenIds: BigNumberish[],
+      ticketOwners: string[],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -869,19 +898,19 @@ export class Main extends BaseContract {
     ): TypedEventFilter<[string], { beacon: string }>;
 
     "EventCreated(uint256,address)"(
-      tokenId?: BigNumberish | null,
+      eventTokenId?: BigNumberish | null,
       organizer?: string | null
     ): TypedEventFilter<
       [BigNumber, string],
-      { tokenId: BigNumber; organizer: string }
+      { eventTokenId: BigNumber; organizer: string }
     >;
 
     EventCreated(
-      tokenId?: BigNumberish | null,
+      eventTokenId?: BigNumberish | null,
       organizer?: string | null
     ): TypedEventFilter<
       [BigNumber, string],
-      { tokenId: BigNumber; organizer: string }
+      { eventTokenId: BigNumber; organizer: string }
     >;
 
     "Initialized(uint8)"(
@@ -910,56 +939,54 @@ export class Main extends BaseContract {
 
     "TicketBought(uint256,uint256,address)"(
       eventTokenId?: BigNumberish | null,
-      tokenId?: BigNumberish | null,
-      buyer?: string | null
+      ticketTokenId?: BigNumberish | null,
+      ticketOwner?: string | null
     ): TypedEventFilter<
       [BigNumber, BigNumber, string],
-      { eventTokenId: BigNumber; tokenId: BigNumber; buyer: string }
+      { eventTokenId: BigNumber; ticketTokenId: BigNumber; ticketOwner: string }
     >;
 
     TicketBought(
       eventTokenId?: BigNumberish | null,
-      tokenId?: BigNumberish | null,
-      buyer?: string | null
+      ticketTokenId?: BigNumberish | null,
+      ticketOwner?: string | null
     ): TypedEventFilter<
       [BigNumber, BigNumber, string],
-      { eventTokenId: BigNumber; tokenId: BigNumber; buyer: string }
+      { eventTokenId: BigNumber; ticketTokenId: BigNumber; ticketOwner: string }
     >;
 
-    "TicketUsed(uint256,uint256,address)"(
-      tokenId?: BigNumberish | null,
+    "TicketSpent(uint256,uint256,address)"(
       eventTokenId?: BigNumberish | null,
-      owner?: null
+      ticketTokenId?: BigNumberish | null,
+      ticketOwner?: string | null
     ): TypedEventFilter<
       [BigNumber, BigNumber, string],
-      { tokenId: BigNumber; eventTokenId: BigNumber; owner: string }
+      { eventTokenId: BigNumber; ticketTokenId: BigNumber; ticketOwner: string }
     >;
 
-    TicketUsed(
-      tokenId?: BigNumberish | null,
+    TicketSpent(
       eventTokenId?: BigNumberish | null,
-      owner?: null
+      ticketTokenId?: BigNumberish | null,
+      ticketOwner?: string | null
     ): TypedEventFilter<
       [BigNumber, BigNumber, string],
-      { tokenId: BigNumber; eventTokenId: BigNumber; owner: string }
+      { eventTokenId: BigNumber; ticketTokenId: BigNumber; ticketOwner: string }
     >;
 
-    "TicketsCreated(uint256,uint256,address)"(
-      tokenId?: BigNumberish | null,
+    "TicketTierCreated(uint256,uint256)"(
       eventTokenId?: BigNumberish | null,
-      organizer?: string | null
+      ticketTierId?: BigNumberish | null
     ): TypedEventFilter<
-      [BigNumber, BigNumber, string],
-      { tokenId: BigNumber; eventTokenId: BigNumber; organizer: string }
+      [BigNumber, BigNumber],
+      { eventTokenId: BigNumber; ticketTierId: BigNumber }
     >;
 
-    TicketsCreated(
-      tokenId?: BigNumberish | null,
+    TicketTierCreated(
       eventTokenId?: BigNumberish | null,
-      organizer?: string | null
+      ticketTierId?: BigNumberish | null
     ): TypedEventFilter<
-      [BigNumber, BigNumber, string],
-      { tokenId: BigNumber; eventTokenId: BigNumber; organizer: string }
+      [BigNumber, BigNumber],
+      { eventTokenId: BigNumber; ticketTierId: BigNumber }
     >;
 
     "Upgraded(address)"(
@@ -972,35 +999,36 @@ export class Main extends BaseContract {
   };
 
   estimateGas: {
-    INFINITE_SUPPLY_TICKET_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+    TICKET_BOUGHT_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    OFFLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+    TICKET_SPENT_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    ONLINE_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+    TICKET_TIER_EARLYBIRD_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    SUBSCRIPTION_TICKET_TYPE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+    TICKET_TIER_OFFLINE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    USED_TICKET_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+    TICKET_TIER_ONLINE_BIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    buyTickets(
-      ticketId: BigNumberish,
-      _for: string,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    TICKET_TIER_SUBSCRIPTION_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+
+    TICKET_TIER_TEAM_BIT(overrides?: CallOverrides): Promise<BigNumber>;
+
+    TICKET_TIER_UNLIMITED_SUPPLY_BIT(
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    commitVerifiedTickets(
+    buyTickets(
       eventTokenId: BigNumberish,
-      ticketIds: BigNumberish[],
-      owners: string[],
-      overrides?: Overrides & { from?: string | Promise<string> }
+      ticketTierId: BigNumberish,
+      _for: string[],
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     createEvent(
       payload: {
         ticketSupply: BigNumberish[];
         ticketPrice: BigNumberish[];
-        subscriptionDuration: BigNumberish[];
-        params: BigNumberish[];
+        ticketParams: BigNumberish[];
         beneficiary: string;
         managers: string[];
         eventMetadataUri: string;
@@ -1010,17 +1038,22 @@ export class Main extends BaseContract {
     ): Promise<BigNumber>;
 
     getEventManagers(
-      eventId: BigNumberish,
+      eventTokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getEventTicketTiers(
+      eventTokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     getEventTickets(
-      eventIds: BigNumberish[],
+      ticketTokenIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     getEvents(
-      eventIds: BigNumberish[],
+      eventTokenIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -1028,9 +1061,14 @@ export class Main extends BaseContract {
 
     getFeeRate(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getTickets(
-      ticketIds: BigNumberish[],
+    getOwnedEventTicket(
+      ticketOwner: string,
+      ticketTokenId: BigNumberish,
       overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getSlippageRate(
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     initialize(
@@ -1040,11 +1078,6 @@ export class Main extends BaseContract {
     ): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    prolongSubscription(
-      ticketId: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
 
     proxiableUUID(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1072,6 +1105,13 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    spendTickets(
+      eventTokenId: BigNumberish,
+      ticketTokenIds: BigNumberish[],
+      ticketOwners: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1092,43 +1132,46 @@ export class Main extends BaseContract {
   };
 
   populateTransaction: {
-    INFINITE_SUPPLY_TICKET_BIT(
+    TICKET_BOUGHT_BIT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    TICKET_SPENT_BIT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    TICKET_TIER_EARLYBIRD_BIT(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    OFFLINE_TICKET_TYPE_BIT(
+    TICKET_TIER_OFFLINE_BIT(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    ONLINE_TICKET_TYPE_BIT(
+    TICKET_TIER_ONLINE_BIT(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    SUBSCRIPTION_TICKET_TYPE_BIT(
+    TICKET_TIER_SUBSCRIPTION_BIT(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    USED_TICKET_BIT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    TICKET_TIER_TEAM_BIT(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    TICKET_TIER_UNLIMITED_SUPPLY_BIT(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     buyTickets(
-      ticketId: BigNumberish,
-      _for: string,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    commitVerifiedTickets(
       eventTokenId: BigNumberish,
-      ticketIds: BigNumberish[],
-      owners: string[],
-      overrides?: Overrides & { from?: string | Promise<string> }
+      ticketTierId: BigNumberish,
+      _for: string[],
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     createEvent(
       payload: {
         ticketSupply: BigNumberish[];
         ticketPrice: BigNumberish[];
-        subscriptionDuration: BigNumberish[];
-        params: BigNumberish[];
+        ticketParams: BigNumberish[];
         beneficiary: string;
         managers: string[];
         eventMetadataUri: string;
@@ -1138,17 +1181,22 @@ export class Main extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getEventManagers(
-      eventId: BigNumberish,
+      eventTokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getEventTicketTiers(
+      eventTokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     getEventTickets(
-      eventIds: BigNumberish[],
+      ticketTokenIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     getEvents(
-      eventIds: BigNumberish[],
+      eventTokenIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -1156,9 +1204,14 @@ export class Main extends BaseContract {
 
     getFeeRate(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    getTickets(
-      ticketIds: BigNumberish[],
+    getOwnedEventTicket(
+      ticketOwner: string,
+      ticketTokenId: BigNumberish,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getSlippageRate(
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     initialize(
@@ -1168,11 +1221,6 @@ export class Main extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    prolongSubscription(
-      ticketId: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
 
     proxiableUUID(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -1197,6 +1245,13 @@ export class Main extends BaseContract {
 
     setTokenContract(
       tokenContractAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    spendTickets(
+      eventTokenId: BigNumberish,
+      ticketTokenIds: BigNumberish[],
+      ticketOwners: string[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
