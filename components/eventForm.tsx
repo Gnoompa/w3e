@@ -5,6 +5,7 @@ import React, {
   useRef,
   RefObject,
 } from "react";
+import axios from "axios";
 import {
   Flex,
   Box,
@@ -196,7 +197,7 @@ const EventForm = () => {
   const eventFormFieldsRef = useRef(eventFormFields);
   const eventFormTabIdToFieldNameMap = {
     0: ["eventTitle", "eventShortDescription"],
-    2: ["ticketPrice", "ticketSupply"],
+    2: ["ticketPrice", "ticketSupply", "addedTickets"],
     3: ["beneficiary"],
   } as {
     [key: number]: (keyof typeof eventPersistedFormData)[];
@@ -241,21 +242,23 @@ const EventForm = () => {
       ].filter(Boolean),
       mediaLinks: eventPersistedFormData.eventMediaLinks,
       eventTicketPriceLabel: getEventTicketPriceRangeLabel(
-        Object.values(eventPersistedFormData.ticketPrice).map(
-          (price, index) => ({
-            price,
-            isFree: eventPersistedFormData.isFreeTicketPrice[index],
-          })
-        )
+        Object.values({
+          ...eventPersistedFormData.isFreeTicketPrice,
+          ...eventPersistedFormData.ticketPrice,
+        }).map((price, index) => ({
+          price: +(price || 0),
+          isFree: eventPersistedFormData.isFreeTicketPrice[index],
+        }))
       ),
       eventTicketsSupplyLabel: getEventTicketTotalSupplyLabel(
-        Object.values(eventPersistedFormData.ticketSupply).map(
-          (supply, index) => ({
-            isUnlimitedSupply:
-              eventPersistedFormData.isUnlimitedTicketSupply[index],
-            supply,
-          })
-        )
+        Object.values({
+          ...eventPersistedFormData.isUnlimitedTicketSupply,
+          ...eventPersistedFormData.ticketSupply,
+        }).map((supply, index) => ({
+          isUnlimitedSupply:
+            eventPersistedFormData.isUnlimitedTicketSupply[index],
+          supply: +(supply || 0),
+        }))
       ),
       ticket:
         eventFormTabs[eventPersistedFormData.tabIndex] == TicketTab
@@ -301,7 +304,7 @@ const EventForm = () => {
         "/#event?id=" +
           parseTransactionLogs(createEventWriteReceipt.logs).filter(
             (log) => log.name == "EventCreated"
-          )[0].args.tokenId
+          )[0].args.eventTokenId
       ),
       dispatch(resetEventAction()));
   }, [createEventWriteReceipt, isSuccessCreateEventWrite]);
@@ -356,9 +359,50 @@ const EventForm = () => {
         ?.flat()
     );
 
-  const uploadMetadata = (
-    metatata: Parameters<typeof context.NFTStorageClient.store>[0]
-  ) => context.NFTStorageClient.store(metatata);
+  const uploadMetadata = async (
+    metadata: Parameters<typeof context.NFTStorageClient.store>[0]
+  ) => {
+    let metadataImageFormData = new FormData();
+
+    metadataImageFormData.append(
+      "file",
+      metadata.image,
+      `metadataImage_${+Date.now()}.png`
+    );
+
+    const imageUploadResponse = await axios.post(
+      "https://api.web3events.ai/upload",
+      metadataImageFormData
+    );
+
+    let metadataFormData = new FormData();
+
+    metadataFormData.append(
+      "file",
+      new Blob(
+        [
+          JSON.stringify({
+            ...metadata,
+            image: `ipfs://${imageUploadResponse.data.data.ipfs}`,
+          }),
+        ],
+        { type: "application/json" }
+      ),
+      `metadata_${+Date.now()}.json`
+    );
+
+    const metadataUploadResponse = await axios.post(
+      "https://api.web3events.ai/upload",
+      metadataFormData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return `ipfs://${metadataUploadResponse.data.data.ipfs}`;
+  };
 
   const getEventMetadata = (
     eventData: typeof eventPersistedFormData
@@ -481,18 +525,20 @@ const EventForm = () => {
 
   // todo prepare request before uploading to ipfs
   const prepareEventForCreation = async () => {
+    let eventMetadataUrl;
+    let ticketMetadataUrls: Awaited<ReturnType<typeof uploadMetadata>>[] = [];
+
     const eventMetadata = getEventMetadata(eventPersistedFormData);
     const eventTicketMetadatas = getEventTicketMetadatas(
       eventPersistedFormData
     );
 
-    let eventMetadataUrl;
-    let ticketMetadataUrls: Awaited<ReturnType<typeof uploadMetadata>>[] = [];
+    console.log();
 
     await Promise.all([
       uploadMetadata({
         ...(eventMetadata as EventMetadata),
-        image: eventPosterImageFile! || defaultEventPosterImageFile,
+        image: eventFormData.eventPoster! || defaultEventPosterImageFile,
       }).then((response) => (eventMetadataUrl = response)),
       ...eventTicketMetadatas.map((metadata, ticketIndex) =>
         uploadMetadata({
@@ -517,7 +563,7 @@ const EventForm = () => {
         params: BigNumber.from(
           1 <<
             (eventPersistedFormData.isUnlimitedTicketSupply[ticketIndex]
-              ? 2
+              ? 3
               : 0)
         ),
         subscriptionDuration:
@@ -535,8 +581,8 @@ const EventForm = () => {
         ),
         beneficiary: eventPersistedFormData.beneficiary,
         managers: [eventPersistedFormData.beneficiary],
-        eventMetadataUri: eventMetadataUrl?.url || "",
-        ticketMetadataUri: ticketMetadataUrls.map(({ url }) => url),
+        eventMetadataUri: eventMetadataUrl || "",
+        ticketMetadataUri: ticketMetadataUrls,
       },
       ticketMetadataUrls
     );
@@ -544,14 +590,11 @@ const EventForm = () => {
     setCreateEventWritePayloadToPrepare({
       ticketSupply: ticketsData.map(({ ticketSupply }) => ticketSupply),
       ticketPrice: ticketsData.map(({ ticketPrice }) => ticketPrice),
-      params: ticketsData.map(({ params }) => params),
-      subscriptionDuration: ticketsData.map(
-        ({ subscriptionDuration }) => subscriptionDuration
-      ),
+      ticketParams: ticketsData.map(({ params }) => params),
       beneficiary: eventPersistedFormData.beneficiary,
       managers: [eventPersistedFormData.beneficiary],
-      eventMetadataUri: eventMetadataUrl?.url,
-      ticketMetadataUri: ticketMetadataUrls.map(({ url }) => url),
+      eventMetadataUri: eventMetadataUrl,
+      ticketMetadataUri: ticketMetadataUrls,
     });
   };
 
@@ -579,10 +622,6 @@ const EventForm = () => {
 
   return (
     <Flex sx={{ flexDirection: "column" }}>
-      {/* <EventTicketImage
-        eventTitle={ticketEventTitle}
-        onImageGenerated={setTicketEventImageResult}
-      /> */}
       <Flex
         gap={"2rem"}
         maxW={"100vw"}

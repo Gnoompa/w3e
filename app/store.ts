@@ -11,9 +11,11 @@ import {
   REGISTER,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import appReducer from "../features/app/appSlice";
 import eventPersistedFormReducer from "../features/eventForm/eventPersistedFormSlice";
 import eventFormReducer from "../features/eventForm/eventFormSlice";
 import eventPreviewReducer from "../features/eventForm/eventPreviewSlice";
+import { api as eventsApi } from "../helpers/eventsApi";
 
 const persistConfig = {
   key: "root",
@@ -22,9 +24,11 @@ const persistConfig = {
 };
 
 const reducer = combineReducers({
+  app: appReducer,
   eventPersistedForm: eventPersistedFormReducer,
   eventForm: eventFormReducer,
   eventPreview: eventPreviewReducer,
+  [eventsApi.reducerPath]: eventsApi.reducer,
 });
 
 export const store = configureStore({
@@ -34,7 +38,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }),
+    }).concat(eventsApi.middleware),
 });
 
 export const persistor = persistStore(store);

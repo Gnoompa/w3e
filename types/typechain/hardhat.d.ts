@@ -13,6 +13,14 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
+      name: "AggregatorInterface",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AggregatorInterface__factory>;
+    getContractFactory(
+      name: "AggregatorV2V3Interface",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AggregatorV2V3Interface__factory>;
+    getContractFactory(
       name: "AggregatorV3Interface",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.AggregatorV3Interface__factory>;
@@ -81,14 +89,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Main__factory>;
     getContractFactory(
-      name: "MainV2test",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MainV2test__factory>;
-    getContractFactory(
-      name: "MainV3test",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MainV3test__factory>;
-    getContractFactory(
       name: "Storage",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Storage__factory>;
@@ -105,6 +105,16 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC1155URIStorageUpgradeable__factory>;
 
+    getContractAt(
+      name: "AggregatorInterface",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AggregatorInterface>;
+    getContractAt(
+      name: "AggregatorV2V3Interface",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AggregatorV2V3Interface>;
     getContractAt(
       name: "AggregatorV3Interface",
       address: string,
@@ -190,16 +200,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Main>;
-    getContractAt(
-      name: "MainV2test",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MainV2test>;
-    getContractAt(
-      name: "MainV3test",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MainV3test>;
     getContractAt(
       name: "Storage",
       address: string,
