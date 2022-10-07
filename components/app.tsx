@@ -1,168 +1,43 @@
 import { context, contextInitialValue } from "./context";
 import {
-  Box,
-  Button,
   Container,
   Flex,
   Heading,
   IconButton,
   Link,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Text,
-  useBreakpoint,
-  Portal,
-  useBreakpointValue,
-  forwardRef,
   Badge,
   Image,
 } from "@chakra-ui/react";
-import NextLink from "next/link";
-import { Routes } from "helpers/routes";
-import {
-  ArrowDownIcon,
-  ArrowRightIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  ExternalLinkIcon,
-  HamburgerIcon,
-} from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
 import TwitterIcon from "../public/icons/twitter";
-import LensterIcon from "../public/icons/lenster";
 import TelegramIcon from "../public/icons/tg";
+import LensterIcon from "../public/icons/lenster";
 import ConnectWallet from "./connectWallet";
+import { getNativeCurrencyToUsdPrice } from "helpers/contract";
+import { useAppDispatch } from "helpers/hooks";
+import { setNativeCurrencyToUsdPrice } from "features/app/appSlice";
+import MenuBreakpointValue from "./menu";
 
 const App: React.FC = (props) => {
-  const MenuBreakpointValue = () =>
-    useBreakpointValue(
-      {
-        base: (
-          <Menu>
-            <MenuButton
-              as={IconButton}
-              bg={"transparent"}
-              aria-label="Menu"
-              fontSize={"3xl"}
-              icon={<HamburgerIcon />}
-            />
-            <MenuList>
-              <MenuItem>
-                <NextLink href={Routes.EventForm} passHref>
-                  <Link>Events</Link>
-                </NextLink>
-              </MenuItem>
-              <MenuItem>
-                <Flex align={"center"} gap=".5rem">
-                  <Link>Subscriptions</Link>
-                  <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
-                    soon
-                  </Badge>
-                </Flex>
-              </MenuItem>
-              <MenuItem>
-                <Flex align={"center"} gap=".5rem">
-                  <Link>Explore events</Link>
-                  <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
-                    soon
-                  </Badge>
-                </Flex>
-              </MenuItem>
-              <MenuItem>
-                <NextLink href={Routes.FAQ} passHref>
-                  <Link>FAQ</Link>
-                </NextLink>
-              </MenuItem>
-            </MenuList>
-          </Menu>
-        ),
-        lg: (
-          <Flex gap={9}>
-            <Menu>
-              <MenuButton>
-                <Flex align={"center"} gap={".5rem"} fontWeight="medium">
-                  Products
-                  <ChevronDownIcon />
-                </Flex>
-              </MenuButton>
-              <MenuList>
-                <MenuItem>
-                  <NextLink href={Routes.EventForm}>
-                    <Flex align={"center"} gap={"2rem"}>
-                      <Flex direction={"column"} gap={".25rem"}>
-                        <Text fontSize={"md"} fontWeight="medium">
-                          Events
-                        </Text>
-                        <Text
-                          maxW={"12rem"}
-                          fontSize="sm"
-                          color={"textContrastSecondary"}
-                        >
-                          General event creation platform, backed by NFT
-                          technology
-                        </Text>
-                      </Flex>
-                      <ChevronRightIcon w={"1.5rem"} h="1.5rem" />
-                    </Flex>
-                  </NextLink>
-                </MenuItem>
-                <MenuItem>
-                  <Flex align={"center"} gap={"2rem"}>
-                    <Flex direction={"column"} gap={".25rem"}>
-                      <Flex align={"center"} gap=".5rem">
-                        <Text fontSize={"md"} fontWeight="medium">
-                          Subscriptions
-                        </Text>
-                        <Badge
-                          variant={"solid"}
-                          color={"warn"}
-                          bg={"accentPrimary"}
-                        >
-                          soon
-                        </Badge>
-                      </Flex>
-                      <Text
-                        maxW={"12rem"}
-                        fontSize="sm"
-                        color={"textContrastSecondary"}
-                      >
-                        Tie physical world subscriptions to blockchain backed
-                        infrastructure
-                      </Text>
-                    </Flex>
-                    <ChevronRightIcon
-                      w={"1.5rem"}
-                      h="1.5rem"
-                      color={"textContrastSecondary"}
-                    />
-                  </Flex>
-                </MenuItem>
-              </MenuList>
-            </Menu>
-            <Flex align={"center"} gap=".5rem">
-              <NextLink href={Routes.EventExplorer}>
-                <Text fontSize={"md"} fontWeight="medium" cursor={"pointer"}>
-                  Explore events
-                </Text>
-                {/* <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
-                soon
-              </Badge> */}
-              </NextLink>
-            </Flex>
-            <Link href={Routes.FAQ}>
-              <NextLink href={Routes.FAQ} passHref>
-                <Text fontSize={"md"} fontWeight="medium" cursor={"pointer"}>
-                  FAQ
-                </Text>
-              </NextLink>
-            </Link>
-          </Flex>
-        ),
-      },
-      { ssr: false }
+  const dispatch = useAppDispatch();
+
+  const {
+    data: nativeCurrencyToUsdPrice,
+    refetch: refetchNativeCurrencyToUsdPrice,
+  } = getNativeCurrencyToUsdPrice();
+  const refetchNativeCurrencyToUsdPriceInterval = 10000;
+
+  useEffect(() => {
+    setInterval(
+      refetchNativeCurrencyToUsdPrice,
+      refetchNativeCurrencyToUsdPriceInterval
     );
+  }, []);
+
+  useEffect(() => {
+    nativeCurrencyToUsdPrice &&
+      dispatch(setNativeCurrencyToUsdPrice(nativeCurrencyToUsdPrice[0].answer));
+  }, [nativeCurrencyToUsdPrice]);
 
   return (
     <Flex direction={"column"} align={"center"} minH={"calc(100vh)"}>
@@ -191,7 +66,9 @@ const App: React.FC = (props) => {
             <Link href="/" float={"left"}>
               <Flex align={"center"} gap={".75rem"}>
                 <Image src="/logo/logomd.png" w={"3rem"}></Image>
-                <Heading as={"h1"} fontSize={"1.5rem"} lineHeight="1em">Web3 <br></br> Events</Heading>
+                <Heading as={"h1"} fontSize={"1.5rem"} lineHeight="1em">
+                  Web3 <br></br> Events
+                </Heading>
                 <Badge variant={"solid"} ml="1rem">
                   alpha
                 </Badge>

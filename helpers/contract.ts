@@ -73,6 +73,8 @@ type getContractEventsArgs = {
   provider: Provider;
   filters?: Record<Chain["id"], any>;
   enabled?: boolean;
+  onSuccess?: (config: Partial<getContractEventsArgs>) => any;
+  onError?: (error: any, config: Partial<getContractEventsArgs>) => any;
   chainIds?: Chain["id"][];
 };
 
@@ -101,6 +103,8 @@ export const useContractEvents = ({
   chainIdToContractMap,
   enabled = true,
   provider,
+  onSuccess,
+  onError,
   ...config
 }: useContractEventsProps) => {
   const [data, setData] = useState<Event[][]>();
@@ -115,6 +119,8 @@ export const useContractEvents = ({
       ...config,
     })
       .then(setData)
+      .then(() => onSuccess?.(config))
+      .catch((error) => onError?.(error, config))
       .finally(() => setIsLoading(false));
   };
 
@@ -126,6 +132,8 @@ export const useContractEvents = ({
     data,
     refetch,
     isLoading,
+    onSuccess,
+    onError,
   };
 };
 

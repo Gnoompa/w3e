@@ -3,11 +3,19 @@ import { BigNumber, BigNumberish, ethers } from "ethers";
 export const getEventTicketPriceRangeLabel = (
   tickets: { price: number | string | undefined; isFree: boolean }[]
 ): string =>
-  console.log(tickets) || tickets && tickets.length
+  tickets && tickets.length
     ? tickets.length > 1
-      ? "TIERED"
+      ? `FROM $${getEventTicketPriceFromLabel(tickets)}`.replace(
+          "FROM $FREE",
+          "FREE"
+        )
       : getEventTicketPriceLabel(tickets[0])
     : "-";
+
+export const getEventTicketPriceFromLabel = (
+  tickets: Parameters<typeof getEventTicketPriceRangeLabel>[0][0][]
+): string =>
+  (tickets.map(({ price }) => +price).sort()[0] || "FREE").toString();
 
 export const getEventTicketPriceLabel = (
   ticket: Parameters<typeof getEventTicketPriceRangeLabel>[0][0]

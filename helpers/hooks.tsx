@@ -10,7 +10,7 @@ import TelegramIcon from "../public/icons/tg";
 import SiteIcon from "../public/icons/site";
 
 export const defaultDateFormat = "ddd, MMM DD YYYY";
-export const defaulyIPFSgateway = "https://nftstorage.link/ipfs/";
+export const defaulyIPFSgateway = "https://api.web3events.ai/media/";
 
 export enum SocialMediaIds {
   Twitter = "twitter",

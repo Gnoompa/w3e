@@ -5,6 +5,7 @@ import React, {
   useRef,
   RefObject,
 } from "react";
+import axios from "axios";
 import {
   Flex,
   Box,
@@ -358,9 +359,50 @@ const EventForm = () => {
         ?.flat()
     );
 
-  const uploadMetadata = (
-    metatata: Parameters<typeof context.NFTStorageClient.store>[0]
-  ) => context.NFTStorageClient.store(metatata);
+  const uploadMetadata = async (
+    metadata: Parameters<typeof context.NFTStorageClient.store>[0]
+  ) => {
+    let metadataImageFormData = new FormData();
+
+    metadataImageFormData.append(
+      "file",
+      metadata.image,
+      `metadataImage_${+Date.now()}.png`
+    );
+
+    const imageUploadResponse = await axios.post(
+      "https://api.web3events.ai/upload",
+      metadataImageFormData
+    );
+
+    let metadataFormData = new FormData();
+
+    metadataFormData.append(
+      "file",
+      new Blob(
+        [
+          JSON.stringify({
+            ...metadata,
+            image: `ipfs://${imageUploadResponse.data.data.ipfs}`,
+          }),
+        ],
+        { type: "application/json" }
+      ),
+      `metadata_${+Date.now()}.json`
+    );
+
+    const metadataUploadResponse = await axios.post(
+      "https://api.web3events.ai/upload",
+      metadataFormData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return `ipfs://${metadataUploadResponse.data.data.ipfs}`;
+  };
 
   const getEventMetadata = (
     eventData: typeof eventPersistedFormData
@@ -483,18 +525,20 @@ const EventForm = () => {
 
   // todo prepare request before uploading to ipfs
   const prepareEventForCreation = async () => {
+    let eventMetadataUrl;
+    let ticketMetadataUrls: Awaited<ReturnType<typeof uploadMetadata>>[] = [];
+
     const eventMetadata = getEventMetadata(eventPersistedFormData);
     const eventTicketMetadatas = getEventTicketMetadatas(
       eventPersistedFormData
     );
 
-    let eventMetadataUrl;
-    let ticketMetadataUrls: Awaited<ReturnType<typeof uploadMetadata>>[] = [];
+    console.log();
 
     await Promise.all([
       uploadMetadata({
         ...(eventMetadata as EventMetadata),
-        image: eventPosterImageFile! || defaultEventPosterImageFile,
+        image: eventFormData.eventPoster! || defaultEventPosterImageFile,
       }).then((response) => (eventMetadataUrl = response)),
       ...eventTicketMetadatas.map((metadata, ticketIndex) =>
         uploadMetadata({
@@ -537,8 +581,8 @@ const EventForm = () => {
         ),
         beneficiary: eventPersistedFormData.beneficiary,
         managers: [eventPersistedFormData.beneficiary],
-        eventMetadataUri: eventMetadataUrl?.url || "",
-        ticketMetadataUri: ticketMetadataUrls.map(({ url }) => url),
+        eventMetadataUri: eventMetadataUrl || "",
+        ticketMetadataUri: ticketMetadataUrls,
       },
       ticketMetadataUrls
     );
@@ -549,8 +593,8 @@ const EventForm = () => {
       ticketParams: ticketsData.map(({ params }) => params),
       beneficiary: eventPersistedFormData.beneficiary,
       managers: [eventPersistedFormData.beneficiary],
-      eventMetadataUri: eventMetadataUrl?.url,
-      ticketMetadataUri: ticketMetadataUrls.map(({ url }) => url),
+      eventMetadataUri: eventMetadataUrl,
+      ticketMetadataUri: ticketMetadataUrls,
     });
   };
 

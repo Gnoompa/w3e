@@ -23,7 +23,7 @@ import TelegramIcon from "../public/icons/tg";
 import SiteIcon from "../public/icons/site";
 import { fadeRightSlideAnimation } from "styles/theme";
 import { motion } from "framer-motion";
-import EventTicket, { PropsType } from "./eventTicket";
+import EventTicket, { PropsType } from "./ui/eventTicketCard";
 
 export type EventProps = {
   name?: string | JSX.Element;

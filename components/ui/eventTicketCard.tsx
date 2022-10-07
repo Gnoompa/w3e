@@ -17,18 +17,22 @@ import { BigNumber, BigNumberish, ethers } from "ethers";
 import {
   getEventTicketNativeCurrencyPriceLabel,
   getEventTicketPriceLabel,
-} from "./helpers/events";
+} from "../helpers/events";
 
 export type PropsType = {
   isAbleToBuy?: boolean;
   isBuyingTicket?: boolean;
   nativeCurrencyToUsdPrice?: BigNumber;
+  eventDatesLabel?: string;
+  eventLocationLabel?: string;
   ticketData: {
     title?: string;
     desc?: string;
     image?: string;
     price?: number | string;
+    priceLabel?: string;
     isFree?: boolean;
+    nativeCurrencyPriceLabel?: string;
   };
   onBuyButtonClick?: () => any;
 };
@@ -130,6 +134,41 @@ const EventTicket = (props: PropsType) => {
           >
             {props.ticketData.title || "Ticket title"}
           </Text>
+          <Flex
+            opacity={0.5}
+            gap=".5rem"
+            flexDir={"column"}
+            display={
+              props.eventDatesLabel || props.eventLocationLabel
+                ? "flex"
+                : "none"
+            }
+          >
+            {props.eventDatesLabel && (
+              <Flex gap=".5rem">
+                <Image src="/icons/calendar.svg" />
+                <Text
+                  color={"textContrast"}
+                  whiteSpace={"nowrap"}
+                  fontSize={["sm"]}
+                >
+                  {props.eventDatesLabel}
+                </Text>
+              </Flex>
+            )}
+            {props.eventLocationLabel && (
+              <Flex gap=".5rem">
+                <Image src="/icons/location.svg" />
+                <Text
+                  color={"textContrast"}
+                  whiteSpace={"nowrap"}
+                  fontSize={["sm"]}
+                >
+                  {props.eventLocationLabel}
+                </Text>
+              </Flex>
+            )}
+          </Flex>
           <Text
             fontSize="lg"
             color={
@@ -146,17 +185,19 @@ const EventTicket = (props: PropsType) => {
             </Text>
             <Flex gap={".25rem"} align={"flex-end"}>
               <Text color={"textAccent"} fontSize={"2xl"} fontWeight="bold">
-                {getEventTicketPriceLabel({
-                  price: props.ticketData.price,
-                  isFree: !!props.ticketData.isFree,
-                })}
+                {props.ticketData.priceLabel ||
+                  getEventTicketPriceLabel({
+                    price: props.ticketData.price,
+                    isFree: !!props.ticketData.isFree,
+                  })}
               </Text>
               {!props.ticketData.isFree && (
                 <Text color={"textContrastSecondary"} fontSize="sm">
-                  {getEventTicketNativeCurrencyPriceLabel(
-                    { price: props.ticketData.price },
-                    props.nativeCurrencyToUsdPrice
-                  )}
+                  {props.ticketData.nativeCurrencyPriceLabel ||
+                    getEventTicketNativeCurrencyPriceLabel(
+                      { price: props.ticketData.price },
+                      props.nativeCurrencyToUsdPrice
+                    )}
                 </Text>
               )}
             </Flex>

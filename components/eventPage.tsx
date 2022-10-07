@@ -89,7 +89,7 @@ import InstagramIcon from "../public/icons/insta";
 import TelegramIcon from "../public/icons/tg";
 import SiteIcon from "../public/icons/site";
 import { useModal } from "connectkit";
-import EventTicket from "./eventTicket";
+import EventTicket from "./ui/eventTicketCard";
 import {
   getEventTicketPriceRangeLabel,
   getEventTicketTotalSupplyLabel,
@@ -290,7 +290,11 @@ const EventPage = () => {
   } = getTokenMetadataUris([
     {
       args: eventTicketsCreatedEvents
-        ? [eventTicketsCreatedEvents[0].map((event) => event.args.tokenId)]
+        ? [
+            eventTicketsCreatedEvents[0].map(
+              (event: Event) => event.args.tokenId
+            ),
+          ]
         : undefined,
       enabled: false,
     },
@@ -800,7 +804,7 @@ const EventPage = () => {
                         eventMetadata,
                         "Event End Date"
                       ) && (
-                        <Flex gap={".5rem"}>
+                        <Flex gap={".5rem"} alignItems="center">
                           <ArrowForwardIcon color={"textContrast"} />
                           <Text
                             color={"textContrast"}
