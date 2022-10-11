@@ -14,12 +14,22 @@ import TelegramIcon from "../public/icons/tg";
 import LensterIcon from "../public/icons/lenster";
 import ConnectWallet from "./connectWallet";
 import { getNativeCurrencyToUsdPrice } from "helpers/contract";
-import { useAppDispatch } from "helpers/hooks";
+import { useAppDispatch, useAppSelector } from "helpers/hooks";
 import { setNativeCurrencyToUsdPrice } from "features/app/appSlice";
 import MenuBreakpointValue from "./menu";
+import useMediaPlaceholderGenerator from "helpers/hooks/mediaPlaceholderGenerator";
+import { initialState as appInitialState } from "features/app/appPersistedSlice";
+import persistStore from "redux-persist/es/persistStore";
+import { persistConfig, persistor } from "app/store";
 
 const App: React.FC = (props) => {
   const dispatch = useAppDispatch();
+  const appState = appInitialState;
+  const appPersistedVersion = useAppSelector((state) => state.appPersisted.ver);
+  const persistorStore = persistor;
+
+  const { CanvasContainer: MediaPlaceholderGeneratorCanvasContainer } =
+    useMediaPlaceholderGenerator();
 
   const {
     data: nativeCurrencyToUsdPrice,
@@ -32,6 +42,8 @@ const App: React.FC = (props) => {
       refetchNativeCurrencyToUsdPrice,
       refetchNativeCurrencyToUsdPriceInterval
     );
+
+    appPersistedVersion != appState.ver && persistorStore.purge();
   }, []);
 
   useEffect(() => {
@@ -124,6 +136,7 @@ const App: React.FC = (props) => {
           </Flex>
         </Flex>
       </Container>
+      <MediaPlaceholderGeneratorCanvasContainer />
     </Flex>
   );
 };

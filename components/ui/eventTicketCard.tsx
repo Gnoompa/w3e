@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { getIPFSUri } from "helpers/hooks";
 import { motion } from "framer-motion";
-import { fadeRightSlideAnimation } from "styles/theme";
+import { fadeRightSlideAnimation, fadeTopSlideAnimation } from "styles/theme";
 import { BigNumber, BigNumberish, ethers } from "ethers";
 import {
   getEventTicketNativeCurrencyPriceLabel,
@@ -29,6 +29,7 @@ export type PropsType = {
     title?: string;
     desc?: string;
     image?: string;
+    imagePlaceholder?: string;
     price?: number | string;
     priceLabel?: string;
     isFree?: boolean;
@@ -59,7 +60,7 @@ const EventTicket = (props: PropsType) => {
       overflow={"hidden"}
       w={"22rem"}
       minW={["20rem", "22rem"]}
-      h={"32rem"}
+      h={"35rem"}
       minH={"32rem"}
       bg={"accentPrimaryContrast"}
       as={motion.div}
@@ -87,7 +88,9 @@ const EventTicket = (props: PropsType) => {
           >
             {props.ticketData.image && (
               <Image
-                src={props.ticketData.image!}
+                src={
+                  props.ticketData.imagePlaceholder || props.ticketData.image!
+                }
                 w={"100%"}
                 filter={"blur(40px)"}
               />
@@ -108,18 +111,22 @@ const EventTicket = (props: PropsType) => {
         >
           {props.ticketData.image && (
             <Image
+              as={motion.img}
+              initial={fadeTopSlideAnimation["false"]}
+              animate={fadeTopSlideAnimation["true"]}
               src={props.ticketData.image}
               borderRadius="lg"
               px={"1rem"}
               title={"show poster"}
               onClick={onOpenTicketImagePreviewModal}
+              fallback={<></>}
             />
           )}
         </Box>
       </Flex>
       <Flex
         direction={"column"}
-        p={"1.5rem"}
+        p={"1rem 1.5rem"}
         gap={"1rem"}
         flex={1}
         justifyContent={"space-between"}
@@ -127,12 +134,13 @@ const EventTicket = (props: PropsType) => {
         <Flex direction={"column"} gap={"1rem"}>
           <Text
             fontSize="2xl"
+            lineHeight={"1.75rem"}
             color={
               props.ticketData.title ? "textContrast" : "textContrastSecondary"
             }
             fontWeight={"bold"}
           >
-            {props.ticketData.title || "Ticket title"}
+            {props.ticketData.title?.substring(0, 50) || "Ticket title"}
           </Text>
           <Flex
             opacity={0.5}
@@ -163,6 +171,9 @@ const EventTicket = (props: PropsType) => {
                   color={"textContrast"}
                   whiteSpace={"nowrap"}
                   fontSize={["sm"]}
+                  overflow="hidden"
+                  textOverflow={"ellipsis"}
+                  maxW="100%"
                 >
                   {props.eventLocationLabel}
                 </Text>
@@ -170,12 +181,13 @@ const EventTicket = (props: PropsType) => {
             )}
           </Flex>
           <Text
-            fontSize="lg"
+            fontSize="md"
+            lineHeight={"1.25rem"}
             color={
               props.ticketData.desc ? "textContrast" : "textContrastSecondary"
             }
           >
-            {props.ticketData.desc || "ticket description"}
+            {props.ticketData.desc?.substring(0, 300) || "ticket description"}
           </Text>
         </Flex>
         <Flex justifyContent={"space-between"} align={"flex-end"}>
@@ -222,6 +234,7 @@ const EventTicket = (props: PropsType) => {
         <ModalContent
           maxW={"calc(100vw - 4rem)"}
           bg={"transparent"}
+          boxShadow="none"
           onClick={onCloseTicketImagePreviewModal}
         >
           <Image

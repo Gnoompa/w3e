@@ -5,8 +5,8 @@ export const getEventTicketPriceRangeLabel = (
 ): string =>
   tickets && tickets.length
     ? tickets.length > 1
-      ? `FROM $${getEventTicketPriceFromLabel(tickets)}`.replace(
-          "FROM $FREE",
+      ? `FROM $${getEventTicketPriceFromLabel(tickets)}`.replaceAll(
+          /(FROM \$FREE)|(FROM \$0.00)/g,
           "FREE"
         )
       : getEventTicketPriceLabel(tickets[0])
@@ -15,7 +15,12 @@ export const getEventTicketPriceRangeLabel = (
 export const getEventTicketPriceFromLabel = (
   tickets: Parameters<typeof getEventTicketPriceRangeLabel>[0][0][]
 ): string =>
-  (tickets.map(({ price }) => +price).sort()[0] || "FREE").toString();
+  (
+    Math.min(tickets.map(({ price }) => +price).sort()[0], 99999)?.toFixed(2) ||
+    "FREE"
+  )
+    .toString()
+    .replace("99999", "99999+");
 
 export const getEventTicketPriceLabel = (
   ticket: Parameters<typeof getEventTicketPriceRangeLabel>[0][0]
@@ -24,7 +29,10 @@ export const getEventTicketPriceLabel = (
     ? "FREE"
     : [undefined, ""].includes(ticket.price)
     ? "-"
-    : `$${(+ticket.price!).toFixed(2)}`;
+    : `$${Math.min(+ticket.price!, 99999)
+        ?.toFixed(2)
+        .toString()
+        .replace("99999.00", "99999+")}`;
 
 export const getEventTicketTotalSupplyLabel = (
   tickets?: {

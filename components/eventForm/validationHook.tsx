@@ -18,7 +18,7 @@ export default () => {
 
   const validationSchema = (value: Partial<typeof eventPersistedForm>) =>
     object({
-      eventTitle: string().required(),
+      eventTitle: string().required().min(3).max(45),
       eventShortDescription: string().required(),
       ticketPrice: object().test(
         (ticketPrice) =>
@@ -48,6 +48,15 @@ export default () => {
           ((result) => result.length && !result.includes(false))(
             Object.keys(eventTicketName).map(
               (ticketIndex) => eventTicketName[ticketIndex]?.trim()?.length >= 3
+            )
+          ) as boolean
+      ),
+      eventTicketDescription: object().test(
+        (eventTicketName) =>
+          ((result) => result.length && !result.includes(false))(
+            Object.keys(eventTicketName).map(
+              (ticketIndex) =>
+                eventTicketName[ticketIndex]?.trim()?.length <= 300
             )
           ) as boolean
       ),

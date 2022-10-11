@@ -253,6 +253,7 @@ const TicketsTab = () => {
             isInvalid={getIsFieldInvalid("eventTicketName")}
           >
             <Input
+              maxLength={45}
               value={
                 eventPersistedFormData.eventTicketName[editingTicketIndex] || ""
               }
@@ -271,6 +272,7 @@ const TicketsTab = () => {
               onBlur={() => validateField({ fieldName: "eventTicketName" })}
             />
             <FormLabel>Ticket type</FormLabel>
+            <FormHelperText>Min 3, Max 45 symbols</FormHelperText>
           </FormControl>
           <Flex gap={"1rem"} justifyContent={"space-between"}>
             <FormControl
@@ -535,6 +537,7 @@ const TicketsTab = () => {
               <FormControl variant="floating" id="ticketDesc">
                 <Textarea
                   autoFocus
+                  maxLength={300}
                   value={
                     eventPersistedFormData.eventTicketDescription[
                       editingTicketIndex
@@ -553,6 +556,7 @@ const TicketsTab = () => {
                   }
                 />
                 <FormLabel>Ticket description</FormLabel>
+                <FormHelperText>Max 300 symbols</FormHelperText>
               </FormControl>
               <CloseButton
                 onClick={() => (
