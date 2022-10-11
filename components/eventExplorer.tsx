@@ -50,6 +50,7 @@ const EventExplorer: React.FC = () => {
     data: explorerEvents,
     isLoading: isLoadingExplorerEvents,
     isSuccess: isSuccessExplorerEvents,
+    isFetching: isFetchingExplorerEvents,
     refetch: refetchExplorerEvents,
   } = useGetEventExplorerEventsQuery(mainTabIndex ? "" : "verified");
 
@@ -104,11 +105,11 @@ const EventExplorer: React.FC = () => {
         >
           Event Explorer
         </Heading>
-        <Tabs onChange={setMainTabIndex} variant="switch">
+        <Tabs onChange={setMainTabIndex} variant="switch" zIndex={1}>
           <TabList pos={"relative"}>
             <Tab w={"50%"} gap="1rem">
               <Flex>Verified</Flex>
-              <CheckCircleIcon color="success" />
+              <CheckCircleIcon color="success" zIndex={"auto"} />
             </Tab>
             <Tab w={"50%"}>All</Tab>
             <Box
@@ -122,10 +123,11 @@ const EventExplorer: React.FC = () => {
         </Tabs>
       </Flex>
       <Flex mt="2rem" gap={"1.5rem"} flexWrap={"wrap"}>
-        {isLoadingExplorerEvents && (
+        {isFetchingExplorerEvents && (
           <Spinner w={"10"} h="10" margin={"5rem auto"} />
         )}
-        {isSuccessExplorerEvents &&
+        {!isFetchingExplorerEvents &&
+          isSuccessExplorerEvents &&
           (explorerEvents.length ? (
             [...explorerEvents]
               ?.sort((a, b) => (+a.id > +b.id ? 1 : -1))
