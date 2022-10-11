@@ -22,6 +22,8 @@
     "@mdx-js/react": "1.6.22",
     "@openzeppelin/contracts": "4.6.0",
     "@reduxjs/toolkit": "1.8.5",
+    "calendar-link": "^2.2.0",
+    "canvas": "^2.10.1",
     "connectkit": "0.0.2",
     "date-and-time": "2.4.0",
     "eslint-config-standard": "17.0.0",

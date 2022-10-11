@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { Global, css } from "@emotion/react";
 import QRCode from "qrcode.react";
+import { google as googleCalendarLink } from "calendar-link";
 import {
   Flex,
   Box,
@@ -76,13 +77,14 @@ import {
 } from "helpers/contract";
 import {
   ArrowForwardIcon,
+  CalendarIcon,
   CheckIcon,
   ExternalLinkIcon,
   LinkIcon,
   WarningIcon,
 } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
-import { fadeRightSlideAnimation } from "styles/theme";
+import { fadeRightSlideAnimation, fadeTopSlideAnimation } from "styles/theme";
 import TwitterIcon from "../public/icons/twitter";
 import FacebookIcon from "../public/icons/facebook";
 import InstagramIcon from "../public/icons/insta";
@@ -328,9 +330,23 @@ const EventPage = () => {
     eventManagers?.[0]?.includes(connectedWalletAddress);
   const canConnectedWalletBuyTickets =
     !connectedWalletOwnedTickets?.length && !isConnectedWalletAnEventManager;
+  const eventHasSetDates =
+    eventMetadata &&
+    (getMetadataAttribute(eventMetadata!, "Event Start Date") ||
+      getMetadataAttribute(eventMetadata!, "Event End Date"));
+
+  const eventHasSetLocation =
+    eventMetadata &&
+    (getMetadataAttribute(eventMetadata!, "Location") ||
+      getMetadataAttribute(eventMetadata!, "Additional Location Info"));
 
   useEffect(() => {
     eventId ? initEvent(eventId) : router.push("/app");
+
+    global.scroll({
+      top: 0,
+      behavior: "smooth",
+    });
   }, []);
 
   useEffect(() => {
@@ -469,12 +485,10 @@ const EventPage = () => {
   }, [isTicketMessageSigningError]);
 
   useEffect(() => {
-    console.log(verifiedTicketWalletAddress, verifyingTicketTokenId);
     verifyingTicketTokenId && refetchBalanceOfVerifyingTicket();
   }, [verifyingTicketTokenId]);
 
   useEffect(() => {
-    console.log(balanceOfVerifyingTicketData);
     balanceOfVerifyingTicketData &&
       balanceOfVerifyingTicketData[0] &&
       (setIsTicketVerificationSuccessful(
@@ -695,6 +709,32 @@ const EventPage = () => {
       setIsBuyingATicket(undefined);
   };
 
+  const onAddToCalendarButtonClick = () => {
+    global.open(
+      googleCalendarLink({
+        title: eventMetadata?.name!,
+        description:
+          eventMetadata?.description +
+          "<br><br>" +
+          `<a href="${location.href}">Visit Event Page</a>`,
+        location: getMetadataAttribute(eventMetadata!, "Location"),
+        start: getMetadataAttribute(eventMetadata!, "Event Start Date")
+          ? getMetadataAttribute(eventMetadata!, "Event Start Date") +
+            " " +
+            (getMetadataAttribute(eventMetadata!, "Event Start Time") || "") +
+            " +0000"
+          : undefined,
+        end: getMetadataAttribute(eventMetadata!, "Event End Date")
+          ? getMetadataAttribute(eventMetadata!, "Event End Date") +
+            " " +
+            (getMetadataAttribute(eventMetadata!, "Event End Time") || "") +
+            " +0000"
+          : undefined,
+        url: location.href,
+      })
+    );
+  };
+
   return (
     <Container mt={"-2.5rem"} variant={"fullscreen"} minH={"100vh"}>
       <Global
@@ -718,7 +758,7 @@ const EventPage = () => {
       >
         <Flex direction={"column"} justifyContent={"center"}>
           <Container
-            h={"20rem"}
+            h={["15rem", "15rem", "20rem"]}
             pos={"relative"}
             overflow={"hidden"}
             zIndex={"base"}
@@ -730,7 +770,7 @@ const EventPage = () => {
                   mt={"0rem"}
                   left={0}
                   w={"100vw"}
-                  h={"20rem"}
+                  h={["15rem", "15rem", "20rem"]}
                   zIndex={"base"}
                   overflow={"hidden"}
                 >
@@ -741,7 +781,10 @@ const EventPage = () => {
                     }
                   >
                     <Image
-                      src={getIPFSUri(eventMetadata?.image)}
+                      src={
+                        eventMetadata.imagePlaceholder ||
+                        getIPFSUri(eventMetadata?.image)
+                      }
                       w={"100vw"}
                       filter={"blur(40px)"}
                     />
@@ -761,10 +804,13 @@ const EventPage = () => {
                 >
                   <Image
                     src={getIPFSUri(eventMetadata?.image)}
-                    borderRadius="lg"
-                    px={"1rem"}
+                    as={motion.img}
+                    initial={fadeTopSlideAnimation["false"]}
+                    animate={fadeTopSlideAnimation["true"]}
+                    maxW={"75vw"}
                     title={"show poster"}
                     onClick={onOpenEventPosterModalOpen}
+                    fallback={<></>}
                   />
                 </Box>
               </Flex>
@@ -783,69 +829,82 @@ const EventPage = () => {
                   pos={"absolute"}
                   maxWidth={"min(1440px, calc(100vw - 4rem))"}
                   left="50%"
-                  top="-3rem"
+                  top={["-4.5rem", "-4.5rem", "-3rem"]}
                   transform={"translateX(-50%)"}
                   zIndex={"overlay"}
                 >
-                  <Flex gap={"3rem"} zIndex={"overlay"}>
-                    <Flex gap={".5rem"} align={"center"}>
-                      <Image src="/icons/calendar.svg"></Image>
-                      <Text
-                        color={"textContrast"}
-                        whiteSpace={"nowrap"}
-                        fontSize={["sm"]}
-                      >
+                  <Flex
+                    flexDirection={["column", "column", "row"]}
+                    gap={["1rem", "1rem", "3rem"]}
+                    zIndex={"overlay"}
+                  >
+                    {eventHasSetDates && (
+                      <Flex gap={".5rem"} align={"center"}>
+                        <Image src="/icons/calendar.svg"></Image>
+                        <Text
+                          color={"textContrast"}
+                          whiteSpace={"nowrap"}
+                          fontSize={["sm"]}
+                        >
+                          {getMetadataAttribute(
+                            eventMetadata,
+                            "Event Start Date"
+                          )}
+                        </Text>
                         {getMetadataAttribute(
                           eventMetadata,
-                          "Event Start Date"
+                          "Event End Date"
+                        ) && (
+                          <Flex gap={".5rem"} alignItems="center">
+                            <ArrowForwardIcon color={"textContrast"} />
+                            <Text
+                              color={"textContrast"}
+                              whiteSpace={"nowrap"}
+                              fontSize={["sm"]}
+                            >
+                              {getMetadataAttribute(
+                                eventMetadata,
+                                "Event End Date"
+                              )}
+                            </Text>
+                          </Flex>
                         )}
-                      </Text>
-                      {getMetadataAttribute(
-                        eventMetadata,
-                        "Event End Date"
-                      ) && (
-                        <Flex gap={".5rem"} alignItems="center">
-                          <ArrowForwardIcon color={"textContrast"} />
-                          <Text
-                            color={"textContrast"}
-                            whiteSpace={"nowrap"}
-                            fontSize={["sm"]}
-                          >
-                            {getMetadataAttribute(
+                      </Flex>
+                    )}
+                    {eventHasSetLocation && (
+                      <Flex gap={".5rem"} align={"center"}>
+                        <Image src="/icons/location.svg"></Image>
+                        <Text
+                          color={"textContrast"}
+                          whiteSpace={"nowrap"}
+                          maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
+                          fontSize={["sm"]}
+                          overflow={"hidden"}
+                          textOverflow={"ellipsis"}
+                        >
+                          {[
+                            getMetadataAttribute(eventMetadata, "Location"),
+                            getMetadataAttribute(
                               eventMetadata,
-                              "Event End Date"
-                            )}
-                          </Text>
-                        </Flex>
-                      )}
-                    </Flex>
-                    <Flex gap={".5rem"} align={"center"}>
-                      <Image src="/icons/location.svg"></Image>
-                      <Text
-                        color={"textContrast"}
-                        whiteSpace={"nowrap"}
-                        maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
-                        fontSize={["sm"]}
-                        overflow={"hidden"}
-                        textOverflow={"ellipsis"}
-                      >
-                        {[
-                          getMetadataAttribute(eventMetadata, "Location"),
-                          getMetadataAttribute(
-                            eventMetadata,
-                            "Additional Location Info"
-                          ),
-                        ]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </Text>
-                    </Flex>
+                              "Additional Location Info"
+                            ),
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </Text>
+                      </Flex>
+                    )}
                   </Flex>
                   <Heading
                     position={"absolute"}
-                    top={"-4rem"}
+                    top={
+                      eventHasSetDates || eventHasSetLocation
+                        ? ["-3rem", "-3rem", "-4rem"]
+                        : ["-1rem", "-1rem", "-2rem"]
+                    }
                     color={"textContrast"}
                     maxW={"95%"}
+                    fontSize={["2xl", "2xl", "4xl"]}
                     whiteSpace={"nowrap"}
                     overflow={"hidden"}
                     textOverflow={"ellipsis"}
@@ -855,7 +914,7 @@ const EventPage = () => {
                   {getMetadataAttribute(eventMetadata, "media") && (
                     <Flex
                       pos={"absolute"}
-                      top={"-14rem"}
+                      top={["-14rem"]}
                       right={"0rem"}
                       zIndex={"overlay"}
                       direction={"column"}
@@ -919,23 +978,33 @@ const EventPage = () => {
               gap={"2rem"}
             >
               <Flex pos={"absolute"} top={"-4.25rem"} right={0} gap={"1rem"}>
+                <Button
+                  onClick={onAddToCalendarButtonClick}
+                  variant={"secondary"}
+                  bg={"bg"}
+                  rightIcon={<CalendarIcon />}
+                >
+                  Add to calendar
+                </Button>
                 {global.navigator.share && (
                   <Button
                     onClick={shareEvent}
                     variant={"secondary"}
                     bg={"bg"}
-                    leftIcon={<ExternalLinkIcon />}
+                    rightIcon={<ExternalLinkIcon />}
                   >
                     Share
                   </Button>
                 )}
-                <IconButton
+                <Button
                   aria-label="copy event link"
                   variant={"secondary"}
-                  icon={<LinkIcon />}
+                  rightIcon={<LinkIcon />}
                   bg={"bg"}
                   onClick={onEventLinkCopyButtonClick}
-                />
+                >
+                  copy link
+                </Button>
               </Flex>
               <Container variant="contrastAccent">
                 <Flex align={"center"}>
@@ -1344,6 +1413,8 @@ const EventPage = () => {
                       image: getIPFSUri(
                         eventTicketMetadatas[ticketIndex].image
                       ),
+                      imagePlaceholder:
+                        eventTicketMetadatas[ticketIndex].imagePlaceholder,
                       price: ethers.utils.formatEther(
                         eventTicketTiers[0][ticketIndex].ticketPrice
                       ),

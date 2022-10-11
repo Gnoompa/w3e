@@ -68,7 +68,7 @@ const VenueTab = () => {
   return (
     <TabContainer title={"Venue"}>
       <Flex>
-        <FormControl variant="floating" id="startDate" flex={1} isRequired>
+        <FormControl variant="floating" id="startDate" flex={1}>
           <Input
             autoFocus
             value={eventPersistedFormData.eventStartDate}
@@ -184,7 +184,7 @@ const VenueTab = () => {
           <Text>Add end date</Text>
         </Button>
       )}
-      <FormControl variant="floating" id="address" isRequired>
+      <FormControl variant="floating" id="address">
         <Input
           value={eventPersistedFormData.eventLocation}
           placeholder=" "

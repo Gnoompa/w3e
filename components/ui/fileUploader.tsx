@@ -89,7 +89,7 @@ export const FileUploader = (props: FileUploaderProps) => {
             )}
           </Flex>
         )}
-        {files && !files.length && (
+        {!files?.length && (
           <Text
             pos={"absolute"}
             bottom=".5rem"

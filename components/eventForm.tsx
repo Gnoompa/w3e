@@ -31,6 +31,7 @@ import {
   defaultDateFormat,
   SocialMediaIds,
   useScrollShadow,
+  uploadMetadata,
 } from "helpers/hooks";
 import { BigNumber, BigNumberish, ethers, FixedNumber } from "ethers";
 import dynamic from "next/dynamic";
@@ -81,6 +82,7 @@ import {
   getEventTicketTotalSupplyLabel,
 } from "./helpers/events";
 import { resolveObjectURL } from "buffer";
+import useMediaPlaceholderGenerator from "helpers/hooks/mediaPlaceholderGenerator";
 
 // const EventTicketImage = dynamic(() => import("./eventTicket"), {
 //   ssr: false,
@@ -174,6 +176,7 @@ const EventForm = () => {
     onOpen: onSimpleDialogOpen,
     onClose: onSimpleDialogClose,
   } = useDisclosure();
+  const { generateMediaPlaceholder } = useMediaPlaceholderGenerator();
   const [simpleDialogData, setSimpleDialogData] = useState<{
     title: string | JSX.Element;
     desc?: string | JSX.Element;
@@ -195,6 +198,7 @@ const EventForm = () => {
   const eventFormFields = useAppSelector((state) => state.eventForm.fields);
   const invalidEventFormFields = useAppSelector(selectInvalidFields);
   const eventFormFieldsRef = useRef(eventFormFields);
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const eventFormTabIdToFieldNameMap = {
     0: ["eventTitle", "eventShortDescription"],
     2: ["ticketPrice", "ticketSupply", "addedTickets"],
@@ -213,6 +217,10 @@ const EventForm = () => {
   useEffect(() => {
     init();
   }, []);
+
+  useEffect(() => {
+    isWalletConnected && isCreatingEvent && beforeEventCreation();
+  }, [isCreatingEvent, isWalletConnected]);
 
   useEffect(() => {
     setEventPreviewData({
@@ -359,51 +367,6 @@ const EventForm = () => {
         ?.flat()
     );
 
-  const uploadMetadata = async (
-    metadata: Parameters<typeof context.NFTStorageClient.store>[0]
-  ) => {
-    let metadataImageFormData = new FormData();
-
-    metadataImageFormData.append(
-      "file",
-      metadata.image,
-      `metadataImage_${+Date.now()}.png`
-    );
-
-    const imageUploadResponse = await axios.post(
-      "https://api.web3events.ai/upload",
-      metadataImageFormData
-    );
-
-    let metadataFormData = new FormData();
-
-    metadataFormData.append(
-      "file",
-      new Blob(
-        [
-          JSON.stringify({
-            ...metadata,
-            image: `ipfs://${imageUploadResponse.data.data.ipfs}`,
-          }),
-        ],
-        { type: "application/json" }
-      ),
-      `metadata_${+Date.now()}.json`
-    );
-
-    const metadataUploadResponse = await axios.post(
-      "https://api.web3events.ai/upload",
-      metadataFormData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    return `ipfs://${metadataUploadResponse.data.data.ipfs}`;
-  };
-
   const getEventMetadata = (
     eventData: typeof eventPersistedFormData
   ): Partial<EventMetadata> => ({
@@ -418,25 +381,32 @@ const EventForm = () => {
         trait_type: "Event Start Date",
         value: date.format(
           new Date(eventData.eventStartDate),
-          defaultDateFormat
+          defaultDateFormat,
+          true
         ),
       },
       eventData.eventStartTime && {
         trait_type: "Event Start Time",
         value: date.format(
           new Date(date.parse(eventData.eventStartTime, "hh:mm")),
-          "hh:mm A"
+          "hh:mm A",
+          true
         ),
       },
       eventData.eventEndDate && {
         trait_type: "Event End Date",
-        value: date.format(new Date(eventData.eventEndDate), defaultDateFormat),
+        value: date.format(
+          new Date(eventData.eventEndDate),
+          defaultDateFormat,
+          true
+        ),
       },
       eventData.eventEndTime && {
         trait_type: "Event End Time",
         value: date.format(
           new Date(date.parse(eventData.eventEndTime, "hh:mm")),
-          "hh:mm A"
+          "hh:mm A",
+          true
         ),
       },
       eventData.eventLocation && {
@@ -466,6 +436,8 @@ const EventForm = () => {
     }));
 
   const beforeEventCreation = () => {
+    setIsCreatingEvent(true);
+
     mbConnectWallet() ||
       mbSwitchChain() ||
       validateEventForm()
@@ -532,8 +504,6 @@ const EventForm = () => {
     const eventTicketMetadatas = getEventTicketMetadatas(
       eventPersistedFormData
     );
-
-    console.log();
 
     await Promise.all([
       uploadMetadata({

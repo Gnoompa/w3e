@@ -3,14 +3,16 @@ import { MouseEventHandler, Ref, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { TypedUseSelectorHook } from "react-redux";
 import type { RootState, AppDispatch } from "../app/store";
+import axios from "axios";
 import TwitterIcon from "../public/icons/twitter";
 import FacebookIcon from "../public/icons/facebook";
 import InstagramIcon from "../public/icons/insta";
 import TelegramIcon from "../public/icons/tg";
 import SiteIcon from "../public/icons/site";
+import { generateMediaPlaceholder } from "./hooks/mediaPlaceholderGenerator";
 
 export const defaultDateFormat = "ddd, MMM DD YYYY";
-export const defaulyIPFSgateway = "https://api.web3events.ai/media/";
+export const defaulyIPFSgateway = "https://api.test.web3events.ai/media/";
 
 export enum SocialMediaIds {
   Twitter = "twitter",
@@ -80,6 +82,50 @@ export function handleOnMouseDown(
 export function formatWalletAddress(address: string): string {
   return address ? `${address.slice(0, 5)}...${address.slice(-3)}` : "";
 }
+
+export const uploadMetadata = async (metadata: object) => {
+  const uploadUrl = /.*test|localhost.*/.test(global.location?.href)
+    ? "https://api.test.web3events.ai/upload"
+    : "https://api.web3events.ai/upload";
+
+  let metadataImageFormData = new FormData();
+
+  metadataImageFormData.append(
+    "file",
+    metadata.image,
+    `metadataImage_${+Date.now()}.${metadata.image.type.split("/")[1]}`
+  );
+
+  const imageUploadResponse = await axios.post(
+    uploadUrl,
+    metadataImageFormData
+  );
+
+  let metadataFormData = new FormData();
+
+  metadataFormData.append(
+    "file",
+    new Blob(
+      [
+        JSON.stringify({
+          ...metadata,
+          image: `ipfs://${imageUploadResponse.data.data.ipfs}`,
+          imagePlaceholder: await generateMediaPlaceholder(metadata.image),
+        }),
+      ],
+      { type: "application/json" }
+    ),
+    `metadata_${+Date.now()}.json`
+  );
+
+  const metadataUploadResponse = await axios.post(uploadUrl, metadataFormData, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  return `ipfs://${metadataUploadResponse.data.data.ipfs}`;
+};
 
 export function getIPFSUri(
   did: string,

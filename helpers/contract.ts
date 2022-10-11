@@ -41,10 +41,12 @@ const chainIdToChainlinkPriceOracleContractAddressMap = {
 
 const chainIdToMainContractAddressMap = {
   [chain.polygonMumbai.id]: "0xfA712DEa7e68f19C2D6562763b535Efe37183Fb8",
+  [chain.polygon.id]: "0x289311CF027B604bb52A54423a7b16b73dc92525",
 };
 
 const chainIdToTokenContractAddressMap = {
   [chain.polygonMumbai.id]: "0x00C6b703bd5100706E3523b174d2b04F3557b012",
+  [chain.polygon.id]: "0x13B38A6595eE6A227995A87DC118fcf85890d3BE",
 };
 
 const chainIdToMainContractMap = {

@@ -17,6 +17,7 @@ import {
   PopoverContent,
   PopoverArrow,
   PopoverBody,
+  FormErrorMessage,
 } from "@chakra-ui/react";
 import FileUploader from "../../ui/fileUploader";
 import { useAppSelector } from "helpers/hooks";
@@ -74,24 +75,27 @@ const MainTab = () => {
           value={eventPersistedFormData.eventTitle}
           autoFocus
           placeholder=" "
+          maxLength={50}
           onChange={(event) =>
             dispatch(upsertEvent({ eventTitle: event.target.value }))
           }
           onBlur={() => validateField({ fieldName: "eventTitle" })}
         />
         <FormLabel>Event title</FormLabel>
+        <FormHelperText>Min 3, Max 50 symbols</FormHelperText>
       </FormControl>
-      <FormControl variant="floating" id="type" isRequired>
+      {/* <FormControl variant="floating" id="type" isRequired>
         <Select defaultValue={"offline"} isRequired>
           <option value={"offline"}>Offline</option>
-          {/* <option value={"online"}>Online</option> */}
+          <option value={"online"}>Online</option>
         </Select>
         <FormLabel>Event type</FormLabel>
-      </FormControl>
+      </FormControl> */}
       <FormControl variant="floating" id="shortdesc" isRequired>
         <Textarea
           value={eventPersistedFormData.eventShortDescription}
           placeholder=" "
+          maxLength={200}
           onChange={(event) =>
             dispatch(upsertEvent({ eventShortDescription: event.target.value }))
           }
@@ -100,8 +104,7 @@ const MainTab = () => {
         />
         <FormLabel>Short description</FormLabel>
         <FormHelperText>
-          Min 30, Max 200 symbols. Description will be shown on the list of all
-          events
+          Max 200 symbols. Description will be shown on the event explorer page
         </FormHelperText>
       </FormControl>
       <FileUploader
@@ -116,7 +119,7 @@ const MainTab = () => {
               borderRadius: "sm",
             }}
           >
-            Drad and grop or click to upload event cover
+            Drad & drop or click to upload event cover
           </Highlight>
         }
         onChange={(files) => dispatch(setEventPoster(files[0]))}

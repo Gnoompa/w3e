@@ -24,6 +24,7 @@ const theme = extendTheme({
     accentSecondary: "#3396FE",
     border: "#C4C4C4",
     warn: "#FFB21C",
+    success: "#4caf50",
   },
   radii: {
     sm: "8px",
@@ -88,6 +89,7 @@ const theme = extendTheme({
         secondary: (props) => ({
           borderRadius: "sm",
           height: "2.5rem",
+          fontSize: "sm",
           py: 0,
           px: "1rem",
         }),
@@ -167,7 +169,7 @@ const theme = extendTheme({
           width: "100vw",
         },
         undersceen: {
-          boxShadow: "0 -45px 45px #00000082",
+          boxShadow: "0 -125px 45px #000000a6",
         },
         scrollableOverlap: {
           overflowX: "scroll",
@@ -300,6 +302,11 @@ const theme = extendTheme({
       variants: {
         floating: {
           helperText: {
+            px: "1rem",
+            mt: ".25rem",
+            fontSize: "sm",
+          },
+          errorText: {
             px: "1rem",
             mt: ".25rem",
             fontSize: "sm",
