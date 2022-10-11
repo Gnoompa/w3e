@@ -12,7 +12,11 @@ import SiteIcon from "../public/icons/site";
 import { generateMediaPlaceholder } from "./hooks/mediaPlaceholderGenerator";
 
 export const defaultDateFormat = "ddd, MMM DD YYYY";
-export const defaulyIPFSgateway = "https://api.test.web3events.ai/media/";
+export const defaulyIPFSgateway = /.*test|localhost.*/.test(
+  global.location?.href
+)
+  ? "https://api.test.web3events.ai/media/"
+  : "https://api.web3events.ai/media/";
 
 export enum SocialMediaIds {
   Twitter = "twitter",
