@@ -56,12 +56,24 @@ const chainIdToMainContractMap = {
       MainContractABI.abi,
       provider
     ),
+  [chain.polygon.id]: (provider?: Provider) =>
+    new ethers.Contract(
+      chainIdToMainContractAddressMap[chain.polygon.id],
+      MainContractABI.abi,
+      provider
+    ),
 };
 
 const chainIdToTokenContractMap = {
   [chain.polygonMumbai.id]: (provider?: Provider) =>
     new ethers.Contract(
       chainIdToTokenContractAddressMap[chain.polygonMumbai.id],
+      TokenContractABI.abi,
+      provider
+    ),
+  [chain.polygon.id]: (provider?: Provider) =>
+    new ethers.Contract(
+      chainIdToTokenContractAddressMap[chain.polygon.id],
       TokenContractABI.abi,
       provider
     ),
