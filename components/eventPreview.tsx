@@ -48,6 +48,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
       py={0}
       pos={"relative"}
       w={["auto", "30rem", "38rem", "38rem", "45rem"]}
+      bg={"accentPrimary"}
       minW={"35rem"}
       minH={"41rem"}
       overflow={"hidden"}
@@ -98,6 +99,7 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
         pos={"relative"}
         overflow={"hidden"}
         zIndex={"base"}
+        bg={"#000"}
       >
         <Text
           color={"textContrastSecondary"}

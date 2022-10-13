@@ -46,6 +46,7 @@ import {
   getIPFSUri,
   getMetadataAttribute,
   SocialMediaIds,
+  useAppSelector,
   useRouterQuery,
 } from "helpers/hooks";
 import dynamic from "next/dynamic";
@@ -319,10 +320,9 @@ const EventPage = () => {
     },
     provider,
   });
-  const {
-    data: nativeCurrencyToUsdPrice,
-    refetch: refetchNativeCurrencyToUsdPrice,
-  } = getNativeCurrencyToUsdPrice();
+  const nativeCurrencyToUsdPrice = useAppSelector(
+    (state) => state.app.nativeCurrencyToUsdPrice
+  );
   const connectedWalletOwnedTickets = eventTicketBoughtEvents?.[0];
   const canShowTicketQr = !!connectedWalletOwnedTickets?.length;
   const isConnectedWalletAnEventManager =
@@ -410,9 +410,7 @@ const EventPage = () => {
       nativeCurrencyToUsdPrice &&
       setEventTicketNativeCurrencyPriceLabel(
         `~${(+ethers.utils.formatUnits(
-          nativeCurrencyToUsdPrice[0].answer
-            .mul(eventTicketStartingPrice)
-            .toString(),
+          nativeCurrencyToUsdPrice.mul(eventTicketStartingPrice).toString(),
           26
         )).toFixed(4)} MATIC`
       );
@@ -543,7 +541,7 @@ const EventPage = () => {
   const getEventTicketPrice = (ticketIndex: number, inNativeCurrency = false) =>
     inNativeCurrency
       ? eventTicketTiers[0][ticketIndex].ticketPrice
-      : nativeCurrencyToUsdPrice[0].answer
+      : nativeCurrencyToUsdPrice
           .mul(10 ** 10)
           .mul(
             +ethers.utils.formatEther(
@@ -564,7 +562,7 @@ const EventPage = () => {
     nativeCurrencyToUsdPrice &&
     !BigNumber.from(eventTicketTiers[0][ticketIndex].ticketPrice).eq(0)
       ? `~${(+ethers.utils.formatUnits(
-          nativeCurrencyToUsdPrice[0].answer
+          nativeCurrencyToUsdPrice
             .mul(eventTicketTiers[0][ticketIndex].ticketPrice)
             .toString(),
           26
@@ -736,11 +734,15 @@ const EventPage = () => {
   };
 
   return (
-    <Container mt={"-2.5rem"} variant={"fullscreen"} minH={"100vh"}>
+    <Container
+      mt={["-3.5rem", "-3.5rem", "-2.5rem"]}
+      variant={"fullscreen"}
+      minH={"100vh"}
+    >
       <Global
         styles={css`
           body {
-            background: var(--chakra-colors-accentPrimary) !important;
+            background: #111 !important;
           }
         `}
       />
@@ -818,7 +820,7 @@ const EventPage = () => {
           </Container>
           <Container
             variant={"undersceen"}
-            bg={"accentPrimary"}
+            bg={"#111"}
             position={"relative"}
             zIndex={"docked"}
             px={"2rem"}
@@ -914,7 +916,7 @@ const EventPage = () => {
                   {getMetadataAttribute(eventMetadata, "media") && (
                     <Flex
                       pos={"absolute"}
-                      top={["-14rem"]}
+                      top={["-9rem", "-9rem", "-14rem"]}
                       right={"0rem"}
                       zIndex={"overlay"}
                       direction={"column"}
@@ -977,7 +979,14 @@ const EventPage = () => {
               pos={"relative"}
               gap={"2rem"}
             >
-              <Flex pos={"absolute"} top={"-4.25rem"} right={0} gap={"1rem"}>
+              <Flex
+                pos={["relative", "relative", "absolute"]}
+                top={[0, 0, "-4.25rem"]}
+                justifyContent="flex-end"
+                flexWrap="wrap"
+                right={0}
+                gap={"1rem"}
+              >
                 <Button
                   onClick={onAddToCalendarButtonClick}
                   variant={"secondary"}
@@ -1421,9 +1430,7 @@ const EventPage = () => {
                       isFree:
                         eventTicketTiers[0][ticketIndex].ticketPrice.eq(0),
                     }}
-                    nativeCurrencyToUsdPrice={
-                      nativeCurrencyToUsdPrice[0].answer
-                    }
+                    nativeCurrencyToUsdPrice={nativeCurrencyToUsdPrice}
                     isBuyingTicket={isBuyingATicket == ticketIndex}
                     onBuyButtonClick={() =>
                       onBuyEventTicketButtonClick(ticketIndex)

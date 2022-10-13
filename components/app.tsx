@@ -9,9 +9,6 @@ import {
   Image,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import TwitterIcon from "../public/icons/twitter";
-import TelegramIcon from "../public/icons/tg";
-import LensterIcon from "../public/icons/lenster";
 import ConnectWallet from "./connectWallet";
 import { getNativeCurrencyToUsdPrice } from "helpers/contract";
 import { useAppDispatch, useAppSelector } from "helpers/hooks";
@@ -21,6 +18,7 @@ import useMediaPlaceholderGenerator from "helpers/hooks/mediaPlaceholderGenerato
 import { initialState as appInitialState } from "features/app/appPersistedSlice";
 import persistStore from "redux-persist/es/persistStore";
 import { persistConfig, persistor } from "app/store";
+import Footer from "./footer";
 
 const App: React.FC = (props) => {
   const dispatch = useAppDispatch();
@@ -47,7 +45,7 @@ const App: React.FC = (props) => {
   }, []);
 
   useEffect(() => {
-    nativeCurrencyToUsdPrice &&
+    nativeCurrencyToUsdPrice?.[0] &&
       dispatch(setNativeCurrencyToUsdPrice(nativeCurrencyToUsdPrice[0].answer));
   }, [nativeCurrencyToUsdPrice]);
 
@@ -98,44 +96,7 @@ const App: React.FC = (props) => {
           {props.children}
         </context.Provider>
       </Flex>
-      <Container mt="2rem" bg="accentPrimary" p="3rem 5rem">
-        <Flex
-          flexDir={["column", "row"]}
-          align="center"
-          gap={"2rem"}
-          justify={"space-between"}
-        >
-          <Heading fontSize={"xx-large"} color={"textContrast"}>
-            Web3Events
-          </Heading>
-          <Flex gap={"1rem"}>
-            <Link href={"https://twitter.com/Web3Eventsai"} target={"_blank"}>
-              <IconButton
-                variant={"icon"}
-                aria-label={"twitter"}
-                icon={<TwitterIcon />}
-              />
-            </Link>
-            <Link
-              href={"https://lenster.xyz/u/web3events.lens"}
-              target={"_blank"}
-            >
-              <IconButton
-                variant={"icon"}
-                aria-label={"lenster"}
-                icon={<LensterIcon width="1.5rem" />}
-              />
-            </Link>
-            <Link href={"https://t.me/web3events_eng"} target={"_blank"}>
-              <IconButton
-                variant={"icon"}
-                aria-label={"telegram"}
-                icon={<TelegramIcon width="1.5rem" />}
-              />
-            </Link>
-          </Flex>
-        </Flex>
-      </Container>
+      <Footer />
       <MediaPlaceholderGeneratorCanvasContainer />
     </Flex>
   );
