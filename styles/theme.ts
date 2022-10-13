@@ -25,6 +25,9 @@ const theme = extendTheme({
     border: "#C4C4C4",
     warn: "#FFB21C",
     success: "#4caf50",
+    accentGradient: "linear-gradient(194.04deg, #3396FE 0%, #00FFFF 100%)",
+    accentGradientSecondary:
+      "linear-gradient(0deg, rgba(253,171,7,1) 0%, rgba(246,119,66,1) 34%, rgba(221,46,0,1) 100%)",
   },
   radii: {
     sm: "8px",
@@ -60,7 +63,7 @@ const theme = extendTheme({
           border: ".15em solid",
           borderColor: "bg",
           color: "bg",
-          py: "1.25em",
+          py: "22px",
           _hover: {
             color: "black",
             borderColor: "black",
@@ -91,7 +94,7 @@ const theme = extendTheme({
           height: "2.5rem",
           fontSize: "sm",
           py: 0,
-          px: "1rem",
+          px: [".5rem", "1rem"],
         }),
         icon: {
           py: "1.25rem",
@@ -100,6 +103,13 @@ const theme = extendTheme({
           textTransform: "none",
           borderRadius: "sm",
         },
+        socialIcon: {
+          py: "1.25rem",
+          px: "1.25rem",
+          bg: "bg",
+          textTransform: "none",
+          borderRadius: "lg",
+        }
       },
     },
     CloseButton: {
@@ -187,12 +197,12 @@ const theme = extendTheme({
         },
         contrast: {
           borderRadius: "lg",
-          bg: "accentPrimary",
-          px: "2rem",
-          py: "2rem",
+          bg: "#111",
+          px: "3rem",
+          py: "3rem",
         },
         contrastAccent: {
-          bg: "accentPrimaryContrast",
+          bg: "accentPrimary",
           borderRadius: "md",
           px: ["1rem", "1.5rem"],
           py: ["1rem", "1rem"],
@@ -216,6 +226,19 @@ const theme = extendTheme({
             borderRadius: "md",
           },
         },
+        graphics: {
+          borderRadius: "md",
+          overflow: "hidden",
+          px: 0,
+          marginInlineStart: 0,
+          marginInlineEnd: 0,
+          width: "5rem",
+        },
+        graphicsSmall: (props) => ({
+          ...theme.components.Container.variants.graphics,
+          width: "3rem",
+          borderRadius: "sm",
+        }),
       },
     },
     Select: {
@@ -258,14 +281,14 @@ const theme = extendTheme({
               bg: "accentPrimary",
               height: "calc(100% - .5rem)",
               top: ".25rem",
-              borderRadius: "md",
+              borderRadius: "14px",
             },
           },
           tab: {
             px: "2rem",
             color: "textContrast",
             bg: "transparent",
-            zIndex: "overlay",
+            zIndex: "docked",
             mr: 0,
             fontWeight: "bold",
             _selected: {
@@ -291,6 +314,14 @@ const theme = extendTheme({
     },
     Text: {
       baseStyle: {},
+      variants: {
+        accent: {
+          backgroundClip: "text",
+          textFillColor: "transparent",
+          backgroundImage:
+            "linear-gradient(194.04deg, #3396FE 0%, #00FFFF 100%)",
+        },
+      },
     },
     Highlight: {
       baseStyle: {

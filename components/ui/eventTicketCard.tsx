@@ -71,6 +71,7 @@ const EventTicket = (props: PropsType) => {
         justify={"center"}
         position={"relative"}
         overflow={"hidden"}
+        bg={"#222"}
         height={"12rem"}
       >
         <Box
@@ -130,6 +131,7 @@ const EventTicket = (props: PropsType) => {
         gap={"1rem"}
         flex={1}
         justifyContent={"space-between"}
+        borderTop="1px solid #565656"
       >
         <Flex direction={"column"} gap={"1rem"}>
           <Text

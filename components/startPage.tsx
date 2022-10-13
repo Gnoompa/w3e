@@ -19,9 +19,12 @@ import { useTheme } from "@emotion/react";
 import NextLink from "next/link";
 import { ArrowDownIcon } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
-import AboutPage from "./aboutPage";
+import AboutPage from "./startPage/aboutPage";
 import { useEffect, useRef, useState } from "react";
 import StartPageGraphicsPlaceholder from "public/startScreenGraphics/startPageGraphicsPlaceholder";
+import InstructionSection from "./startPage/instruction";
+import TrustedBySection from "./startPage/trustedBy";
+import InfoBlocksSection from "./startPage/infoBlocks";
 
 const StartPage: NextPage = () => {
   const router = useRouter();
@@ -76,66 +79,40 @@ const StartPage: NextPage = () => {
             <Heading
               as="h1"
               variant="contrast"
-              fontSize={["xx-large", "xx-large", "xx-large", "xxx-large"]}
+              fontSize={["1.5rem", "1.25rem", "1.5rem", "2.5rem"]}
               fontWeight={"black"}
+              whiteSpace="nowrap"
             >
-              Web3Events
+              <Highlight
+                query={["NFT", "any"]}
+                styles={{ color: "textAccent" }}
+              >
+                NFT tickets for any experience
+              </Highlight>
             </Heading>
             <Heading
-              whiteSpace={"nowrap"}
-              mt={[".25em", ".25em", "1em"]}
+              mt={["1em"]}
               as="h2"
               textTransform="none"
               variant="contrastFaded"
               fontSize={["lg", "lg", "lg", "2xl"]}
-              fontWeight={"md"}
+              fontWeight={["semibold", "normal"]}
+              textAlign="center"
+              lineHeight={"1.5em"}
             >
-              Create and receive tickets on blockchain
+              <Highlight query={["Web3Event's"]} styles={{ color: "bg" }}>
+                Create, distribute and monitor tickets for events with
+                Web3Event's Ticketing Platform
+              </Highlight>
             </Heading>
             <Flex
-              mt={["2em", ".5em"]}
-              direction={["column", "column", "row"]}
-              align={["center", "center", "initial"]}
-              gap={".5em"}
+              direction={["column", "row"]}
+              mt={["4rem", "1rem", "4rem"]}
+              gap="1rem"
             >
-              <Heading
-                whiteSpace={["nowrap"]}
-                textTransform="none"
-                as="h2"
-                variant="contrastFaded"
-                fontSize={["lg", "lg", "lg", "2xl"]}
-                fontWeight={"md"}
-              >
-                Collab & share profit.
-              </Heading>
-
-              <Heading
-                whiteSpace={["nowrap"]}
-                textTransform="none"
-                as="h2"
-                variant="contrastFaded"
-                fontSize={["lg", "lg", "lg", "2xl"]}
-                fontWeight={"md"}
-              >
-                <Highlight
-                  query={"Secondary market royalties."}
-                  styles={theme.components.Highlight.baseStyle}
-                >
-                  Secondary market royalties.
-                </Highlight>
-              </Heading>
-              <Heading
-                whiteSpace={["nowrap"]}
-                as="h2"
-                textTransform="none"
-                variant="contrastFaded"
-                fontSize={["lg", "lg", "lg", "2xl"]}
-                fontWeight={"md"}
-              >
-                Invest in events.
-              </Heading>
-            </Flex>
-            <Flex mt={["4rem", "1rem", "4rem"]}>
+              <NextLink href={Routes.EventExplorer}>
+                <Button variant={"outline"}>explore events</Button>
+              </NextLink>
               <NextLink href={Routes.EventForm}>
                 <Button variant={"accent"}>organize new event</Button>
               </NextLink>
@@ -150,9 +127,9 @@ const StartPage: NextPage = () => {
         align={"center"}
         justify="center"
         mt={"2.75rem"}
-        bg="bg"
+        bg={["transparent", "bg"]}
         border="2px solid"
-        borderColor="textContrastSecondary"
+        borderColor={["#fff", "textContrastSecondary"]}
         borderRadius="lg"
         w="2.5rem"
         h="3.5rem"
@@ -169,13 +146,16 @@ const StartPage: NextPage = () => {
           }}
         >
           <ArrowDownIcon
-            color={"textContrastSecondary"}
+            color={["#fff", "textContrastSecondary"]}
             w="1.5rem"
             h="1.5rem"
           />
         </motion.div>
       </Flex>
+      <InstructionSection />
+      <TrustedBySection />
       <AboutPage ref={aboutPageRef} />
+      <InfoBlocksSection />
     </Container>
   );
 };

@@ -97,7 +97,11 @@ const EventExplorer: React.FC = () => {
         margin: "2rem auto",
       }}
     >
-      <Flex justifyContent={"space-between"}>
+      <Flex
+        justifyContent={"space-between"}
+        flexDir={["column", "row"]}
+        gap="1rem"
+      >
         <Heading
           fontWeight={"extrabold"}
           fontSize={["2rem", "2rem", "3rem"]}
@@ -124,7 +128,12 @@ const EventExplorer: React.FC = () => {
       </Flex>
       <Flex mt="2rem" gap={"1.5rem"} flexWrap={"wrap"}>
         {isFetchingExplorerEvents && (
-          <Spinner w={"10"} h="10" margin={"5rem auto"} />
+          <Spinner
+            w={"10"}
+            h="10"
+            margin={"5rem auto"}
+            color={["bgAccent", "accentPrimary"]}
+          />
         )}
         {!isFetchingExplorerEvents &&
           isSuccessExplorerEvents &&

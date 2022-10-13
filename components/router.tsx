@@ -7,28 +7,27 @@ import StartPage from "./startPage";
 import { useState, useEffect } from "react";
 import App from "./app";
 
+const StylizedSpinner = () => (
+  <Spinner
+    sx={{ margin: "20rem auto", transform: "translateY(-50%)" }}
+    color={["bgAccent", "accentPrimary"]}
+  />
+);
+
 const EventForm = dynamic(() => import("./eventForm"), {
-  loading: () => (
-    <Spinner sx={{ margin: "20rem auto", transform: "translateY(-50%)" }} />
-  ),
+  loading: () => <StylizedSpinner />,
 });
 
 const EventPage = dynamic(() => import("./eventPage"), {
-  loading: () => (
-    <Spinner sx={{ margin: "20rem auto", transform: "translateY(-50%)" }} />
-  ),
+  loading: () => <StylizedSpinner />,
 });
 
 const EventExplorer = dynamic(() => import("./eventExplorer"), {
-  loading: () => (
-    <Spinner sx={{ margin: "20rem auto", transform: "translateY(-50%)" }} />
-  ),
+  loading: () => <StylizedSpinner />,
 });
 
 const Dashboard = dynamic(() => import("./dashboard"), {
-  loading: () => (
-    <Spinner sx={{ margin: "20rem auto", transform: "translateY(-50%)" }} />
-  ),
+  loading: () => <StylizedSpinner />,
 });
 
 const Router: React.FC = () => {

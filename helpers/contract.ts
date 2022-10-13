@@ -402,6 +402,7 @@ export const getNativeCurrencyToUsdPrice = (
   chainIds: Chain["id"][] = [defaultChainId]
 ) =>
   useContractReads({
+    allowFailure: true,
     contracts: chainIds.map((chainId) => ({
       addressOrName: chainIdToChainlinkPriceOracleContractAddressMap[chainId],
       contractInterface: JSON.parse(chainlinkPriceOracleABI),
