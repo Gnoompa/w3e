@@ -289,11 +289,11 @@ const Dashboard = () => {
                                 variant={"accent"}
                                 as={Flex}
                                 alignItems={"center"}
-                                gap={"1rem"}
+                                gap={".5rem"}
                                 onClick={() => goToEventPage(eventIds[index])}
                               >
                                 to event page
-                                <ArrowForwardIcon color={"textContrast"} />
+                                <ArrowForwardIcon color={"accent"} />
                               </Button>
                             </Flex>
                           </Container>
@@ -364,12 +364,13 @@ const Dashboard = () => {
                             <Button
                               as={Flex}
                               alignItems={"center"}
+                              gap={".5rem"}
                               onClick={() =>
                                 goToEventPage(ownedTicketEventIds[index])
                               }
                             >
                               to event page
-                              <ArrowForwardIcon color={"textContrast"} />
+                              <ArrowForwardIcon color={"accent"} />
                             </Button>
                           </Flex>
                         </Container>

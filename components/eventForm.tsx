@@ -269,10 +269,17 @@ const EventForm = () => {
         }))
       ),
       ticket:
+        eventFormData.editingTicketIndex !== undefined &&
         eventFormTabs[eventPersistedFormData.tabIndex] == TicketTab
-          ? getTicketData(eventFormData.editingTicketIndex)
+          ? {
+              image: defaultEventPosterImageFileUrl,
+              ...eventPreviewData?.ticket,
+              ...getTicketData(eventFormData.editingTicketIndex),
+            }
           : undefined,
     });
+
+    console.log(eventFormData.editingTicketIndex);
 
     eventPersistedFormDataRef.current = eventPersistedFormData;
   }, [
@@ -304,6 +311,22 @@ const EventForm = () => {
         : undefined,
     }));
   }, [eventFormData.eventPoster]);
+
+  useEffect(() => {
+    eventFormData.editingTicketIndex !== undefined &&
+      eventFormTabs[eventPersistedFormData.tabIndex] == TicketTab &&
+      setEventPreviewData((prevData) => ({
+        ...prevData,
+        ticket: {
+          ...prevData?.ticket,
+          image: eventFormData.ticketPosters?.[eventFormData.editingTicketIndex]
+            ? URL.createObjectURL(
+                eventFormData.ticketPosters[eventFormData.editingTicketIndex]!
+              )
+            : defaultEventPosterImageFileUrl,
+        },
+      }));
+  }, [eventFormData.ticketPosters, eventFormData.editingTicketIndex]);
 
   useEffect(() => {
     createEventWriteReceipt &&
@@ -433,6 +456,8 @@ const EventForm = () => {
         ticketData.eventTicketDescription[ticketIndex] ||
         ticketData.eventShortDescription ||
         "",
+      __ticketTierBenefits:
+        ticketData.ticketBenefits[ticketIndex]?.filter(Boolean),
     }));
 
   const beforeEventCreation = () => {
@@ -487,10 +512,8 @@ const EventForm = () => {
       ? undefined
       : {
           title: eventPersistedFormData.eventTicketName[ticketIndex],
-          image: eventFormData.ticketPosters?.[ticketIndex]
-            ? URL.createObjectURL(eventFormData.ticketPosters[ticketIndex]!)
-            : defaultEventPosterImageFileUrl,
           desc: eventPersistedFormData.eventTicketDescription[ticketIndex],
+          benefits: eventPersistedFormData.ticketBenefits[ticketIndex],
           price: eventPersistedFormData.ticketPrice[ticketIndex],
           isFree: eventPersistedFormData.isFreeTicketPrice[ticketIndex],
         };

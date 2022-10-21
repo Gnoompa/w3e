@@ -17,6 +17,8 @@ import {
   TabPanels,
   Tabs,
   Text,
+  useClipboard,
+  useToast,
 } from "@chakra-ui/react";
 import { defaultDateFormat, getIPFSUri, useRouterQuery } from "helpers/hooks";
 import dynamic from "next/dynamic";
@@ -29,10 +31,7 @@ import { BigNumber, ethers } from "ethers";
 import EventTicket, {
   PropsType as EventTicketComponentPropsType,
 } from "./ui/eventTicketCard";
-import {
-  useGetEventExplorerEventsQuery,
-  useLazyGetEventExplorerEventsQuery,
-} from "../helpers/eventsApi";
+import { useGetEventsQuery } from "../helpers/eventsApi";
 import {
   getEventTicketNativeCurrencyPriceLabel,
   getEventTicketPriceRangeLabel,
@@ -40,11 +39,15 @@ import {
 import { motion } from "framer-motion";
 import { CheckCircleIcon } from "@chakra-ui/icons";
 import { fadeTopSlideAnimation } from "styles/theme";
+import { Routes } from "helpers/routes";
 
 const EventExplorer: React.FC = () => {
   const router = useRouter();
 
   const [mainTabIndex, setMainTabIndex] = useState<number>(0);
+  const [copiedValue, setCopiedValue] = useState<string>("");
+  const { hasCopied, onCopy } = useClipboard(copiedValue);
+  const toast = useToast();
 
   const {
     data: explorerEvents,
@@ -52,11 +55,17 @@ const EventExplorer: React.FC = () => {
     isSuccess: isSuccessExplorerEvents,
     isFetching: isFetchingExplorerEvents,
     refetch: refetchExplorerEvents,
-  } = useGetEventExplorerEventsQuery(mainTabIndex ? "" : "verified");
+  } = useGetEventsQuery(mainTabIndex ? "" : "verified");
 
   useEffect(() => {
     refetchExplorerEvents();
   }, [mainTabIndex]);
+
+  useEffect(() => {
+    copiedValue && onCopy();
+
+    setCopiedValue("");
+  }, [copiedValue]);
 
   const getEventTicketData = (
     eventData: object
@@ -65,6 +74,7 @@ const EventExplorer: React.FC = () => {
     image: getIPFSUri(eventData.image),
     imagePlaceholder: eventData.imagePlaceholder,
     desc: eventData.shortDescription,
+    // participantsLabel: "10 part",
     priceLabel: getEventTicketPriceRangeLabel(
       eventData.ticketTypes.map((ticketTier) => ({
         price: +ethers.utils.formatEther(ticketTier.price),
@@ -84,6 +94,22 @@ const EventExplorer: React.FC = () => {
       .filter(Boolean)
       .map((eventDate) => date.format(new Date(eventDate), defaultDateFormat))
       .join(" - ");
+
+  const onShareEventButtonClick = (event: object) => {
+    navigator.share
+      ? navigator.share({
+          title: event?.name,
+          url: location.href,
+        })
+      : (setCopiedValue(
+          `${global.location.origin}${Routes.EventPage}?id=${event.externalId}`
+        ),
+        toast({
+          title: "copied event link",
+          status: "success",
+          isClosable: true,
+        }));
+  };
 
   const goToEventPage = (eventTokenId: string) =>
     router.push(`/#event?id=${eventTokenId}`);
@@ -146,6 +172,8 @@ const EventExplorer: React.FC = () => {
                   eventLocationLabel={event.locationName}
                   ticketData={getEventTicketData(event)}
                   onBuyButtonClick={() => goToEventPage(event.externalId)}
+                  onShareButtonClick={() => onShareEventButtonClick(event)}
+                  buyButtonLabel="check it"
                 />
               ))
           ) : (

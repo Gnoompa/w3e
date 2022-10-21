@@ -52,9 +52,12 @@ import {
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { BigNumber, BigNumberish, ethers } from "ethers";
+import MainContractABI from "../abi/MainV2.sol/MainV2.json";
 import {
   chain,
   useAccount,
+  useContractRead,
+  useContractReads,
   useProvider,
   useSignMessage,
   useWaitForTransaction,
@@ -82,6 +85,7 @@ import {
   CheckIcon,
   ExternalLinkIcon,
   LinkIcon,
+  SettingsIcon,
   WarningIcon,
 } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
@@ -97,6 +101,8 @@ import {
   getEventTicketPriceRangeLabel,
   getEventTicketTotalSupplyLabel,
 } from "./helpers/events";
+import EventManagerModal from "./eventManagerModal";
+import CheckoutModal from "./checkoutModal";
 
 const QrScanner = dynamic(() => import("./ui/qrScanner"), {
   ssr: false,
@@ -117,8 +123,11 @@ const EventPage = () => {
   const { setOpen: setOpenWalletConnectModal } = useModal();
   const [copiedValue, setCopiedValue] = useState<string>("");
   const { hasCopied, onCopy } = useClipboard(copiedValue);
-  const { address: connectedWalletAddress, isConnected: isWalletConnected } =
-    useAccount();
+  const {
+    address: connectedWalletAddress,
+    isConnected: isWalletConnected,
+    isConnecting: isWalletConnecting,
+  } = useAccount();
   const [currentStage, setCurrentStage] = useState<Stage>(Stage.LoadingEvent);
   const [eventTokenId, setEventTokenId] = useState<string>();
   const [event, setEvent] = useState<Partial<OnchainEvent>>();
@@ -127,6 +136,8 @@ const EventPage = () => {
   >([]);
   const [isBuyingATicket, setIsBuyingATicket] = useState<number>();
   const [isVerifyingATicket, setIsVerifyingATicket] = useState(false);
+  const [scannedTicketTicketTier, setScannedTicketTicketTier] =
+    useState<number>();
   const [eventTicketStartingPrice, setEventTicketStartingPrice] =
     useState<BigNumberish>();
   const [eventTicketsTotalSupply, setEventTicketsTotalSupply] = useState<
@@ -153,6 +164,16 @@ const EventPage = () => {
     isOpen: isEventTicketsModalOpen,
     onOpen: onOpenEventTicketsModalOpen,
     onClose: onCloseEventTicketsModalOpen,
+  } = useDisclosure();
+  const {
+    isOpen: isEventManagerModalOpen,
+    onOpen: onOpenEventManagerModal,
+    onClose: onCloseEventManagerModal,
+  } = useDisclosure();
+  const {
+    isOpen: isCheckoutModalOpen,
+    onOpen: onOpenCheckoutModal,
+    onClose: onCloseCheckoutModal,
   } = useDisclosure();
   const {
     isOpen: isTicketVerificationModalOpen,
@@ -186,6 +207,10 @@ const EventPage = () => {
     message: ticketSigningMessage,
   });
 
+  const [ticketDataToBeSigned, setTicketDataToBeSigned] = useState<{
+    tokenId: BigNumberish;
+    tier: BigNumberish;
+  }>();
   const [isTicketVerificationSuccessful, setIsTicketVerificationSuccessful] =
     useState<boolean>();
   const eventId = routerQuery.id;
@@ -201,10 +226,13 @@ const EventPage = () => {
   const [isEventPosterLoaded, setIsEventPosterLoaded] = useState(false);
   const { data: events } = getEvents([{ args: [[eventId]] }]);
   const { data: eventManagers } = getEventManagers([{ args: [eventId] }]);
-  const { data: eventTicketTiers } = getEventTicketTiers([{ args: [eventId] }]);
+  const { data: eventTicketTiers } = getEventTicketTiers([{ args: eventId }]);
+
   const eventTicketTiersRef = useRef([]);
-  const [verifyingTicketTokenId, setVerifyingTicketTokenId] =
-    useState<string>();
+  const [verifyingTicket, setVerifyingTicket] = useState<{
+    tokenId: BigNumberish;
+    tier: BigNumberish;
+  }>();
   const [verifiedTicketWalletAddress, setVerifiedTicketWalletAddress] =
     useState<string>();
   const {
@@ -212,7 +240,7 @@ const EventPage = () => {
     refetch: refetchBalanceOfVerifyingTicket,
   } = getBalanceOfToken([
     {
-      args: [verifiedTicketWalletAddress, verifyingTicketTokenId],
+      args: [verifiedTicketWalletAddress, verifyingTicket?.tokenId],
       enabled: false,
     },
   ]);
@@ -227,6 +255,7 @@ const EventPage = () => {
   const {
     config: preparedBuyEventTicketWriteConfig,
     refetch: refetchPreparedBuyEventTicketWriteConfig,
+    isLoading: isLoadingPreparedBuyEventTicketWriteConfig,
     error: preparedBuyEventTicketWriteConfigError,
   } = prepareBuyEventTicket({
     ...buyEventTicketWriteConfigToPrepare,
@@ -312,6 +341,20 @@ const EventPage = () => {
   } = useMainContractEvents({
     eventName: "TicketBought",
     filters: {
+      [defaultChainId]: [BigNumber.from(routerQuery.id).toHexString()],
+    },
+    provider,
+  });
+  const nativeCurrencyToUsdPrice = useAppSelector(
+    (state) => state.app.nativeCurrencyToUsdPrice
+  );
+  const {
+    data: connectedWalletOwnedTickets,
+    refetch: refetchConnectedWalletOwnedTickets,
+    isLoading: isLoadingConnectedWalletOwnedTickets,
+  } = useMainContractEvents({
+    eventName: "TicketBought",
+    filters: {
       [defaultChainId]: [
         BigNumber.from(routerQuery.id).toHexString(),
         null,
@@ -320,16 +363,11 @@ const EventPage = () => {
     },
     provider,
   });
-  const nativeCurrencyToUsdPrice = useAppSelector(
-    (state) => state.app.nativeCurrencyToUsdPrice
-  );
-  const connectedWalletOwnedTickets = eventTicketBoughtEvents?.[0];
-  const canShowTicketQr = !!connectedWalletOwnedTickets?.length;
+  const canShowTicketQr = !!connectedWalletOwnedTickets?.[0]?.length;
   const isConnectedWalletAnEventManager =
     connectedWalletAddress &&
     eventManagers?.[0]?.includes(connectedWalletAddress);
-  const canConnectedWalletBuyTickets =
-    !connectedWalletOwnedTickets?.length && !isConnectedWalletAnEventManager;
+  const canConnectedWalletBuyTickets = !isConnectedWalletAnEventManager;
   const eventHasSetDates =
     eventMetadata &&
     (getMetadataAttribute(eventMetadata!, "Event Start Date") ||
@@ -351,11 +389,22 @@ const EventPage = () => {
 
   useEffect(() => {
     eventTicketTiers &&
-      !eventTicketTiersRef.current.length &&
+      !eventTicketTiersRef.current?.length &&
       (eventTicketTiersRef.current = eventTicketTiers?.[0]?.map(
         ({ metadataUri }) => metadataUri
       ));
   }, [eventId, eventTicketTiers]);
+
+  useEffect(() => {
+    isBuyingATicket !== undefined &&
+      buyEventTicketWriteConfigToPrepare &&
+      preparedBuyEventTicketWriteConfigError &&
+      toast({
+        title: "Can't complete the purchase: some address already has a ticket",
+        status: "error",
+        isClosable: true,
+      });
+  }, [preparedBuyEventTicketWriteConfigError, isBuyingATicket]);
 
   useEffect(() => {
     event &&
@@ -427,7 +476,9 @@ const EventPage = () => {
     buyEventTicketWriteData &&
       (isSuccessBuyEventTicketWrite &&
         (refetchEventTicketBoughtEvents(),
+        refetchConnectedWalletOwnedTickets(),
         setIsBuyingATicket(undefined),
+        onCloseCheckoutModal(),
         onCloseEventTicketsModalOpen(),
         toast({
           title: "A ticket has been bought",
@@ -483,34 +534,35 @@ const EventPage = () => {
   }, [isTicketMessageSigningError]);
 
   useEffect(() => {
-    verifyingTicketTokenId && refetchBalanceOfVerifyingTicket();
-  }, [verifyingTicketTokenId]);
+    verifyingTicket && refetchBalanceOfVerifyingTicket();
+  }, [verifyingTicket]);
 
   useEffect(() => {
-    balanceOfVerifyingTicketData &&
-      balanceOfVerifyingTicketData[0] &&
+    balanceOfVerifyingTicketData?.[0] &&
       (setIsTicketVerificationSuccessful(
         balanceOfVerifyingTicketData[0].gte(1)
       ),
-      setScannedTickets([
-        ...scannedTickets,
-        {
-          ticketTokenId: verifyingTicketTokenId!,
-          ownerAddress: verifiedTicketWalletAddress!,
-        },
-      ]),
+      // setScannedTickets([
+      //   ...scannedTickets,
+      //   {
+      //     ticketTokenId: verifyingTicketTokenId!,
+      //     ownerAddress: verifiedTicketWalletAddress!,
+      //   },
+      // ]),
       setTimeout(
         () => (
           setIsTicketVerificationSuccessful(undefined),
           setIsVerifyingATicket(false),
-          setVerifyingTicketTokenId(undefined)
+          setVerifyingTicket(undefined)
         ),
-        3000
+        7000
       ));
   }, [balanceOfVerifyingTicketData]);
 
   useEffect(() => {
     copiedValue && onCopy();
+
+    setCopiedValue("");
   }, [copiedValue]);
 
   useEffect(() => {
@@ -572,7 +624,7 @@ const EventPage = () => {
   const onTicketVerificationQrScanned = (scannedTicketQrDataJSON: string) => {
     if (scannedTicketQrDataJSON) {
       try {
-        const { ticketTokenId, signedMessage } = JSON.parse(
+        const { ticketTokenId, ticketTier, signedMessage } = JSON.parse(
           scannedTicketQrDataJSON
         );
         const ownerAddress =
@@ -582,7 +634,7 @@ const EventPage = () => {
         ticketTokenId &&
           ownerAddress &&
           (setIsVerifyingATicket(true),
-          setVerifyingTicketTokenId(ticketTokenId),
+          setVerifyingTicket({ tokenId: ticketTokenId, tier: ticketTier }),
           setVerifiedTicketWalletAddress(ownerAddress));
       } catch (error) {
         handleError(error as Error, {
@@ -604,7 +656,6 @@ const EventPage = () => {
 
   const onEventLinkCopyButtonClick = () => {
     setCopiedValue(global.location.href);
-    onCopy();
 
     toast({
       title: "copied event link",
@@ -624,18 +675,25 @@ const EventPage = () => {
 
   const onBuyEventTicketButtonClick = (ticketTierId: number) => {
     setIsBuyingATicket(ticketTierId);
+    onOpenCheckoutModal();
+  };
 
-    if (isWalletConnected && !isLoadingBuyEventTicketWrite) {
+  const onCompleteCheckout = (ticketRecievers: string[]) => {
+    if (
+      isWalletConnected &&
+      !isLoadingBuyEventTicketWrite &&
+      isBuyingATicket !== undefined
+    ) {
       try {
-        eventTicketTiers?.[0]?.[ticketTierId]
+        eventTicketTiers?.[0]?.[isBuyingATicket]
           ? setBuyEventTicketWriteConfigToPrepare({
               args: [
-                eventTicketTiers[0][ticketTierId].eventTokenId,
-                ticketTierId,
-                [connectedWalletAddress!],
+                eventTicketTiers[0][isBuyingATicket].eventTokenId,
+                isBuyingATicket,
+                ticketRecievers,
               ],
               overrides: {
-                value: getEventTicketPrice(ticketTierId, true),
+                value: getEventTicketPrice(isBuyingATicket),
               },
             })
           : handleError(new Error("Unable to prepare write config"));
@@ -651,24 +709,7 @@ const EventPage = () => {
     isWalletConnected ? false : (setOpenWalletConnectModal(true), true);
 
   const onTicketPreviewModalOpenButtonClick = () => {
-    mbConnectWallet() ||
-      (setSimpleAlertData({
-        title: <Text>Prove ticket ownership by signing</Text>,
-        description: (
-          <Highlight
-            query={["free"]}
-            styles={{
-              bg: "accentSecondary",
-              borderRadius: "5px",
-              color: "textContrast",
-              p: ".25em .5em",
-            }}
-          >
-            It is free and for security reasons only
-          </Highlight>
-        ),
-      }),
-      setTimeout(onSimpleAlertOpen));
+    onTicketPreviewModalOpen();
   };
 
   const onTicketSignButtonClick = () => {
@@ -678,7 +719,8 @@ const EventPage = () => {
   const prepareTicketQrData = (signedMessage: string) =>
     setTicketPreviewQrData(
       JSON.stringify({
-        ticketTokenId: getTicketTokenId(0)?._hex,
+        ticketTokenId: ticketDataToBeSigned?.tokenId,
+        ticketTier: ticketDataToBeSigned?.tier,
         signedMessage,
       })
     );
@@ -733,6 +775,39 @@ const EventPage = () => {
     );
   };
 
+  const onShowTicketQrButtonClick = (
+    ticketTokenId: BigNumberish,
+    ticketTier: BigNumberish
+  ) => {
+    setTicketDataToBeSigned({
+      tokenId: ticketTokenId.toString(),
+      tier: +ticketTier,
+    });
+
+    mbConnectWallet() ||
+      (setSimpleAlertData({
+        title: <Text>Prove ticket ownership by signing</Text>,
+        description: (
+          <Highlight
+            query={["free"]}
+            styles={{
+              bg: "accentSecondary",
+              borderRadius: "5px",
+              color: "textContrast",
+              p: ".25em .5em",
+            }}
+          >
+            It is free and for security reasons only
+          </Highlight>
+        ),
+      }),
+      setTimeout(onSimpleAlertOpen));
+  };
+
+  const onManageEventButtonClick = () => {
+    onOpenEventManagerModal();
+  };
+
   return (
     <Container
       mt={["-3.5rem", "-3.5rem", "-2.5rem"]}
@@ -742,7 +817,7 @@ const EventPage = () => {
       <Global
         styles={css`
           body {
-            background: #111 !important;
+            background: var(--chakra-colors-accentPrimary) !important;
           }
         `}
       />
@@ -820,7 +895,7 @@ const EventPage = () => {
           </Container>
           <Container
             variant={"undersceen"}
-            bg={"#111"}
+            bg={"accentPrimary"}
             position={"relative"}
             zIndex={"docked"}
             px={"2rem"}
@@ -991,29 +1066,33 @@ const EventPage = () => {
                   onClick={onAddToCalendarButtonClick}
                   variant={"secondary"}
                   bg={"bg"}
-                  rightIcon={<CalendarIcon />}
+                  leftIcon={<CalendarIcon />}
                 >
                   Add to calendar
                 </Button>
-                {global.navigator.share && (
+                <Button
+                  onClick={
+                    global.navigator.share
+                      ? shareEvent
+                      : onEventLinkCopyButtonClick
+                  }
+                  variant={"secondary"}
+                  bg={"bg"}
+                  leftIcon={<Image src="/icons/share.svg" />}
+                >
+                  Share
+                </Button>
+
+                {isConnectedWalletAnEventManager && (
                   <Button
-                    onClick={shareEvent}
+                    onClick={onManageEventButtonClick}
                     variant={"secondary"}
                     bg={"bg"}
-                    rightIcon={<ExternalLinkIcon />}
+                    leftIcon={<SettingsIcon />}
                   >
-                    Share
+                    Manage Event
                   </Button>
                 )}
-                <Button
-                  aria-label="copy event link"
-                  variant={"secondary"}
-                  rightIcon={<LinkIcon />}
-                  bg={"bg"}
-                  onClick={onEventLinkCopyButtonClick}
-                >
-                  copy link
-                </Button>
               </Flex>
               <Container variant="contrastAccent">
                 <Flex align={"center"}>
@@ -1110,32 +1189,49 @@ const EventPage = () => {
                         </Flex>
                       </Button>
                     )}
-                    {canConnectedWalletBuyTickets ? (
-                      <Button
-                        variant={"accent"}
-                        onClick={() =>
-                          eventTicketTiers[0].length > 1
-                            ? onOpenEventTicketsModalOpen()
-                            : onBuyEventTicketButtonClick(0)
-                        }
-                        isLoading={
-                          isBuyingATicket === 0 ||
-                          isLoadingEventTicketBoughtEvents
-                        }
-                      >
-                        buy
-                      </Button>
-                    ) : (
-                      !isConnectedWalletAnEventManager && (
-                        <Flex direction={"column"} gap={".5rem"}>
+                    {!isConnectedWalletAnEventManager && (
+                      <Flex gap="1rem" flexDir={["column", "row"]}>
+                        {canConnectedWalletBuyTickets && isWalletConnected && (
                           <Button
-                            variant={"accent"}
-                            onClick={onTicketPreviewModalOpenButtonClick}
+                            variant={
+                              connectedWalletOwnedTickets?.[0]?.length
+                                ? "outline"
+                                : "accent"
+                            }
+                            onClick={() =>
+                              eventTicketTiers[0].length > 1
+                                ? onOpenEventTicketsModalOpen()
+                                : onBuyEventTicketButtonClick(0)
+                            }
+                            isLoading={
+                              isLoadingBuyEventTicketWrite ||
+                              isLoadingPreparedBuyEventTicketWriteConfig ||
+                              isLoadingEventTicketBoughtEvents ||
+                              isWalletConnecting ||
+                              isLoadingConnectedWalletOwnedTickets
+                            }
                           >
-                            Show my ticket
+                            buy tickets
                           </Button>
-                        </Flex>
-                      )
+                        )}
+                        {isWalletConnected ? (
+                          !!connectedWalletOwnedTickets?.[0]?.length &&
+                          !isConnectedWalletAnEventManager && (
+                            <Flex direction={"column"} gap={".5rem"}>
+                              <Button
+                                variant={"accent"}
+                                onClick={onTicketPreviewModalOpenButtonClick}
+                              >
+                                Show my tickets
+                              </Button>
+                            </Flex>
+                          )
+                        ) : (
+                          <Button variant={"accent"} onClick={mbConnectWallet}>
+                            Connect Wallet
+                          </Button>
+                        )}
+                      </Flex>
                     )}
                   </Flex>
                   <AlertDialog
@@ -1172,29 +1268,125 @@ const EventPage = () => {
                     onClose={onTicketPreviewModalClose}
                   >
                     <ModalOverlay />
-                    <ModalContent>
-                      <ModalHeader>My Ticket</ModalHeader>
-                      <ModalCloseButton />
-                      <ModalBody paddingBottom={"3rem"}>
+                    <ModalContent
+                      width={
+                        connectedWalletOwnedTickets?.[0]?.length > 1
+                          ? "30rem"
+                          : "auto"
+                      }
+                      maxW={"calc(100vw - 1rem)"}
+                      bg={"accentPrimary"}
+                      paddingY={"2rem"}
+                    >
+                      <Flex flex={1} direction={"column"} gap={"1rem"}>
                         <Flex
                           flex={1}
-                          direction={"column"}
-                          align={"center"}
-                          justify={"center"}
-                          gap={"1rem"}
+                          alignItems={"center"}
+                          justify={"space-between"}
+                          paddingX={["2rem"]}
+                          mb="1rem"
                         >
-                          {ticketPreviewQrData && (
+                          <Heading color="textContrast">My Tickets</Heading>
+                          <ModalCloseButton
+                            pos={"relative"}
+                            top={0}
+                            right={0}
+                            color={"textContrastSecondary"}
+                            size={"lg"}
+                          />
+                        </Flex>
+                        {ticketPreviewQrData ? (
+                          <Flex
+                            flex={1}
+                            direction={"column"}
+                            align={"center"}
+                            justify={"center"}
+                            gap={"2rem"}
+                            px={["1rem", "2rem"]}
+                          >
                             <QRCode
                               renderAs="canvas"
                               size={300}
+                              bgColor="transparent"
+                              fgColor="#fff"
                               value={ticketPreviewQrData}
                             />
-                          )}
-                          <Text color={"text"}>
-                            show this to an event manager
-                          </Text>
-                        </Flex>
-                      </ModalBody>
+                            <Button
+                              variant={"accent"}
+                              onClick={() => setTicketPreviewQrData(undefined)}
+                            >
+                              Done
+                            </Button>
+                          </Flex>
+                        ) : (
+                          <Container
+                            as={Flex}
+                            variant={"scrollableOverlap"}
+                            gap={["1rem", "1.5rem"]}
+                            px={["1rem", "2rem"]}
+                            maxW="100%"
+                          >
+                            {eventTicketTiers?.[0] &&
+                              eventTicketMetadatas?.length &&
+                              connectedWalletOwnedTickets?.[0]?.map(
+                                ({ args }) => (
+                                  <Flex flexDir={"column"} gap={["2rem"]}>
+                                    <EventTicket
+                                      ticketData={{
+                                        title:
+                                          eventTicketMetadatas[
+                                            +args.ticketTierId
+                                          ].name,
+                                        desc: eventTicketMetadatas[
+                                          +args.ticketTierId
+                                        ].description,
+                                        image: getIPFSUri(
+                                          eventTicketMetadatas[
+                                            +args.ticketTierId
+                                          ].image
+                                        ),
+                                        benefits:
+                                          eventTicketMetadatas[
+                                            +args.ticketTierId
+                                          ].__ticketTierBenefits,
+                                        imagePlaceholder:
+                                          eventTicketMetadatas[
+                                            +args.ticketTierId
+                                          ].imagePlaceholder,
+                                        price: ethers.utils.formatEther(
+                                          eventTicketTiers[0][
+                                            +args.ticketTierId
+                                          ].ticketPrice
+                                        ),
+                                        isFree:
+                                          eventTicketTiers[0][
+                                            +args.ticketTierId
+                                          ].ticketPrice.eq(0),
+                                      }}
+                                      isAbleToBuy={false}
+                                      nativeCurrencyToUsdPrice={
+                                        nativeCurrencyToUsdPrice
+                                      }
+                                    />
+                                    <Button
+                                      variant={"accent"}
+                                      width="15rem"
+                                      m={"0 auto"}
+                                      onClick={() =>
+                                        onShowTicketQrButtonClick(
+                                          args.ticketTokenId,
+                                          args.ticketTierId
+                                        )
+                                      }
+                                    >
+                                      Show ticket QR
+                                    </Button>
+                                  </Flex>
+                                )
+                              )}
+                          </Container>
+                        )}
+                      </Flex>
                     </ModalContent>
                   </Modal>
                   <Modal
@@ -1202,34 +1394,119 @@ const EventPage = () => {
                     onClose={onTicketVerificationModalClose}
                   >
                     <ModalOverlay />
-                    <ModalContent>
-                      <ModalHeader>Verifying Tickets</ModalHeader>
-                      <ModalCloseButton />
-                      <ModalBody>
+                    <ModalContent
+                      width={"30rem"}
+                      maxW={"calc(100vw - 1rem)"}
+                      bg={"accentPrimary"}
+                      paddingY={"2rem"}
+                    >
+                      <Flex flex={1} direction={"column"} gap={"1rem"}>
                         <Flex
                           flex={1}
-                          direction={"column"}
-                          align={"center"}
-                          justify={"center"}
-                          gap={"1rem"}
+                          alignItems={"center"}
+                          justify={"space-between"}
+                          paddingX={["2rem"]}
+                          mb="1rem"
+                        >
+                          <Heading color="textContrast">
+                            Ticket Verification
+                          </Heading>
+                          <ModalCloseButton
+                            pos={"relative"}
+                            top={0}
+                            right={0}
+                            color={"textContrastSecondary"}
+                            size={"lg"}
+                          />
+                        </Flex>
+                        <Flex
+                          flexDir={"column"}
+                          px={["1rem", "2rem"]}
+                          gap="2rem"
+                          alignItems={"center"}
                         >
                           <QrScanner
                             showResult={false}
                             onResult={onTicketVerificationQrScanned}
                           />
+
                           {isVerifyingATicket ? (
                             (isTicketVerificationSuccessful === undefined && (
                               <Flex align={"center"} gap={"1rem"}>
-                                <Text fontWeight={"bold"}>
-                                  verifying a ticket
+                                <Spinner color="textContrastSecondary" />
+                                <Text color={"textContrastSecondary"}>
+                                  verifying...
                                 </Text>
-                                <Spinner />
                               </Flex>
                             )) ||
                             (isTicketVerificationSuccessful === true && (
-                              <Flex align={"center"} gap={"1rem"}>
-                                <Text fontWeight={"bold"}>ticket is valid</Text>
-                                <CheckIcon color={"green"} />
+                              <Flex w={"100%"} gap={"2rem"} flexDir="column">
+                                <Text
+                                  alignSelf={"center"}
+                                  color={"textContrastSecondary"}
+                                >
+                                  scan for ticket QR
+                                </Text>
+                                <Flex
+                                  flexDir={"column"}
+                                  alignSelf="flex-start"
+                                  flex={1}
+                                >
+                                  <Flex gap={"1rem"} flexDir="column">
+                                    <Flex gap={"1rem"} align="center">
+                                      <Image
+                                        src="/icons/ticket.svg"
+                                        opacity={0.8}
+                                        w={"1rem"}
+                                        h={"1rem"}
+                                      />
+                                      <Text
+                                        color={"textContrast"}
+                                        fontSize={"xl"}
+                                        fontWeight="semibold"
+                                      >
+                                        {
+                                          eventTicketMetadatas?.[
+                                            verifyingTicket?.tier
+                                          ]?.name
+                                        }
+                                      </Text>
+                                    </Flex>
+                                    <Flex
+                                      flexDirection={"column"}
+                                      gap=".25rem"
+                                      maxH="7rem"
+                                      overflowY="scroll"
+                                    >
+                                      {eventTicketMetadatas?.[
+                                        verifyingTicket?.tier
+                                      ]?.__ticketTierBenefits?.map(
+                                        (benefit) => (
+                                          <Flex
+                                            as={motion.div}
+                                            initial={
+                                              fadeTopSlideAnimation["false"]
+                                            }
+                                            animate={
+                                              fadeTopSlideAnimation["true"]
+                                            }
+                                            gap=".75rem"
+                                            alignItems={"center"}
+                                          >
+                                            <CheckIcon color={"success"} />
+                                            <Text
+                                              color={"textContrast"}
+                                              fontWeight="semibold"
+                                            >
+                                              {benefit.substring(0, 55) ||
+                                                "benefit"}
+                                            </Text>
+                                          </Flex>
+                                        )
+                                      )}
+                                    </Flex>
+                                  </Flex>
+                                </Flex>
                               </Flex>
                             )) ||
                             (isTicketVerificationSuccessful === false && (
@@ -1241,11 +1518,16 @@ const EventPage = () => {
                               </Flex>
                             ))
                           ) : (
-                            <Text color={"text"}>scan ticket QR codes</Text>
+                            <Text color={"textContrastSecondary"}>
+                              scan for ticket QR
+                            </Text>
                           )}
                         </Flex>
-                      </ModalBody>
-                      <ModalFooter>
+                        {scannedTicketTicketTier != undefined && (
+                          <Flex>{scannedTicketTicketTier}</Flex>
+                        )}
+                      </Flex>
+                      {/* <ModalFooter>
                         <Button
                           variant={"accent"}
                           isLoading={
@@ -1261,7 +1543,7 @@ const EventPage = () => {
                         >
                           Complete Verification
                         </Button>
-                      </ModalFooter>
+                      </ModalFooter> */}
                     </ModalContent>
                   </Modal>
                 </Flex>
@@ -1364,6 +1646,7 @@ const EventPage = () => {
         <ModalContent
           maxW={"calc(100vw - 4rem)"}
           bg={"transparent"}
+          boxShadow="none"
           onClick={onCloseEventPosterModal}
         >
           <Image
@@ -1382,7 +1665,7 @@ const EventPage = () => {
         <ModalOverlay></ModalOverlay>
         <ModalContent
           width={"65rem"}
-          maxW={"calc(100vw - 4rem)"}
+          maxW={"calc(100vw - 1rem)"}
           bg={"accentPrimary"}
           paddingY={"2rem"}
         >
@@ -1422,6 +1705,8 @@ const EventPage = () => {
                       image: getIPFSUri(
                         eventTicketMetadatas[ticketIndex].image
                       ),
+                      benefits:
+                        eventTicketMetadatas[ticketIndex].__ticketTierBenefits,
                       imagePlaceholder:
                         eventTicketMetadatas[ticketIndex].imagePlaceholder,
                       price: ethers.utils.formatEther(
@@ -1431,7 +1716,12 @@ const EventPage = () => {
                         eventTicketTiers[0][ticketIndex].ticketPrice.eq(0),
                     }}
                     nativeCurrencyToUsdPrice={nativeCurrencyToUsdPrice}
-                    isBuyingTicket={isBuyingATicket == ticketIndex}
+                    isBuyingTicket={
+                      (isBuyingATicket == ticketIndex &&
+                        isLoadingBuyEventTicketWrite) ||
+                      isLoadingPreparedBuyEventTicketWriteConfig ||
+                      isLoadingEventTicketBoughtEvents
+                    }
                     onBuyButtonClick={() =>
                       onBuyEventTicketButtonClick(ticketIndex)
                     }
@@ -1441,6 +1731,43 @@ const EventPage = () => {
           </Flex>
         </ModalContent>
       </Modal>
+      <EventManagerModal
+        eventTokenId={eventId}
+        isOpen={isEventManagerModalOpen}
+        onClose={onCloseEventManagerModal}
+      />
+      {isBuyingATicket !== undefined &&
+        eventMetadata &&
+        eventTicketMetadatas?.[0] && (
+          <CheckoutModal
+            event={{
+              name: eventMetadata.name,
+              location: getMetadataAttribute(eventMetadata, "Location"),
+              startDate: getMetadataAttribute(
+                eventMetadata,
+                "Event Start Date"
+              ),
+              endDate: getMetadataAttribute(eventMetadata, "Event End Date"),
+              image: getIPFSUri(eventMetadata.image),
+            }}
+            ticketTier={{
+              name: eventTicketMetadatas[isBuyingATicket!].name,
+              price: ethers.utils.formatEther(
+                eventTicketTiers?.[0]?.[isBuyingATicket!].ticketPrice
+              ),
+            }}
+            isOpen={isCheckoutModalOpen}
+            onClose={onCloseCheckoutModal}
+            hasTicket={!!connectedWalletOwnedTickets?.[0]?.length}
+            isCompletingPurchase={
+              isLoadingBuyEventTicketWrite ||
+              isLoadingPreparedBuyEventTicketWriteConfig ||
+              isLoadingEventTicketBoughtEvents ||
+              isWalletConnecting
+            }
+            onCompletePurchaseButtonClick={onCompleteCheckout}
+          />
+        )}
     </Container>
   );
 };

@@ -61,8 +61,7 @@ const Component = forwardRef((props, ref) => {
                 fontSize={"lg"}
                 lineHeight="1.25rem"
               >
-                Gain insigns on inner workings & how our to integrate our SDKs
-                into your solution.
+                Get to know how to integrate our SDKs into your solution
               </Text>
             </Container>
             <Container
@@ -84,7 +83,7 @@ const Component = forwardRef((props, ref) => {
               </Flex>
               <Text color="#fff" fontSize={"lg"} lineHeight="1.25rem">
                 Vote on official Web3Events governance proposals and view past
-                proposals.
+                proposals
               </Text>
             </Container>
             <Container
@@ -115,7 +114,7 @@ const Component = forwardRef((props, ref) => {
                 lineHeight="1.25rem"
               >
                 Participate by proposing features and discussing future of our
-                platform with the Web3Events community.
+                platform
               </Text>
             </Container>
             <Container
@@ -170,7 +169,7 @@ const Component = forwardRef((props, ref) => {
               >
                 <Highlight query={["`test`"]} styles={{ color: "textAccent" }}>
                   Read how you can create and preview events using `test`
-                  infrastructure.
+                  infrastructure
                 </Highlight>
               </Text>
             </Container>

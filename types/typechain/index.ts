@@ -20,6 +20,7 @@ export type { ERC165Upgradeable } from "./ERC165Upgradeable";
 export type { IERC165Upgradeable } from "./IERC165Upgradeable";
 export type { IStorage } from "./IStorage";
 export type { Main } from "./Main";
+export type { MainV2 } from "./MainV2";
 export type { Storage } from "./Storage";
 export type { ERC1155MixedFungibleMintableUpgradeable } from "./ERC1155MixedFungibleMintableUpgradeable";
 export type { ERC1155Upgradeable } from "./ERC1155Upgradeable";
@@ -44,6 +45,7 @@ export { ERC165Upgradeable__factory } from "./factories/ERC165Upgradeable__facto
 export { IERC165Upgradeable__factory } from "./factories/IERC165Upgradeable__factory";
 export { IStorage__factory } from "./factories/IStorage__factory";
 export { Main__factory } from "./factories/Main__factory";
+export { MainV2__factory } from "./factories/MainV2__factory";
 export { Storage__factory } from "./factories/Storage__factory";
 export { ERC1155MixedFungibleMintableUpgradeable__factory } from "./factories/ERC1155MixedFungibleMintableUpgradeable__factory";
 export { ERC1155Upgradeable__factory } from "./factories/ERC1155Upgradeable__factory";
