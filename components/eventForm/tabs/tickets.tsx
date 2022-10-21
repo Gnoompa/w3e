@@ -34,7 +34,12 @@ import {
   setEditingTicketIndex as setEditingTicketIndexAction,
 } from "features/eventForm/eventFormSlice";
 import { useAppDispatch } from "helpers/hooks";
-import { AddIcon, DeleteIcon, QuestionIcon } from "@chakra-ui/icons";
+import {
+  AddIcon,
+  CheckCircleIcon,
+  DeleteIcon,
+  QuestionIcon,
+} from "@chakra-ui/icons";
 import EditIcon from "../../../public/icons/edit";
 import { default as TabContainer } from "./container";
 import { setEventData as setEventPreviewData } from "features/eventForm/eventPreviewSlice";
@@ -116,7 +121,7 @@ const TicketsTab = () => {
   }, [nativeCurrencyToUsdPriceResponse]);
 
   useEffect(() => {
-    editingTicketIndex &&
+    editingTicketIndex !== undefined &&
       setTicketNativeCurrencyPriceLabel(
         eventPersistedFormData.isFreeTicketPrice[editingTicketIndex!] ? (
           "FREE"
@@ -238,9 +243,33 @@ const TicketsTab = () => {
       ));
   };
 
-  useEffect(() => {
-    console.log(eventFormData.ticketPosters);
-  }, [eventFormData.ticketPosters]);
+  const addTicketTypeBenefits = () => {
+    dispatch(
+      upsertEvent({
+        ticketBenefits: {
+          ...eventPersistedFormData.ticketBenefits,
+          [editingTicketIndex!]: [
+            ...(eventPersistedFormData.ticketBenefits[editingTicketIndex!] ||
+              []),
+            "",
+          ],
+        },
+      })
+    );
+  };
+
+  const removeTicketTypeBenefit = (benefitIndex: number) => {
+    dispatch(
+      upsertEvent({
+        ticketBenefits: {
+          ...eventPersistedFormData.ticketBenefits,
+          [editingTicketIndex!]: eventPersistedFormData.ticketBenefits[
+            editingTicketIndex!
+          ]?.filter((_, i) => i != benefitIndex),
+        },
+      })
+    );
+  };
 
   return (
     <TabContainer title={"Tickets"}>
@@ -330,6 +359,15 @@ const TicketsTab = () => {
                 onChange={() => (
                   dispatch(
                     upsertEvent({
+                      ticketPrice: {
+                        ...eventPersistedFormData.ticketPrice,
+                        [editingTicketIndex]: !eventPersistedFormData
+                          .isFreeTicketPrice[editingTicketIndex]
+                          ? 0
+                          : eventPersistedFormData.ticketPrice[
+                              editingTicketIndex
+                            ],
+                      },
                       isFreeTicketPrice: {
                         ...eventPersistedFormData.isFreeTicketPrice,
                         [editingTicketIndex]:
@@ -452,6 +490,56 @@ const TicketsTab = () => {
               </FormLabel>
             </FormControl>
           </Flex>
+          {eventPersistedFormData.ticketBenefits?.[editingTicketIndex]?.map(
+            (manager, managerIndex) => (
+              <Flex gap={"1rem"} key={managerIndex} align={"center"}>
+                <CheckCircleIcon color={"success"} />
+                <FormControl variant="floating" id="longdesc">
+                  <Input
+                    autoFocus
+                    value={
+                      eventPersistedFormData.ticketBenefits?.[
+                        editingTicketIndex
+                      ]?.[managerIndex]
+                    }
+                    placeholder=" "
+                    onChange={(event) => {
+                      let eventManagers = [
+                        ...(eventPersistedFormData.ticketBenefits[
+                          editingTicketIndex
+                        ] || []),
+                      ];
+                      eventManagers.splice(managerIndex, 1, event.target.value);
+                      dispatch(
+                        upsertEvent({
+                          ticketBenefits: {
+                            ...eventPersistedFormData.ticketBenefits,
+                            [editingTicketIndex]: eventManagers,
+                          },
+                        })
+                      );
+                    }}
+                  />
+                </FormControl>
+                <CloseButton
+                  onClick={() => removeTicketTypeBenefit(managerIndex)}
+                />
+              </Flex>
+            )
+          )}
+          <Button
+            variant={"ghost"}
+            display={"flex"}
+            gap={"1rem"}
+            disabled={
+              eventPersistedFormData.ticketBenefits?.[editingTicketIndex]
+                ?.length >= 8
+            }
+            onClick={addTicketTypeBenefits}
+          >
+            <AddIcon color={"accentSecondary"} />
+            <Text>Add ticket benefits</Text>
+          </Button>
           <Flex gap={"1rem"} align={"center"} justify={"center"}>
             <Box flex={1}>
               <FileUploader
@@ -699,7 +787,7 @@ const TicketsTab = () => {
               variant={"ghost"}
               display={"flex"}
               gap={"1rem"}
-              mt={"6rem"}
+              mt={"7rem"}
               onClick={() =>
                 setEditingTicketIndex(
                   eventPersistedFormData.addedTickets.length

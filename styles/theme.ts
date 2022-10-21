@@ -46,7 +46,7 @@ const theme = extendTheme({
         fontWeight: "bold",
         cursor: "pointer",
         _hover: {
-          opacity: 0.7,
+          opacity: 0.9,
           // bg: "accentSecondary !important",
         },
       },
@@ -109,7 +109,7 @@ const theme = extendTheme({
           bg: "bg",
           textTransform: "none",
           borderRadius: "lg",
-        }
+        },
       },
     },
     CloseButton: {
@@ -197,12 +197,12 @@ const theme = extendTheme({
         },
         contrast: {
           borderRadius: "lg",
-          bg: "#111",
+          bg: "accentPrimary",
           px: "3rem",
           py: "3rem",
         },
         contrastAccent: {
-          bg: "accentPrimary",
+          bg: "accentPrimaryContrast",
           borderRadius: "md",
           px: ["1rem", "1.5rem"],
           py: ["1rem", "1rem"],

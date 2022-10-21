@@ -10,7 +10,7 @@ import {
 import { Provider } from "@wagmi/core";
 import { Main as MainContractTypechain } from "types/typechain/Main";
 import { ERC1155MixedFungibleMintableUpgradeable as TokenContractTypechain } from "types/typechain/ERC1155MixedFungibleMintableUpgradeable";
-import MainContractABI from "../abi/Main.sol/Main.json";
+import MainContractABI from "../abi/MainV2.sol/MainV2.json";
 import TokenContractABI from "../abi/ERC1155MixedFungibleMintableUpgradeable.sol/ERC1155MixedFungibleMintableUpgradeable.json";
 import { Log } from "@ethersproject/abstract-provider/src.ts";
 import { Interface, LogDescription } from "ethers/lib/utils";

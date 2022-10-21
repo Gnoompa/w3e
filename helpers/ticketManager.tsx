@@ -7,6 +7,7 @@ import {
   useMainContractEvents,
   getEventTicketTiers,
   useTokenMetadataFetch,
+  getNativeCurrencyToUsdPrice,
 } from "helpers/contract";
 import { useAppSelector, useRouterQuery } from "helpers/hooks";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -16,12 +17,13 @@ interface IProps {
   eventTokenId: string;
 }
 
-const TicketManager = (props: IProps) => {
+const useTicketManager = (props: IProps) => {
   const provider = useProvider();
   const { setOpen: setWalletConnectModalOpen } = useModal();
-  const nativeCurrencyToUsdPrice = useAppSelector(
-    (state) => state.app.nativeCurrencyToUsdPrice
-  );
+  const {
+    data: nativeCurrencyToUsdPrice,
+    refetch: refetchNativeCurrencyToUsdPrice,
+  } = getNativeCurrencyToUsdPrice();
   const { address: connectedWalletAddress, isConnected: isWalletConnected } =
     useAccount();
 
@@ -37,11 +39,12 @@ const TicketManager = (props: IProps) => {
     refetch: refetchConnectedWalletEventTicketBoughtEvents,
     isLoading: isLoadingConnectedWalletEventTicketBoughtEvents,
   } = useMainContractEvents({
+    enabled: false,
     eventName: "TicketBought",
     filters: {
       [defaultChainId]: [
         null,
-        BigNumber.from(props.eventTokenId).toHexString(),
+        props.eventTokenId && BigNumber.from(props.eventTokenId).toHexString(),
         connectedWalletAddress,
       ],
     },
@@ -62,7 +65,6 @@ const TicketManager = (props: IProps) => {
     error: preparedBuyEventTicketWriteConfigError,
   } = prepareBuyEventTicket({
     ...buyEventTicketWriteConfigToPrepare,
-    enabled: false,
   });
 
   const { data: buyEventTicketWriteResponse, write: buyEventTicketWrite } =
@@ -82,6 +84,10 @@ const TicketManager = (props: IProps) => {
   const [eventTicketTierIdToBeBought, setEventTicketTierIdToBeBought] =
     useState<number>();
   const isBuyingEventTicket = eventTicketTierIdToBeBought !== undefined;
+
+  useEffect(() => {
+    refetchConnectedWalletEventTicketBoughtEvents();
+  }, []);
 
   useEffect(() => {
     eventTicketTiers &&
@@ -128,7 +134,7 @@ const TicketManager = (props: IProps) => {
   };
 
   const getEventTicketPrice = (ticketTierId: number) =>
-    BigNumber.from(nativeCurrencyToUsdPrice)!
+    BigNumber.from(nativeCurrencyToUsdPrice?.[0].answer)!
       .mul(10 ** 10)
       .mul(
         +ethers.utils.formatEther(
@@ -152,6 +158,4 @@ const TicketManager = (props: IProps) => {
   };
 };
 
-TicketManager.defaultProps = {};
-
-export default TicketManager;
+export default useTicketManager;

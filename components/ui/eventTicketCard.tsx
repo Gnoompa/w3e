@@ -9,6 +9,7 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
+  IconButton,
 } from "@chakra-ui/react";
 import { getIPFSUri } from "helpers/hooks";
 import { motion } from "framer-motion";
@@ -18,11 +19,13 @@ import {
   getEventTicketNativeCurrencyPriceLabel,
   getEventTicketPriceLabel,
 } from "../helpers/events";
+import { CheckIcon } from "@chakra-ui/icons";
 
 export type PropsType = {
   isAbleToBuy?: boolean;
+  buyButtonLabel?: string;
   isBuyingTicket?: boolean;
-  nativeCurrencyToUsdPrice?: BigNumber;
+  nativeCurrencyToUsdPrice?: BigNumber | undefined;
   eventDatesLabel?: string;
   eventLocationLabel?: string;
   ticketData: {
@@ -33,9 +36,13 @@ export type PropsType = {
     price?: number | string;
     priceLabel?: string;
     isFree?: boolean;
+    participantsLabel?: string;
+    supplyLabel?: string;
     nativeCurrencyPriceLabel?: string;
+    benefits?: string[];
   };
   onBuyButtonClick?: () => any;
+  onShareButtonClick?: () => any;
 };
 
 const EventTicket = (props: PropsType) => {
@@ -74,6 +81,20 @@ const EventTicket = (props: PropsType) => {
         bg={"#222"}
         height={"12rem"}
       >
+        {props.onShareButtonClick && (
+          <IconButton
+            w="4rem"
+            pos="absolute"
+            right="1rem"
+            top="1rem"
+            zIndex="dropdown"
+            borderRadius="sm"
+            boxShadow="0 1px 5px var(--chakra-colors-accentPrimaryContrast)"
+            aria-label="share"
+            onClick={props.onShareButtonClick}
+            icon={<Image src="/icons/share.svg" />}
+          />
+        )}
         <Box
           pos={"absolute"}
           mt={"0rem"}
@@ -115,8 +136,8 @@ const EventTicket = (props: PropsType) => {
               as={motion.img}
               initial={fadeTopSlideAnimation["false"]}
               animate={fadeTopSlideAnimation["true"]}
-              src={props.ticketData.image}
-              borderRadius="lg"
+              src={getIPFSUri(props.ticketData.image)}
+              borderRadius="sm"
               px={"1rem"}
               title={"show poster"}
               onClick={onOpenTicketImagePreviewModal}
@@ -144,6 +165,32 @@ const EventTicket = (props: PropsType) => {
           >
             {props.ticketData.title?.substring(0, 50) || "Ticket title"}
           </Text>
+          <Flex
+            flexDirection={"column"}
+            gap=".25rem"
+            maxH="7rem"
+            overflowY="scroll"
+          >
+            {props.ticketData.benefits?.map((benefit) => (
+              <Flex
+                as={motion.div}
+                initial={fadeTopSlideAnimation["false"]}
+                animate={fadeTopSlideAnimation["true"]}
+                gap=".75rem"
+                alignItems={"center"}
+              >
+                <CheckIcon
+                  color={benefit ? "success" : "textContrastSecondary"}
+                />
+                <Text
+                  color={benefit ? "textContrast" : "textContrastSecondary"}
+                  fontWeight="semibold"
+                >
+                  {benefit.substring(0, 55) || "benefit"}
+                </Text>
+              </Flex>
+            ))}
+          </Flex>
           <Flex
             opacity={0.5}
             gap=".5rem"
@@ -185,6 +232,8 @@ const EventTicket = (props: PropsType) => {
           <Text
             fontSize="md"
             lineHeight={"1.25rem"}
+            maxH="4rem"
+            overflowY="scroll"
             color={
               props.ticketData.desc ? "textContrast" : "textContrastSecondary"
             }
@@ -192,12 +241,44 @@ const EventTicket = (props: PropsType) => {
             {props.ticketData.desc?.substring(0, 300) || "ticket description"}
           </Text>
         </Flex>
-        <Flex justifyContent={"space-between"} align={"flex-end"}>
-          <Flex direction={"column"} gap={".5rem"}>
-            <Text color="textContrast" fontSize={"sm"} fontWeight="medium">
-              Minting price
+        {props.ticketData.participantsLabel && (
+          <Flex gap=".5rem" alignItems={"center"}>
+            <Flex>
+              <Image
+                src="/graphics/graphics1.png"
+                w="2rem"
+                h="2rem"
+                borderRadius={"18px"}
+                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+              />
+              <Image
+                src="/graphics/graphics3.png"
+                w="2rem"
+                h="2rem"
+                ml="-1rem"
+                borderRadius={"18px"}
+                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+              />
+              <Image
+                src="/graphics/graphics4.png"
+                w="2rem"
+                h="2rem"
+                ml="-1rem"
+                borderRadius={"18px"}
+                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+              />
+            </Flex>
+            <Text color="bg" fontWeight={"medium"}>
+              {props.ticketData.participantsLabel}
             </Text>
-            <Flex gap={".25rem"} align={"flex-end"}>
+          </Flex>
+        )}
+        <Flex justifyContent={"space-between"} align={"flex-end"}>
+          <Flex direction={"column"} gap={"0"}>
+            {/* <Text color="textContrast" fontSize={"sm"} fontWeight="medium">
+              Minting price
+            </Text> */}
+            <Flex align={"flex-start"} flexDir="column">
               <Text color={"textAccent"} fontSize={"2xl"} fontWeight="bold">
                 {props.ticketData.priceLabel ||
                   getEventTicketPriceLabel({
@@ -205,8 +286,12 @@ const EventTicket = (props: PropsType) => {
                     isFree: !!props.ticketData.isFree,
                   })}
               </Text>
-              {!props.ticketData.isFree && (
-                <Text color={"textContrastSecondary"} fontSize="sm">
+              {!props.ticketData.isFree && props.nativeCurrencyToUsdPrice && (
+                <Text
+                  color={"textContrastSecondary"}
+                  fontSize="sm"
+                  lineHeight={"1em"}
+                >
                   {props.ticketData.nativeCurrencyPriceLabel ||
                     getEventTicketNativeCurrencyPriceLabel(
                       { price: props.ticketData.price },
@@ -223,7 +308,7 @@ const EventTicket = (props: PropsType) => {
             isLoading={props.isBuyingTicket}
             onClick={props.onBuyButtonClick}
           >
-            Buy
+            {props.buyButtonLabel}
           </Button>
         </Flex>
       </Flex>
@@ -253,6 +338,7 @@ const EventTicket = (props: PropsType) => {
 
 EventTicket.defaultProps = {
   isAbleToBuy: true,
+  buyButtonLabel: "Buy",
 } as PropsType;
 
 export default EventTicket;

@@ -45,7 +45,7 @@ const Component = forwardRef((props, ref) => {
             Web3Events
           </Heading>
           <Flex gap={"1rem"}>
-            <Link href={"https://twitter.com/Web3Eventsai"} target={"_blank"}>
+            <Link href={"https://twitter.com/Web3Events_ai"} target={"_blank"}>
               <IconButton
                 variant={"socialIcon"}
                 aria-label={"twitter"}

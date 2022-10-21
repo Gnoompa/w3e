@@ -90,10 +90,16 @@ const AboutPage = forwardRef((props, ref) => {
                       lineHeight="1.25rem"
                       textAlign={["center", "center", "center", "initial"]}
                     >
-                      Extend your existing flows by adding our widget to your
-                      website in just couple lines of code. Customizeble by
-                      default with ability to change font/colors/branding to
-                      your liking.
+                      <ul style={{ paddingLeft: "1rem" }}>
+                        <li>
+                          Extend your existing flows by adding our widget to
+                          your website in just couple lines of code
+                        </li>
+                        <li style={{ paddingTop: "1rem" }}>
+                          Customizeble by default with ability to change
+                          font/colors/branding to your liking
+                        </li>
+                      </ul>
                     </Text>
                   </Flex>
                 </Flex>

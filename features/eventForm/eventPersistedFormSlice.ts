@@ -21,6 +21,7 @@ export interface State {
   isFreeTicketPrice: { [key: number]: boolean };
   ticketSupply: { [key: number]: number | undefined };
   ticketPrice: { [key: number]: string | undefined };
+  ticketBenefits: { [key: number]: (string | undefined)[] };
   beneficiary: string;
   eventManagers: (string | undefined)[];
   eventMediaLinks: { [key in SocialMediaIds]?: string };
@@ -40,6 +41,7 @@ export const initialState: State = {
   eventLocation: "",
   eventAdditionalLocationInfo: "",
   ticketPrice: {},
+  ticketBenefits: {},
   eventTicketName: {},
   isUnlimitedTicketSupply: {},
   ticketSupply: {},
