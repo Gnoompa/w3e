@@ -22,6 +22,7 @@ import {
   getEventTicketPriceLabel,
 } from "./helpers/events";
 import { useAccount } from "wagmi";
+import { BigNumberish } from "ethers";
 
 export type CheckoutModalProps = Omit<ModalProps, "children"> & {
   event: {
@@ -33,7 +34,7 @@ export type CheckoutModalProps = Omit<ModalProps, "children"> & {
   };
   ticketTier: {
     name?: string;
-    price?: string;
+    price?: BigNumberish;
   };
   hasTicket?: boolean;
   isCompletingPurchase?: boolean;

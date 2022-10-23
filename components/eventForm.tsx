@@ -458,6 +458,7 @@ const EventForm = () => {
         "",
       __ticketTierBenefits:
         ticketData.ticketBenefits[ticketIndex]?.filter(Boolean),
+      __ticketTierOrder: ticketIndex,
     }));
 
   const beforeEventCreation = () => {

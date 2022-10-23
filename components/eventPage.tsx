@@ -8,6 +8,7 @@ import React, {
   RefObject,
 } from "react";
 import { Global, css } from "@emotion/react";
+import pluralize from "pluralize";
 import QRCode from "qrcode.react";
 import { google as googleCalendarLink } from "calendar-link";
 import {
@@ -98,7 +99,10 @@ import SiteIcon from "../public/icons/site";
 import { useModal } from "connectkit";
 import EventTicket from "./ui/eventTicketCard";
 import {
+  getEventParticipantsAmountLabel,
   getEventTicketPriceRangeLabel,
+  getEventTicketTierLeftSupply,
+  getEventTicketTierLeftSupplyLabel,
   getEventTicketTotalSupplyLabel,
 } from "./helpers/events";
 import EventManagerModal from "./eventManagerModal";
@@ -226,7 +230,8 @@ const EventPage = () => {
   const [isEventPosterLoaded, setIsEventPosterLoaded] = useState(false);
   const { data: events } = getEvents([{ args: [[eventId]] }]);
   const { data: eventManagers } = getEventManagers([{ args: [eventId] }]);
-  const { data: eventTicketTiers } = getEventTicketTiers([{ args: eventId }]);
+  const { data: eventTicketTiers, refetch: refetchEventTicketTiers } =
+    getEventTicketTiers([{ args: eventId }]);
 
   const eventTicketTiersRef = useRef([]);
   const [verifyingTicket, setVerifyingTicket] = useState<{
@@ -334,6 +339,7 @@ const EventPage = () => {
   const { data: eventTicketMetadatas } = useTokenMetadataFetch({
     dids: eventTicketTiersRef.current,
   }) as { data: EventTicketMetadata[] | undefined };
+
   const {
     data: eventTicketBoughtEvents,
     refetch: refetchEventTicketBoughtEvents,
@@ -428,7 +434,7 @@ const EventPage = () => {
       setEventTicketPriceLabel(
         getEventTicketPriceRangeLabel(
           eventTicketTiers[0].map((ticketTier) => ({
-            price: ethers.utils.formatEther(ticketTier.ticketPrice),
+            price: ticketTier.ticketPrice,
             isFree: ticketTier.ticketPrice.eq(0),
           }))
         )
@@ -476,6 +482,7 @@ const EventPage = () => {
     buyEventTicketWriteData &&
       (isSuccessBuyEventTicketWrite &&
         (refetchEventTicketBoughtEvents(),
+        refetchEventTicketTiers(),
         refetchConnectedWalletOwnedTickets(),
         setIsBuyingATicket(undefined),
         onCloseCheckoutModal(),
@@ -1130,9 +1137,14 @@ const EventPage = () => {
                           >
                             {eventTicketPriceLabel}
                           </Text>
-                          <Text fontSize={"sm"} color={"textContrastSecondary"}>
-                            {eventTicketNativeCurrencyPriceLabel}
-                          </Text>
+                          {eventTicketTiers?.[0]?.length == 1 && (
+                            <Text
+                              fontSize={"sm"}
+                              color={"textContrastSecondary"}
+                            >
+                              {eventTicketNativeCurrencyPriceLabel}
+                            </Text>
+                          )}
                         </Flex>
                       </Flex>
                       <Flex gap={"2rem"}>
@@ -1329,60 +1341,65 @@ const EventPage = () => {
                             {eventTicketTiers?.[0] &&
                               eventTicketMetadatas?.length &&
                               connectedWalletOwnedTickets?.[0]?.map(
-                                ({ args }) => (
-                                  <Flex flexDir={"column"} gap={["2rem"]}>
-                                    <EventTicket
-                                      ticketData={{
-                                        title:
-                                          eventTicketMetadatas[
+                                ({ args }) =>
+                                  console.log(eventTicketTiers) || (
+                                    <Flex flexDir={"column"} gap={["2rem"]}>
+                                      <EventTicket
+                                        ticketData={{
+                                          title:
+                                            eventTicketMetadatas[
+                                              +args.ticketTierId
+                                            ].name,
+                                          desc: eventTicketMetadatas[
                                             +args.ticketTierId
-                                          ].name,
-                                        desc: eventTicketMetadatas[
-                                          +args.ticketTierId
-                                        ].description,
-                                        image: getIPFSUri(
-                                          eventTicketMetadatas[
-                                            +args.ticketTierId
-                                          ].image
-                                        ),
-                                        benefits:
-                                          eventTicketMetadatas[
-                                            +args.ticketTierId
-                                          ].__ticketTierBenefits,
-                                        imagePlaceholder:
-                                          eventTicketMetadatas[
-                                            +args.ticketTierId
-                                          ].imagePlaceholder,
-                                        price: ethers.utils.formatEther(
-                                          eventTicketTiers[0][
-                                            +args.ticketTierId
-                                          ].ticketPrice
-                                        ),
-                                        isFree:
-                                          eventTicketTiers[0][
-                                            +args.ticketTierId
-                                          ].ticketPrice.eq(0),
-                                      }}
-                                      isAbleToBuy={false}
-                                      nativeCurrencyToUsdPrice={
-                                        nativeCurrencyToUsdPrice
-                                      }
-                                    />
-                                    <Button
-                                      variant={"accent"}
-                                      width="15rem"
-                                      m={"0 auto"}
-                                      onClick={() =>
-                                        onShowTicketQrButtonClick(
-                                          args.ticketTokenId,
-                                          args.ticketTierId
-                                        )
-                                      }
-                                    >
-                                      Show ticket QR
-                                    </Button>
-                                  </Flex>
-                                )
+                                          ].description,
+                                          image: getIPFSUri(
+                                            eventTicketMetadatas[
+                                              +args.ticketTierId
+                                            ].image
+                                          ),
+                                          benefits:
+                                            eventTicketMetadatas[
+                                              +args.ticketTierId
+                                            ].__ticketTierBenefits,
+                                          imagePlaceholder:
+                                            eventTicketMetadatas[
+                                              +args.ticketTierId
+                                            ].imagePlaceholder,
+                                          price: ethers.utils.formatEther(
+                                            eventTicketTiers[0][
+                                              +args.ticketTierId
+                                            ].ticketPrice
+                                          ),
+                                          isFree:
+                                            eventTicketTiers[0][
+                                              +args.ticketTierId
+                                            ].ticketPrice.eq(0),
+                                          participantsLabel:
+                                            getEventParticipantsAmountLabel(
+                                              eventTicketTiers[0]
+                                            ),
+                                        }}
+                                        isAbleToBuy={false}
+                                        nativeCurrencyToUsdPrice={
+                                          nativeCurrencyToUsdPrice
+                                        }
+                                      />
+                                      <Button
+                                        variant={"accent"}
+                                        width="15rem"
+                                        m={"0 auto"}
+                                        onClick={() =>
+                                          onShowTicketQrButtonClick(
+                                            args.ticketTokenId,
+                                            args.ticketTierId
+                                          )
+                                        }
+                                      >
+                                        Show ticket QR
+                                      </Button>
+                                    </Flex>
+                                  )
                               )}
                           </Container>
                         )}
@@ -1669,7 +1686,7 @@ const EventPage = () => {
           bg={"accentPrimary"}
           paddingY={"2rem"}
         >
-          <Flex flex={1} direction={"column"} gap={"1rem"}>
+          <Flex flex={1} direction={"column"} gap={"2rem"}>
             <Flex
               flex={1}
               alignItems={"center"}
@@ -1695,38 +1712,47 @@ const EventPage = () => {
                 paddingLeft: "2rem",
               }}
             >
-              {eventTicketTiers &&
-                eventTicketMetadatas &&
-                eventTicketMetadatas.map((ticket, ticketIndex) => (
-                  <EventTicket
-                    ticketData={{
-                      title: eventTicketMetadatas[ticketIndex].name,
-                      desc: eventTicketMetadatas[ticketIndex].description,
-                      image: getIPFSUri(
-                        eventTicketMetadatas[ticketIndex].image
-                      ),
-                      benefits:
-                        eventTicketMetadatas[ticketIndex].__ticketTierBenefits,
-                      imagePlaceholder:
-                        eventTicketMetadatas[ticketIndex].imagePlaceholder,
-                      price: ethers.utils.formatEther(
-                        eventTicketTiers[0][ticketIndex].ticketPrice
-                      ),
-                      isFree:
-                        eventTicketTiers[0][ticketIndex].ticketPrice.eq(0),
-                    }}
-                    nativeCurrencyToUsdPrice={nativeCurrencyToUsdPrice}
-                    isBuyingTicket={
-                      (isBuyingATicket == ticketIndex &&
-                        isLoadingBuyEventTicketWrite) ||
-                      isLoadingPreparedBuyEventTicketWriteConfig ||
-                      isLoadingEventTicketBoughtEvents
-                    }
-                    onBuyButtonClick={() =>
-                      onBuyEventTicketButtonClick(ticketIndex)
-                    }
-                  />
-                ))}
+              {eventTicketTiers?.[0] &&
+                eventTicketMetadatas?.length &&
+                eventTicketMetadatas
+                  .sort((a, b) =>
+                    a.__ticketTierOrder > b.__ticketTierOrder ? 1 : -1
+                  )
+                  .map((ticketTierMetadata, ticketIndex) => (
+                    <EventTicket
+                      key={ticketIndex}
+                      ticketData={{
+                        title: ticketTierMetadata.name,
+                        desc: ticketTierMetadata.description,
+                        image: getIPFSUri(ticketTierMetadata.image),
+                        benefits: ticketTierMetadata.__ticketTierBenefits,
+                        imagePlaceholder: ticketTierMetadata.imagePlaceholder,
+                        price: eventTicketTiers[0][ticketIndex].ticketPrice,
+                        supplyLabel: getEventTicketTierLeftSupplyLabel(
+                          eventTicketTiers[0][ticketIndex]
+                        ),
+                        isFree:
+                          eventTicketTiers[0][ticketIndex].ticketPrice.eq(0),
+                      }}
+                      isAbleToBuy={
+                        getEventTicketTierLeftSupply(
+                          eventTicketTiers[0][ticketIndex]
+                        ) > 0
+                      }
+                      nativeCurrencyToUsdPrice={nativeCurrencyToUsdPrice}
+                      isBuyingTicket={
+                        (isBuyingATicket == ticketIndex &&
+                          isLoadingBuyEventTicketWrite) ||
+                        isLoadingPreparedBuyEventTicketWriteConfig ||
+                        isLoadingEventTicketBoughtEvents
+                      }
+                      onBuyButtonClick={() =>
+                        onBuyEventTicketButtonClick(
+                          +eventTicketTiers[0][ticketIndex].tier
+                        )
+                      }
+                    />
+                  ))}
             </Container>
           </Flex>
         </ModalContent>
@@ -1752,9 +1778,7 @@ const EventPage = () => {
             }}
             ticketTier={{
               name: eventTicketMetadatas[isBuyingATicket!].name,
-              price: ethers.utils.formatEther(
-                eventTicketTiers?.[0]?.[isBuyingATicket!].ticketPrice
-              ),
+              price: eventTicketTiers?.[0]?.[isBuyingATicket!].ticketPrice,
             }}
             isOpen={isCheckoutModalOpen}
             onClose={onCloseCheckoutModal}

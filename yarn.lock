@@ -8051,6 +8051,11 @@
   "resolved" "https://registry.npmjs.org/pinkie/-/pinkie-2.0.4.tgz"
   "version" "2.0.4"
 
+"pluralize@^8.0.0":
+  "integrity" "sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA=="
+  "resolved" "https://registry.npmjs.org/pluralize/-/pluralize-8.0.0.tgz"
+  "version" "8.0.0"
+
 "pngjs@^3.3.0":
   "integrity" "sha512-NCrCHhWmnQklfH4MtJMRjZ2a8c80qXeMlQMv2uVp9ISJMTt562SbGd6n2oq0PaPgKm7Z6pL9E2UlLIhC+SHL3w=="
   "resolved" "https://registry.npmjs.org/pngjs/-/pngjs-3.4.0.tgz"

@@ -36,8 +36,8 @@ export type PropsType = {
     price?: number | string;
     priceLabel?: string;
     isFree?: boolean;
-    participantsLabel?: string;
-    supplyLabel?: string;
+    participantsLabel?: string | undefined;
+    supplyLabel?: string | undefined;
     nativeCurrencyPriceLabel?: string;
     benefits?: string[];
   };
@@ -90,6 +90,7 @@ const EventTicket = (props: PropsType) => {
             zIndex="dropdown"
             borderRadius="sm"
             boxShadow="0 1px 5px var(--chakra-colors-accentPrimaryContrast)"
+            opacity={.9}
             aria-label="share"
             onClick={props.onShareButtonClick}
             icon={<Image src="/icons/share.svg" />}
@@ -241,75 +242,84 @@ const EventTicket = (props: PropsType) => {
             {props.ticketData.desc?.substring(0, 300) || "ticket description"}
           </Text>
         </Flex>
-        {props.ticketData.participantsLabel && (
-          <Flex gap=".5rem" alignItems={"center"}>
-            <Flex>
-              <Image
-                src="/graphics/graphics1.png"
-                w="2rem"
-                h="2rem"
-                borderRadius={"18px"}
-                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
-              />
-              <Image
-                src="/graphics/graphics3.png"
-                w="2rem"
-                h="2rem"
-                ml="-1rem"
-                borderRadius={"18px"}
-                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
-              />
-              <Image
-                src="/graphics/graphics4.png"
-                w="2rem"
-                h="2rem"
-                ml="-1rem"
-                borderRadius={"18px"}
-                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
-              />
+        <Flex flexDir={"column"} gap="1rem" w="100%">
+          {props.ticketData.participantsLabel && (
+            <Flex gap=".5rem" alignItems={"center"}>
+              <Flex>
+                <Image
+                  src="/graphics/graphics1.png"
+                  w="2rem"
+                  h="2rem"
+                  borderRadius={"18px"}
+                  border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+                />
+                <Image
+                  src="/graphics/graphics3.png"
+                  w="2rem"
+                  h="2rem"
+                  ml="-1rem"
+                  borderRadius={"18px"}
+                  border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+                />
+                <Image
+                  src="/graphics/graphics4.png"
+                  w="2rem"
+                  h="2rem"
+                  ml="-1rem"
+                  borderRadius={"18px"}
+                  border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+                />
+              </Flex>
+              <Text color="bg" fontWeight={"medium"}>
+                {props.ticketData.participantsLabel}
+              </Text>
             </Flex>
-            <Text color="bg" fontWeight={"medium"}>
-              {props.ticketData.participantsLabel}
-            </Text>
-          </Flex>
-        )}
-        <Flex justifyContent={"space-between"} align={"flex-end"}>
-          <Flex direction={"column"} gap={"0"}>
-            {/* <Text color="textContrast" fontSize={"sm"} fontWeight="medium">
+          )}
+          <Flex justifyContent={"space-between"}>
+            <Flex direction={"column"} gap={"0"}>
+              {/* <Text color="textContrast" fontSize={"sm"} fontWeight="medium">
               Minting price
             </Text> */}
-            <Flex align={"flex-start"} flexDir="column">
-              <Text color={"textAccent"} fontSize={"2xl"} fontWeight="bold">
-                {props.ticketData.priceLabel ||
-                  getEventTicketPriceLabel({
-                    price: props.ticketData.price,
-                    isFree: !!props.ticketData.isFree,
-                  })}
-              </Text>
-              {!props.ticketData.isFree && props.nativeCurrencyToUsdPrice && (
-                <Text
-                  color={"textContrastSecondary"}
-                  fontSize="sm"
-                  lineHeight={"1em"}
-                >
-                  {props.ticketData.nativeCurrencyPriceLabel ||
-                    getEventTicketNativeCurrencyPriceLabel(
-                      { price: props.ticketData.price },
-                      props.nativeCurrencyToUsdPrice
-                    )}
-                </Text>
-              )}
+              <Flex align={"flex-start"} flexDir="column">
+                <Flex gap=".5rem" alignItems={"flex-end"}>
+                  <Text color={"textAccent"} fontSize={"2xl"} fontWeight="bold">
+                    {props.ticketData.priceLabel ||
+                      getEventTicketPriceLabel({
+                        price: props.ticketData.price,
+                        isFree: !!props.ticketData.isFree,
+                      })}
+                  </Text>
+                  {props.ticketData.supplyLabel && (
+                    <Text color={"textContrastAccent"} lineHeight={"2rem"}>
+                      {props.ticketData.supplyLabel}
+                    </Text>
+                  )}
+                </Flex>
+                {!props.ticketData.isFree && props.nativeCurrencyToUsdPrice && (
+                  <Text
+                    color={"textContrastSecondary"}
+                    fontSize="sm"
+                    lineHeight={"1em"}
+                  >
+                    {props.ticketData.nativeCurrencyPriceLabel ||
+                      getEventTicketNativeCurrencyPriceLabel(
+                        { price: props.ticketData.price },
+                        props.nativeCurrencyToUsdPrice
+                      )}
+                  </Text>
+                )}
+              </Flex>
             </Flex>
+            <Button
+              variant={props.isAbleToBuy ? "accent" : "outlineAccent"}
+              pointerEvents={props.isAbleToBuy ? "initial" : "none"}
+              isDisabled={!props.isAbleToBuy || props.isBuyingTicket}
+              isLoading={props.isBuyingTicket}
+              onClick={props.onBuyButtonClick}
+            >
+              {props.buyButtonLabel}
+            </Button>
           </Flex>
-          <Button
-            variant={props.isAbleToBuy ? "accent" : "outlineAccent"}
-            pointerEvents={props.isAbleToBuy ? "initial" : "none"}
-            isDisabled={!props.isAbleToBuy || props.isBuyingTicket}
-            isLoading={props.isBuyingTicket}
-            onClick={props.onBuyButtonClick}
-          >
-            {props.buyButtonLabel}
-          </Button>
         </Flex>
       </Flex>
       <Modal
