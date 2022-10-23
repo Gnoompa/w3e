@@ -21,7 +21,7 @@ export type EventManagerModalProps = Omit<ModalProps, "children"> & {
 };
 
 export const Component = (props: EventManagerModalProps) => {
-  const embedWidgetCode = `<iframe src="${location.origin}/embedWidget?event=${props.eventTokenId}" border-radius: 36px; border: none; outline: none; width: 1024px;height: 625px; max-width: calc(100% - 2rem); />`;
+  const embedWidgetCode = `<iframe src="${location.origin}/embedWidget.html?event=${props.eventTokenId}" border-radius: 36px; border: none; outline: none; width: 1024px;height: 625px; max-width: calc(100% - 2rem); />`;
   const { onCopy: onCopyEmbedWidgetCode } = useClipboard(embedWidgetCode);
   const toast = useToast();
 
