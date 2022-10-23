@@ -33,6 +33,7 @@ import EventTicket, {
 } from "./ui/eventTicketCard";
 import { useGetEventsQuery } from "../helpers/eventsApi";
 import {
+  getEventParticipantsAmountLabel,
   getEventTicketNativeCurrencyPriceLabel,
   getEventTicketPriceRangeLabel,
 } from "./helpers/events";
@@ -73,11 +74,15 @@ const EventExplorer: React.FC = () => {
     title: eventData.name,
     image: getIPFSUri(eventData.image),
     imagePlaceholder: eventData.imagePlaceholder,
+    participantsLabel: getEventParticipantsAmountLabel(
+      eventData.ticketTypes.map((ticketType) => ({
+        ticketsSoldAmount: +ticketType.sold,
+      }))
+    ),
     desc: eventData.shortDescription,
-    // participantsLabel: "10 part",
     priceLabel: getEventTicketPriceRangeLabel(
       eventData.ticketTypes.map((ticketTier) => ({
-        price: +ethers.utils.formatEther(ticketTier.price),
+        price: ticketTier.price,
         isFree: !+ticketTier.price,
       }))
     ),

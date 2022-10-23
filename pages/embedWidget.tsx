@@ -11,6 +11,7 @@ import { BigNumber, ethers } from "ethers";
 import {
   Container,
   Flex,
+  Image,
   Text,
   useDisclosure,
   useToast,
@@ -21,6 +22,10 @@ import useTicketManager from "helpers/ticketManager";
 import CheckoutModal from "../components/checkoutModal";
 import { useGetEventQuery, useGetEventsQuery } from "helpers/eventsApi";
 import { css, Global } from "@emotion/react";
+import {
+  getEventParticipantsAmountLabel,
+  getEventTicketTierLeftSupplyLabel,
+} from "@components/helpers/events";
 
 export const EmbedWidget = () => {
   const router = useRouter();
@@ -42,6 +47,8 @@ export const EmbedWidget = () => {
     isFetching: isFetchingEvent,
     refetch: refetchEvent,
   } = useGetEventQuery(routerQuery.eventId);
+
+  console.log(router)
 
   const {
     eventTicketTiers,
@@ -108,7 +115,7 @@ export const EmbedWidget = () => {
     isWalletConnected ? false : (setOpenWalletConnectModal(true), true);
 
   return (
-    <Flex bg="accentPrimary" py="2rem">
+    <Flex bg="accentPrimary" py="2rem" flexDir={"column"} gap="1rem">
       <Global
         styles={css`
           body {
@@ -116,6 +123,46 @@ export const EmbedWidget = () => {
           }
         `}
       />
+      <Flex
+        gap=".5rem"
+        alignItems={"center"}
+        alignSelf={"flex-end"}
+        px={"2rem"}
+      >
+        <Flex>
+          <Image
+            src="/graphics/graphics1.png"
+            w="2rem"
+            h="2rem"
+            borderRadius={"18px"}
+            border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+          />
+          <Image
+            src="/graphics/graphics3.png"
+            w="2rem"
+            h="2rem"
+            ml="-1rem"
+            borderRadius={"18px"}
+            border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+          />
+          <Image
+            src="/graphics/graphics4.png"
+            w="2rem"
+            h="2rem"
+            ml="-1rem"
+            borderRadius={"18px"}
+            border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+          />
+        </Flex>
+        <Text color="bg" fontWeight={"medium"}>
+          {event &&
+            getEventParticipantsAmountLabel(
+              event!.ticketTypes.map((ticketType) => ({
+                ticketsSoldAmount: ticketType.sold,
+              }))
+            )}
+        </Text>
+      </Flex>
       <Container
         as={Flex}
         variant={"scrollableOverlap"}
@@ -133,9 +180,14 @@ export const EmbedWidget = () => {
               desc: ticketTier.description,
               image: getIPFSUri(ticketTier.image),
               imagePlaceholder: ticketTier.imagePlaceholder,
-              price: ethers.utils.formatEther(ticketTier.price),
+              price: ticketTier.price,
               isFree: !+ticketTier.price,
+              supplyLabel: getEventTicketTierLeftSupplyLabel({
+                ticketSupply: ticketTier.supply,
+                ticketsSoldAmount: ticketTier.sold,
+              }),
             }}
+            isAbleToBuy={!!+ticketTier.sold}
             nativeCurrencyToUsdPrice={nativeCurrencyToUsdPrice?.[0]?.answer}
             isBuyingTicket={isBuyingEventTicket}
             onBuyButtonClick={() =>

@@ -67,7 +67,7 @@ const VenueTab = () => {
 
   return (
     <TabContainer title={"Venue"}>
-      <Flex>
+      <Flex gap={"1rem"}>
         <FormControl variant="floating" id="startDate" flex={1}>
           <Input
             autoFocus

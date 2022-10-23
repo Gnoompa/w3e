@@ -90,7 +90,7 @@ const useTicketManager = (props: IProps) => {
   }, []);
 
   useEffect(() => {
-    eventTicketTiers &&
+    eventTicketTiers?.[0] &&
       !eventTicketTiersRef.current &&
       (eventTicketTiersRef.current = eventTicketTiers[0].map(
         ({ metadataUri }) => metadataUri

@@ -1,7 +1,8 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
+import pluralize from "pluralize";
 
 export const getEventTicketPriceRangeLabel = (
-  tickets: { price: number | string | undefined; isFree: boolean }[]
+  tickets: { price: BigNumberish | undefined; isFree: boolean }[]
 ): string =>
   tickets && tickets.length
     ? tickets.length > 1
@@ -16,8 +17,13 @@ export const getEventTicketPriceFromLabel = (
   tickets: Parameters<typeof getEventTicketPriceRangeLabel>[0][0][]
 ): string =>
   (
-    Math.min(tickets.map(({ price }) => +price).sort()[0], 99999)?.toFixed(2) ||
-    "FREE"
+    Math.min(
+      tickets
+        .map(({ price }) => +ethers.utils.formatUnits(price?.toString()))
+        .filter(Boolean)
+        .sort()[0] || 0,
+      99999
+    )?.toFixed(2) || "FREE"
   )
     .toString()
     .replace("99999", "99999+");
@@ -29,7 +35,7 @@ export const getEventTicketPriceLabel = (
     ? "FREE"
     : [undefined, ""].includes(ticket.price)
     ? "-"
-    : `$${Math.min(+ticket.price!, 99999)
+    : `$${Math.min(+ethers.utils.formatUnits(ticket.price?.toString()), 99999)
         ?.toFixed(2)
         .toString()
         .replace("99999.00", "99999+")}`;
@@ -54,7 +60,42 @@ export const getEventTicketNativeCurrencyPriceLabel = (
 ) =>
   ticket.price && nativeCurrencyToUsdPrice
     ? `~${(+ethers.utils.formatUnits(
-        nativeCurrencyToUsdPrice.mul(+ticket.price),
-        8
+        nativeCurrencyToUsdPrice.mul(ticket.price),
+        26
       )).toFixed(4)} MATIC`
     : "";
+
+export const getEventParticipantsAmountLabel = (
+  ticketTiers: { ticketsSoldAmount: BigNumberish }[]
+) =>
+  ((ticketTiersSoldTicketAmount) =>
+    `${ticketTiersSoldTicketAmount || 0} ${pluralize(
+      "ticket",
+      ticketTiersSoldTicketAmount
+    )} sold`)(
+    ticketTiers.reduceRight(
+      (a, b) => +a.ticketsSoldAmount + +b.ticketsSoldAmount
+    )
+  );
+
+export const getEventTicketTierLeftSupply = (ticketTier: {
+  ticketSupply: BigNumberish;
+  ticketsSoldAmount: BigNumberish;
+  ticketParams: BigNumberish;
+}) =>
+  +ticketTier.ticketParams & (1 << 3)
+    ? Infinity
+    : +ticketTier.ticketSupply - +ticketTier.ticketsSoldAmount;
+
+export const getEventTicketTierLeftSupplyLabel = (ticketTier: {
+  ticketSupply: BigNumberish;
+  ticketsSoldAmount: BigNumberish;
+}) =>
+  ((eventTicketTierLeftSupply) =>
+    `(${
+      eventTicketTierLeftSupply == Infinity ? "∞" : eventTicketTierLeftSupply
+    } left${
+      eventTicketTierLeftSupply <= 10 && eventTicketTierLeftSupply > 0
+        ? " 🔥)"
+        : ")"
+    }`)(getEventTicketTierLeftSupply(ticketTier));
