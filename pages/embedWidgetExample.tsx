@@ -25,7 +25,7 @@ export const Component = () => {
       </Heading>
       {eventId && (
         <iframe
-          src={`/embedWidget?eventId=${eventId}`}
+          src={`/embedWidget.html?eventId=${eventId}`}
           style={{
             borderRadius: "36px",
             border: "none",
