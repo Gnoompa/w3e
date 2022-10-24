@@ -21,7 +21,11 @@ export const Component = () => {
       justify={"center"}
       py="5rem"
     >
-      <Heading color={["bg", "textAccentSecondary"]} fontWeight="bold" fontSize={["2xl", "3rem"]}>
+      <Heading
+        color={["bg", "textAccentSecondary"]}
+        fontWeight="bold"
+        fontSize={["2xl", "3rem"]}
+      >
         Web3Events Widget Example
       </Heading>
       {eventId && (

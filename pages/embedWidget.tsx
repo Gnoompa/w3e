@@ -25,6 +25,7 @@ import { useGetEventQuery, useGetEventsQuery } from "helpers/eventsApi";
 import { css, Global } from "@emotion/react";
 import {
   getEventParticipantsAmountLabel,
+  getEventTicketTierLeftSupply,
   getEventTicketTierLeftSupplyLabel,
 } from "@components/helpers/events";
 
@@ -49,8 +50,6 @@ export const EmbedWidget = () => {
     refetch: refetchEvent,
   } = useGetEventQuery(routerQuery.eventId);
 
-  console.log(router);
-
   const {
     eventTicketTiers,
     eventTicketTiersMetadata,
@@ -62,6 +61,7 @@ export const EmbedWidget = () => {
     buyEventTicketWriteError,
     isBuyingEventTicket,
   } = useTicketManager({ eventTokenId: routerQuery.eventId });
+
   const [eventTicketTierToBuy, setEventTicketTierToBuy] = useState<number>();
   const {
     isOpen: isCheckoutModalOpen,
@@ -149,7 +149,13 @@ export const EmbedWidget = () => {
                 ticketParams: ticketTier.params,
               }),
             }}
-            isAbleToBuy={!!+ticketTier.sold}
+            isAbleToBuy={
+              getEventTicketTierLeftSupply({
+                ticketParams: ticketTier.params,
+                ticketsSoldAmount: ticketTier.sold,
+                ticketSupply: ticketTier.supply,
+              }) > 0
+            }
             nativeCurrencyToUsdPrice={nativeCurrencyToUsdPrice?.[0]?.answer}
             isBuyingTicket={isBuyingEventTicket}
             onBuyButtonClick={() =>
@@ -186,7 +192,7 @@ export const EmbedWidget = () => {
                 border="3px solid var(--chakra-colors-accentPrimaryContrast)"
               />
             </Flex>
-            <Text color="bg" fontWeight={"medium"}>
+            <Text color="bg" fontWeight={"semibold"}>
               {event &&
                 getEventParticipantsAmountLabel(
                   event!.ticketTypes.map((ticketType) => ({
@@ -198,9 +204,14 @@ export const EmbedWidget = () => {
           <Link href={"https://web3events.ai"} target="_blank">
             <Flex align={"center"} gap=".75rem">
               <Image src="/logo/logomd.png" w={"2rem"}></Image>
-              <Text color={"bg"} fontWeight="semibold">
-                Web3Events
-              </Text>
+              <Flex flexDir={"column"} lineHeight={"1rem"}>
+                <Text color={"bg"} fontWeight="bold">
+                  Web3
+                </Text>
+                <Text color={"bg"} fontWeight="bold">
+                  Events
+                </Text>
+              </Flex>
             </Flex>
           </Link>
         </Flex>
@@ -217,13 +228,12 @@ export const EmbedWidget = () => {
           }}
           ticketTier={{
             name: event.ticketTypes[eventTicketTierToBuy].name,
-            price: ethers.utils.formatEther(
-              event.ticketTypes[eventTicketTierToBuy].price
-            ),
+            price: event.ticketTypes[eventTicketTierToBuy].price,
           }}
           isOpen={isCheckoutModalOpen}
           onClose={onCloseCheckoutModal}
           isCompletingPurchase={isBuyingEventTicket}
+          hasTicket={!!connectedWalletEventTicketBoughtEvents?.[0]?.length}
           onCompletePurchaseButtonClick={() =>
             buyEventTicket(eventTicketTierToBuy!)
           }
