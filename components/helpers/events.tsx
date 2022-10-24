@@ -90,6 +90,7 @@ export const getEventTicketTierLeftSupply = (ticketTier: {
 export const getEventTicketTierLeftSupplyLabel = (ticketTier: {
   ticketSupply: BigNumberish;
   ticketsSoldAmount: BigNumberish;
+  ticketParams: BigNumberish;
 }) =>
   ((eventTicketTierLeftSupply) =>
     `(${

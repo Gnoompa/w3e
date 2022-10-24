@@ -10,6 +10,7 @@ import InstagramIcon from "../public/icons/insta";
 import TelegramIcon from "../public/icons/tg";
 import SiteIcon from "../public/icons/site";
 import { generateMediaPlaceholder } from "./hooks/mediaPlaceholderGenerator";
+import { Routes } from "./routes";
 
 export const defaultDateFormat = "ddd, MMM DD YYYY";
 export const defaulyIPFSgateway = /.*test|localhost.*/.test(
@@ -147,6 +148,9 @@ export const getMetadataAttribute = (
       attributeName
     )
   )[0]?.value;
+
+export const getPageRouteURLEndpoint = (route: Routes) =>
+  /.*test|localhost.*/.test(global.location?.href) ? route : `${route}.html`;
 
 export const useAppDispatch: () => AppDispatch = useDispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

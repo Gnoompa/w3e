@@ -12,6 +12,7 @@ import {
   Container,
   Flex,
   Image,
+  Link,
   Text,
   useDisclosure,
   useToast,
@@ -48,7 +49,7 @@ export const EmbedWidget = () => {
     refetch: refetchEvent,
   } = useGetEventQuery(routerQuery.eventId);
 
-  console.log(router)
+  console.log(router);
 
   const {
     eventTicketTiers,
@@ -115,7 +116,7 @@ export const EmbedWidget = () => {
     isWalletConnected ? false : (setOpenWalletConnectModal(true), true);
 
   return (
-    <Flex bg="accentPrimary" py="2rem" flexDir={"column"} gap="1rem">
+    <Flex bg="accentPrimary" py="2rem" flexDir={"column"} gap="2rem">
       <Global
         styles={css`
           body {
@@ -123,46 +124,6 @@ export const EmbedWidget = () => {
           }
         `}
       />
-      <Flex
-        gap=".5rem"
-        alignItems={"center"}
-        alignSelf={"flex-end"}
-        px={"2rem"}
-      >
-        <Flex>
-          <Image
-            src="/graphics/graphics1.png"
-            w="2rem"
-            h="2rem"
-            borderRadius={"18px"}
-            border="3px solid var(--chakra-colors-accentPrimaryContrast)"
-          />
-          <Image
-            src="/graphics/graphics3.png"
-            w="2rem"
-            h="2rem"
-            ml="-1rem"
-            borderRadius={"18px"}
-            border="3px solid var(--chakra-colors-accentPrimaryContrast)"
-          />
-          <Image
-            src="/graphics/graphics4.png"
-            w="2rem"
-            h="2rem"
-            ml="-1rem"
-            borderRadius={"18px"}
-            border="3px solid var(--chakra-colors-accentPrimaryContrast)"
-          />
-        </Flex>
-        <Text color="bg" fontWeight={"medium"}>
-          {event &&
-            getEventParticipantsAmountLabel(
-              event!.ticketTypes.map((ticketType) => ({
-                ticketsSoldAmount: ticketType.sold,
-              }))
-            )}
-        </Text>
-      </Flex>
       <Container
         as={Flex}
         variant={"scrollableOverlap"}
@@ -185,6 +146,7 @@ export const EmbedWidget = () => {
               supplyLabel: getEventTicketTierLeftSupplyLabel({
                 ticketSupply: ticketTier.supply,
                 ticketsSoldAmount: ticketTier.sold,
+                ticketParams: ticketTier.params,
               }),
             }}
             isAbleToBuy={!!+ticketTier.sold}
@@ -196,6 +158,54 @@ export const EmbedWidget = () => {
           />
         ))}
       </Container>
+      {event && (
+        <Flex justifyContent={"space-between"} px={"2rem"}>
+          <Flex gap=".5rem" alignItems={"center"}>
+            <Flex>
+              <Image
+                src="/graphics/graphics1.png"
+                w="2rem"
+                h="2rem"
+                borderRadius={"18px"}
+                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+              />
+              <Image
+                src="/graphics/graphics3.png"
+                w="2rem"
+                h="2rem"
+                ml="-1rem"
+                borderRadius={"18px"}
+                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+              />
+              <Image
+                src="/graphics/graphics4.png"
+                w="2rem"
+                h="2rem"
+                ml="-1rem"
+                borderRadius={"18px"}
+                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+              />
+            </Flex>
+            <Text color="bg" fontWeight={"medium"}>
+              {event &&
+                getEventParticipantsAmountLabel(
+                  event!.ticketTypes.map((ticketType) => ({
+                    ticketsSoldAmount: ticketType.sold,
+                  }))
+                )}
+            </Text>
+          </Flex>
+          <Link href={"https://web3events.ai"} target="_blank">
+            <Flex align={"center"} gap=".75rem">
+              <Image src="/logo/logomd.png" w={"2rem"}></Image>
+              <Text color={"bg"} fontWeight="semibold">
+                Web3Events
+              </Text>
+            </Flex>
+          </Link>
+        </Flex>
+      )}
+
       {eventTicketTierToBuy !== undefined && (
         <CheckoutModal
           event={{
