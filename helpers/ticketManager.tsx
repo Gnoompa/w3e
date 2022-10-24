@@ -43,8 +43,8 @@ const useTicketManager = (props: IProps) => {
     eventName: "TicketBought",
     filters: {
       [defaultChainId]: [
-        null,
         props.eventTokenId && BigNumber.from(props.eventTokenId).toHexString(),
+        null,
         connectedWalletAddress,
       ],
     },

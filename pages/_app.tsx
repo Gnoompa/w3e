@@ -56,7 +56,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <link rel="apple-touch-icon" sizes="256x256" href="https://static.web3events.ai/favicon/apple_toucn.png"/>
         <link rel="icon" sizes="any" type="image/svg+xml" href="https://static.web3events.ai/favicon/favicon.svg"/>
 
-        // Ссылки, и краулер гугла
+        
         <link rel="shortlink" href="https://web3Events.ai/"/>
         <link rel="canonical" href="https://web3Events.ai/"/>
         // Static speedup
