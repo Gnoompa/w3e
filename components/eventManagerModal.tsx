@@ -15,6 +15,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useClipboard } from "@chakra-ui/react";
+import { getPageRouteURLEndpoint } from "helpers/hooks";
 import { Routes } from "helpers/routes";
 import React from "react";
 
@@ -23,7 +24,11 @@ export type EventManagerModalProps = Omit<ModalProps, "children"> & {
 };
 
 export const Component = (props: EventManagerModalProps) => {
-  const embedWidgetCode = `<iframe src="${location.origin}${Routes.EmbedWidget}?eventId=${props.eventTokenId}" border-radius: 36px; border: none; outline: none; width: 1024px;height: 688px; max-width: calc(100% - 2rem); />`;
+  const embedWidgetCode = `<iframe src="${
+    location.origin
+  }${getPageRouteURLEndpoint(Routes.EmbedWidget)}?eventId=${
+    props.eventTokenId
+  }" border-radius: 36px; border: none; outline: none; width: 1024px;height: 688px; max-width: calc(100% - 2rem); />`;
   const { onCopy: onCopyEmbedWidgetCode } = useClipboard(embedWidgetCode);
   const toast = useToast();
 
@@ -77,7 +82,9 @@ export const Component = (props: EventManagerModalProps) => {
             </Text>
             <Flex gap=".5rem" align={"center"}>
               <Link
-                href={`${Routes.EmbedWidgetExample}?eventId=${props.eventTokenId}`}
+                href={`${getPageRouteURLEndpoint(
+                  Routes.EmbedWidgetExample
+                )}?eventId=${props.eventTokenId}`}
                 color="accentSecondary"
                 textDecor={"underline"}
                 target={"_blank"}
