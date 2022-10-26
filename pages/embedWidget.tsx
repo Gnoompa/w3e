@@ -14,6 +14,7 @@ import {
   Image,
   Link,
   Text,
+  useBreakpointValue,
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
@@ -28,11 +29,28 @@ import {
   getEventTicketTierLeftSupply,
   getEventTicketTierLeftSupplyLabel,
 } from "@components/helpers/events";
+import { motion } from "framer-motion";
 
 export const EmbedWidget = () => {
   const router = useRouter();
   const provider = useProvider();
   const toast = useToast();
+
+  const SwipeIcon = useBreakpointValue({
+    base: () => (
+      <motion.img
+        animate={{ rotate: [0, 15, 0, -15, 0] }}
+        transition={{
+          repeat: Infinity,
+          type: "spring",
+          duration: 1,
+        }}
+        style={{ width: "3rem", margin: "0 auto" }}
+        src="/icons/swipe.svg"
+      />
+    ),
+    md: () => <></>,
+  });
 
   const routerQuery = useRouterQuery(router);
   const {
@@ -128,11 +146,8 @@ export const EmbedWidget = () => {
         as={Flex}
         variant={"scrollableOverlap"}
         gap={"1.5rem"}
-        style={{
-          maxWidth: "100%",
-          paddingRight: "2rem",
-          paddingLeft: "2rem",
-        }}
+        px={["1rem", "2rem"]}
+        maxW={"100%"}
       >
         {event?.ticketTypes.map((ticketTier, ticketTierIndex) => (
           <EventTicket
@@ -165,55 +180,58 @@ export const EmbedWidget = () => {
         ))}
       </Container>
       {event && (
-        <Flex justifyContent={"space-between"} px={"2rem"}>
-          <Flex gap=".5rem" alignItems={"center"}>
-            <Flex>
-              <Image
-                src="/graphics/graphics1.png"
-                w="2rem"
-                h="2rem"
-                borderRadius={"18px"}
-                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
-              />
-              <Image
-                src="/graphics/graphics3.png"
-                w="2rem"
-                h="2rem"
-                ml="-1rem"
-                borderRadius={"18px"}
-                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
-              />
-              <Image
-                src="/graphics/graphics4.png"
-                w="2rem"
-                h="2rem"
-                ml="-1rem"
-                borderRadius={"18px"}
-                border="3px solid var(--chakra-colors-accentPrimaryContrast)"
-              />
-            </Flex>
-            <Text color="bg" fontWeight={"semibold"}>
-              {event &&
-                getEventParticipantsAmountLabel(
-                  event!.ticketTypes.map((ticketType) => ({
-                    ticketsSoldAmount: ticketType.sold,
-                  }))
-                )}
-            </Text>
-          </Flex>
-          <Link href={"https://web3events.ai"} target="_blank">
-            <Flex align={"center"} gap=".75rem">
-              <Image src="/logo/logomd.png" w={"2rem"}></Image>
-              <Flex flexDir={"column"} lineHeight={"1rem"}>
-                <Text color={"bg"} fontWeight="bold">
-                  Web3
-                </Text>
-                <Text color={"bg"} fontWeight="bold">
-                  Events
-                </Text>
+        <Flex flexDir={"column"} gap="1rem">
+          <SwipeIcon />
+          <Flex justifyContent={"space-between"} px={["1rem", "2rem"]}>
+            <Flex gap=".5rem" alignItems={"center"}>
+              <Flex>
+                <Image
+                  src="/graphics/graphics1.png"
+                  w="2rem"
+                  h="2rem"
+                  borderRadius={"18px"}
+                  border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+                />
+                <Image
+                  src="/graphics/graphics3.png"
+                  w="2rem"
+                  h="2rem"
+                  ml="-1rem"
+                  borderRadius={"18px"}
+                  border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+                />
+                <Image
+                  src="/graphics/graphics4.png"
+                  w="2rem"
+                  h="2rem"
+                  ml="-1rem"
+                  borderRadius={"18px"}
+                  border="3px solid var(--chakra-colors-accentPrimaryContrast)"
+                />
               </Flex>
+              <Text color="bg" fontWeight={"semibold"}>
+                {event &&
+                  getEventParticipantsAmountLabel(
+                    event!.ticketTypes.map((ticketType) => ({
+                      ticketsSoldAmount: ticketType.sold,
+                    }))
+                  )}
+              </Text>
             </Flex>
-          </Link>
+            <Link href={"https://web3events.ai"} target="_blank">
+              <Flex align={"center"} gap=".75rem">
+                <Image src="/logo/logomd.png" w={"2rem"}></Image>
+                <Flex flexDir={"column"} lineHeight={"1rem"}>
+                  <Text color={"bg"} fontWeight="bold">
+                    Web3
+                  </Text>
+                  <Text color={"bg"} fontWeight="bold">
+                    Events
+                  </Text>
+                </Flex>
+              </Flex>
+            </Link>
+          </Flex>
         </Flex>
       )}
 
