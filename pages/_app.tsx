@@ -40,10 +40,6 @@ function MyApp({ Component, pageProps }: AppProps) {
         <link rel="apple-touch-icon" sizes="144x144" href="/mobile/apple-icon-144x144.png"/>
         <link rel="apple-touch-icon" sizes="152x152" href="/mobile/apple-icon-152x152.png"/>
         <link rel="apple-touch-icon" sizes="180x180" href="/mobile/apple-icon-180x180.png"/>
-        <link rel="icon" type="image/png" sizes="192x192"  href="/mobile/android-icon-192x192.png"/>
-        <link rel="icon" type="image/png" sizes="32x32" href="/mobile/favicon-32x32.png"/>
-        <link rel="icon" type="image/png" sizes="96x96" href="/mobile/favicon-96x96.png"/>
-        <link rel="icon" type="image/png" sizes="16x16" href="/mobile/favicon-16x16.png"/>
         <link rel="manifest" href="/mobile/manifest.json"/>
         <meta name="msapplication-TileColor" content="#ffffff"/>
         <meta name="msapplication-TileImage" content="/mobile/ms-icon-144x144.png"/>
@@ -52,11 +48,15 @@ function MyApp({ Component, pageProps }: AppProps) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge"/>
         <meta content="width=device-width, initial-scale=1, maximum-scale=5" name="viewport"/>
         // icons
-        <link rel="shortcut icon" type="image/x-icon" sizes="32x32" href="https://static.web3events.ai/favicon/shortcut.png"/>
-        <link rel="apple-touch-icon" sizes="256x256" href="https://static.web3events.ai/favicon/apple_toucn.png"/>
-        <link rel="icon" sizes="any" type="image/svg+xml" href="https://static.web3events.ai/favicon/favicon.svg"/>
+        <link rel="shortcut icon" type="image/x-icon" sizes="32x32" href="/favicon.ico"/>
+        <link rel="apple-touch-icon" sizes="256x256" href="/favicon.ico"/>
+        <link rel="icon" sizes="any" type="image/svg+xml" href="/favicon.ico"/>
+        <link rel="icon" type="image/png" sizes="192x192"  href="/mobile/android-icon-192x192.png"/>
+        <link rel="icon" type="image/png" sizes="32x32" href="/mobile/favicon-32x32.png"/>
+        <link rel="icon" type="image/png" sizes="96x96" href="/mobile/favicon-96x96.png"/>
+        <link rel="icon" type="image/png" sizes="16x16" href="/mobile/favicon-16x16.png"/>
 
-        
+
         <link rel="shortlink" href="https://web3Events.ai/"/>
         <link rel="canonical" href="https://web3Events.ai/"/>
         // Static speedup
@@ -75,9 +75,34 @@ function MyApp({ Component, pageProps }: AppProps) {
         <meta property="og:url" content="https://web3events.ai"/>
         <meta property="og:site_name" content="Web3Events" data-rh="true"/>
         <meta property="og:image:type" content="image/png" data-rh="true"/>
-        <meta property="og:image" content="https://static.web3events.ai/external/openGraph-cover.png" data-rh="true"/>
+        <meta property="og:image" content="/openGraph-cover.png" data-rh="true"/>
         <meta property="og:image:width" content="400"/>
         <meta property="og:image:height" content="400"/>
+
+        // OpenGraph
+<meta property="og:title" content="Ticketing Platform for Web3 Community - Web3Events"/>
+<meta property="og:description" content="Web3Events is a platform for ticket management in web3 world. Create, distribute and verify tickets in an intuitive interface."/>
+<meta property="og:image:alt" content="New building block for the people of the world." data-rh="true"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://web3events.ai"/>
+<meta property="og:site_name" content="Web3Events" data-rh="true"/>
+<meta property="og:image:type" content="image/png" data-rh="true"/>
+<meta property="og:image" content="/openGraph-cover.png" data-rh="true"/>
+<meta property="og:image:width" content="400"/>
+<meta property="og:image:height" content="400"/>
+
+// Twitter
+<meta property="twitter:title" content="Web3Events – Create &amp; Receive NFT Tickets" data-rh="true"/>
+<meta property="twitter:description" content="Web3Events is an all in one place to create, distribute and verify tickets for your event in a convenient way. Start building web3 community today. 🎫" data-rh="true"/>
+<meta property="twitter:image:alt" content="New building block for the people of the world." data-rh="true"/>
+<meta property="twitter:card" content="summary_large_image" data-rh="true"/>
+<meta property="twitter:site" content="@Web3Events_ai" data-rh="true"/>
+<meta property="twitter:creator" content="@petr_kuznetsof" data-rh="true"/>
+<meta property="twitter:image" content="/twitter-cover.png" data-rh="true"/>
+<meta property="twitter:image:width" content="400"/>
+<meta property="twitter:image:height" content="400"/>
+
 
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-470YTNYWWK"/>
         <style>{`

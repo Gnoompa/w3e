@@ -254,7 +254,7 @@ const EventForm = () => {
           ...eventPersistedFormData.isFreeTicketPrice,
           ...eventPersistedFormData.ticketPrice,
         }).map((price, index) => ({
-          price: +(price || 0),
+          price: +price ? ethers.utils.parseEther(price) : 0,
           isFree: eventPersistedFormData.isFreeTicketPrice[index],
         }))
       ),
@@ -278,8 +278,6 @@ const EventForm = () => {
             }
           : undefined,
     });
-
-    console.log(eventFormData.editingTicketIndex);
 
     eventPersistedFormDataRef.current = eventPersistedFormData;
   }, [
@@ -515,7 +513,11 @@ const EventForm = () => {
           title: eventPersistedFormData.eventTicketName[ticketIndex],
           desc: eventPersistedFormData.eventTicketDescription[ticketIndex],
           benefits: eventPersistedFormData.ticketBenefits[ticketIndex],
-          price: eventPersistedFormData.ticketPrice[ticketIndex],
+          price: +eventPersistedFormData.ticketPrice[ticketIndex]
+            ? ethers.utils.parseEther(
+                eventPersistedFormData.ticketPrice[ticketIndex]
+              )
+            : 0,
           isFree: eventPersistedFormData.isFreeTicketPrice[ticketIndex],
         };
 
@@ -541,7 +543,7 @@ const EventForm = () => {
             eventFormData.ticketPosters?.[ticketIndex] ||
             defaultEventPosterImageFile!,
         })
-          .then((response) => ticketMetadataUrls.push(response))
+          .then((response) => ticketMetadataUrls[ticketIndex] = response)
           .catch(console.error)
       ),
     ]);
@@ -566,6 +568,7 @@ const EventForm = () => {
     );
 
     console.log(
+      eventTicketMetadatas,
       {
         ticketSupply: ticketsData.map(({ ticketSupply }) => ticketSupply),
         ticketPrice: ticketsData.map(({ ticketPrice }) => ticketPrice),

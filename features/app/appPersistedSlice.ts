@@ -6,7 +6,7 @@ export interface State {
 }
 
 export const initialState: State = {
-  ver: "a-1.0",
+  ver: "a-1.0.1",
 };
 
 export const slice = createSlice({

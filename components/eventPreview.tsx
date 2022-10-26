@@ -101,15 +101,17 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
         zIndex={"base"}
         bg={"#000"}
       >
-        <Text
-          color={"textContrastSecondary"}
-          pos={"absolute"}
-          top={"50%"}
-          left={"50%"}
-          transform={"translate(-50%,-50%)"}
-        >
-          Your cover will be here
-        </Text>
+        {!eventData?.image && (
+          <Text
+            color={"textContrastSecondary"}
+            pos={"absolute"}
+            top={"50%"}
+            left={"50%"}
+            transform={"translate(-50%,-50%)"}
+          >
+            Your cover will be here
+          </Text>
+        )}
         {eventData?.image && (
           <Flex justify={"center"}>
             <Box

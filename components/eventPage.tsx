@@ -601,12 +601,8 @@ const EventPage = () => {
     inNativeCurrency
       ? eventTicketTiers[0][ticketIndex].ticketPrice
       : nativeCurrencyToUsdPrice
-          .mul(10 ** 10)
-          .mul(
-            +ethers.utils.formatEther(
-              eventTicketTiers[0][0].ticketPrice.toString()
-            )
-          );
+          .mul(eventTicketTiers[0][ticketIndex].ticketPrice.toString())
+          .div(10 ** 8);
 
   const getEventTicketPriceLabel = (ticketIndex: number) =>
     eventTicketTiers?.[0]?.[ticketIndex] &&
@@ -684,6 +680,8 @@ const EventPage = () => {
     setIsBuyingATicket(ticketTierId);
     onOpenCheckoutModal();
   };
+
+  console.log(eventTicketTiers);
 
   const onCompleteCheckout = (ticketRecievers: string[]) => {
     if (
@@ -1341,65 +1339,63 @@ const EventPage = () => {
                             {eventTicketTiers?.[0] &&
                               eventTicketMetadatas?.length &&
                               connectedWalletOwnedTickets?.[0]?.map(
-                                ({ args }) =>
-                                  console.log(eventTicketTiers) || (
-                                    <Flex flexDir={"column"} gap={["2rem"]}>
-                                      <EventTicket
-                                        ticketData={{
-                                          title:
-                                            eventTicketMetadatas[
-                                              +args.ticketTierId
-                                            ].name,
-                                          desc: eventTicketMetadatas[
+                                ({ args }) => (
+                                  <Flex flexDir={"column"} gap={["2rem"]}>
+                                    <EventTicket
+                                      ticketData={{
+                                        title:
+                                          eventTicketMetadatas[
                                             +args.ticketTierId
-                                          ].description,
-                                          image: getIPFSUri(
-                                            eventTicketMetadatas[
-                                              +args.ticketTierId
-                                            ].image
+                                          ].name,
+                                        desc: eventTicketMetadatas[
+                                          +args.ticketTierId
+                                        ].description,
+                                        image: getIPFSUri(
+                                          eventTicketMetadatas[
+                                            +args.ticketTierId
+                                          ].image
+                                        ),
+                                        benefits:
+                                          eventTicketMetadatas[
+                                            +args.ticketTierId
+                                          ].__ticketTierBenefits,
+                                        imagePlaceholder:
+                                          eventTicketMetadatas[
+                                            +args.ticketTierId
+                                          ].imagePlaceholder,
+                                        price:
+                                          eventTicketTiers[0][
+                                            +args.ticketTierId
+                                          ].ticketPrice,
+                                        isFree:
+                                          eventTicketTiers[0][
+                                            +args.ticketTierId
+                                          ].ticketPrice.eq(0),
+                                        participantsLabel:
+                                          getEventParticipantsAmountLabel(
+                                            eventTicketTiers[0]
                                           ),
-                                          benefits:
-                                            eventTicketMetadatas[
-                                              +args.ticketTierId
-                                            ].__ticketTierBenefits,
-                                          imagePlaceholder:
-                                            eventTicketMetadatas[
-                                              +args.ticketTierId
-                                            ].imagePlaceholder,
-                                          price: ethers.utils.formatEther(
-                                            eventTicketTiers[0][
-                                              +args.ticketTierId
-                                            ].ticketPrice
-                                          ),
-                                          isFree:
-                                            eventTicketTiers[0][
-                                              +args.ticketTierId
-                                            ].ticketPrice.eq(0),
-                                          participantsLabel:
-                                            getEventParticipantsAmountLabel(
-                                              eventTicketTiers[0]
-                                            ),
-                                        }}
-                                        isAbleToBuy={false}
-                                        nativeCurrencyToUsdPrice={
-                                          nativeCurrencyToUsdPrice
-                                        }
-                                      />
-                                      <Button
-                                        variant={"accent"}
-                                        width="15rem"
-                                        m={"0 auto"}
-                                        onClick={() =>
-                                          onShowTicketQrButtonClick(
-                                            args.ticketTokenId,
-                                            args.ticketTierId
-                                          )
-                                        }
-                                      >
-                                        Show ticket QR
-                                      </Button>
-                                    </Flex>
-                                  )
+                                      }}
+                                      isAbleToBuy={false}
+                                      nativeCurrencyToUsdPrice={
+                                        nativeCurrencyToUsdPrice
+                                      }
+                                    />
+                                    <Button
+                                      variant={"accent"}
+                                      width="15rem"
+                                      m={"0 auto"}
+                                      onClick={() =>
+                                        onShowTicketQrButtonClick(
+                                          args.ticketTokenId,
+                                          args.ticketTierId
+                                        )
+                                      }
+                                    >
+                                      Show ticket QR
+                                    </Button>
+                                  </Flex>
+                                )
                               )}
                           </Container>
                         )}
