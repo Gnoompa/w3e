@@ -230,6 +230,14 @@ const EventPage = () => {
   const [isEventPosterLoaded, setIsEventPosterLoaded] = useState(false);
   const { data: events } = getEvents([{ args: [[eventId]] }]);
   const { data: eventManagers } = getEventManagers([{ args: [eventId] }]);
+  const [eventTicketsToRefetch, setEventTicketsToRefetch] =
+    useState<{ ticketTokenId: BigNumberish }[]>();
+  const { data: eventTickets, refetch: refetchEventTickets } = getEventTickets([
+    {
+      enabled: false,
+      args: [eventTicketsToRefetch?.map(({ ticketTokenId }) => ticketTokenId)],
+    },
+  ]);
   const { data: eventTicketTiers, refetch: refetchEventTicketTiers } =
     getEventTicketTiers([{ args: eventId }]);
 
@@ -383,6 +391,8 @@ const EventPage = () => {
     eventMetadata &&
     (getMetadataAttribute(eventMetadata!, "Location") ||
       getMetadataAttribute(eventMetadata!, "Additional Location Info"));
+
+  const ticketVerificationCleanupTimeout = useRef(0);
 
   useEffect(() => {
     eventId ? initEvent(eventId) : router.push("/app");
@@ -541,13 +551,13 @@ const EventPage = () => {
   }, [isTicketMessageSigningError]);
 
   useEffect(() => {
-    verifyingTicket && refetchBalanceOfVerifyingTicket();
-  }, [verifyingTicket]);
+    eventTicketsToRefetch?.length && refetchEventTickets();
+  }, [eventTicketsToRefetch]);
 
   useEffect(() => {
-    balanceOfVerifyingTicketData?.[0] &&
+    eventTickets?.[0]?.[0] &&
       (setIsTicketVerificationSuccessful(
-        balanceOfVerifyingTicketData[0].gte(1)
+        eventTickets?.[0]?.[0]?.eventTokenId.toString() == eventId
       ),
       // setScannedTickets([
       //   ...scannedTickets,
@@ -556,15 +566,30 @@ const EventPage = () => {
       //     ownerAddress: verifiedTicketWalletAddress!,
       //   },
       // ]),
-      setTimeout(
+      clearTimeout(ticketVerificationCleanupTimeout.current),
+      (ticketVerificationCleanupTimeout.current = setTimeout(
         () => (
           setIsTicketVerificationSuccessful(undefined),
           setIsVerifyingATicket(false),
+          setEventTicketsToRefetch([]),
           setVerifyingTicket(undefined)
         ),
         7000
-      ));
-  }, [balanceOfVerifyingTicketData]);
+      )));
+  }, [eventTickets]);
+
+  useEffect(() => {
+    isTicketVerificationSuccessful === true
+      ? toast({
+          title: "This ticket is valid",
+          status: "success",
+        })
+      : isTicketVerificationSuccessful === false &&
+        toast({
+          title: "Invalid ticket",
+          status: "error",
+        });
+  }, [isTicketVerificationSuccessful]);
 
   useEffect(() => {
     copiedValue && onCopy();
@@ -630,6 +655,7 @@ const EventPage = () => {
         const { ticketTokenId, ticketTier, signedMessage } = JSON.parse(
           scannedTicketQrDataJSON
         );
+
         const ownerAddress =
           signedMessage &&
           ethers.utils.verifyMessage(ticketSigningMessage, signedMessage);
@@ -638,10 +664,11 @@ const EventPage = () => {
           ownerAddress &&
           (setIsVerifyingATicket(true),
           setVerifyingTicket({ tokenId: ticketTokenId, tier: ticketTier }),
+          setEventTicketsToRefetch([{ ticketTokenId }]),
           setVerifiedTicketWalletAddress(ownerAddress));
       } catch (error) {
         handleError(error as Error, {
-          title: "Ivalid ticket QR code",
+          title: "Invalid ticket QR code",
           description: "",
         });
         setIsVerifyingATicket(false);
@@ -680,8 +707,6 @@ const EventPage = () => {
     setIsBuyingATicket(ticketTierId);
     onOpenCheckoutModal();
   };
-
-  console.log(eventTicketTiers);
 
   const onCompleteCheckout = (ticketRecievers: string[]) => {
     if (
@@ -1451,8 +1476,7 @@ const EventPage = () => {
                                   verifying...
                                 </Text>
                               </Flex>
-                            )) ||
-                            (isTicketVerificationSuccessful === true && (
+                            )) || (
                               <Flex w={"100%"} gap={"2rem"} flexDir="column">
                                 <Text
                                   alignSelf={"center"}
@@ -1460,76 +1484,70 @@ const EventPage = () => {
                                 >
                                   scan for ticket QR
                                 </Text>
-                                <Flex
-                                  flexDir={"column"}
-                                  alignSelf="flex-start"
-                                  flex={1}
-                                >
-                                  <Flex gap={"1rem"} flexDir="column">
-                                    <Flex gap={"1rem"} align="center">
-                                      <Image
-                                        src="/icons/ticket.svg"
-                                        opacity={0.8}
-                                        w={"1rem"}
-                                        h={"1rem"}
-                                      />
-                                      <Text
-                                        color={"textContrast"}
-                                        fontSize={"xl"}
-                                        fontWeight="semibold"
+                                {isTicketVerificationSuccessful === true && (
+                                  <Flex
+                                    flexDir={"column"}
+                                    alignSelf="flex-start"
+                                    flex={1}
+                                  >
+                                    <Flex gap={"1rem"} flexDir="column">
+                                      <Flex gap={"1rem"} align="center">
+                                        <Image
+                                          src="/icons/ticket.svg"
+                                          opacity={0.8}
+                                          w={"1rem"}
+                                          h={"1rem"}
+                                        />
+                                        <Text
+                                          color={"textContrast"}
+                                          fontSize={"xl"}
+                                          fontWeight="semibold"
+                                        >
+                                          {
+                                            eventTicketMetadatas?.[
+                                              verifyingTicket?.tier
+                                            ]?.name
+                                          }
+                                        </Text>
+                                      </Flex>
+                                      <Flex
+                                        flexDirection={"column"}
+                                        gap=".25rem"
+                                        maxH="7rem"
+                                        overflowY="scroll"
                                       >
-                                        {
-                                          eventTicketMetadatas?.[
-                                            verifyingTicket?.tier
-                                          ]?.name
-                                        }
-                                      </Text>
-                                    </Flex>
-                                    <Flex
-                                      flexDirection={"column"}
-                                      gap=".25rem"
-                                      maxH="7rem"
-                                      overflowY="scroll"
-                                    >
-                                      {eventTicketMetadatas?.[
-                                        verifyingTicket?.tier
-                                      ]?.__ticketTierBenefits?.map(
-                                        (benefit) => (
-                                          <Flex
-                                            as={motion.div}
-                                            initial={
-                                              fadeTopSlideAnimation["false"]
-                                            }
-                                            animate={
-                                              fadeTopSlideAnimation["true"]
-                                            }
-                                            gap=".75rem"
-                                            alignItems={"center"}
-                                          >
-                                            <CheckIcon color={"success"} />
-                                            <Text
-                                              color={"textContrast"}
-                                              fontWeight="semibold"
+                                        {eventTicketMetadatas?.[
+                                          verifyingTicket?.tier
+                                        ]?.__ticketTierBenefits?.map(
+                                          (benefit) => (
+                                            <Flex
+                                              as={motion.div}
+                                              initial={
+                                                fadeTopSlideAnimation["false"]
+                                              }
+                                              animate={
+                                                fadeTopSlideAnimation["true"]
+                                              }
+                                              gap=".75rem"
+                                              alignItems={"center"}
                                             >
-                                              {benefit.substring(0, 55) ||
-                                                "benefit"}
-                                            </Text>
-                                          </Flex>
-                                        )
-                                      )}
+                                              <CheckIcon color={"success"} />
+                                              <Text
+                                                color={"textContrast"}
+                                                fontWeight="semibold"
+                                              >
+                                                {benefit.substring(0, 55) ||
+                                                  "benefit"}
+                                              </Text>
+                                            </Flex>
+                                          )
+                                        )}
+                                      </Flex>
                                     </Flex>
                                   </Flex>
-                                </Flex>
+                                )}
                               </Flex>
-                            )) ||
-                            (isTicketVerificationSuccessful === false && (
-                              <Flex align={"center"} gap={"1rem"}>
-                                <Text fontWeight={"bold"}>
-                                  ticket is not valid
-                                </Text>
-                                <WarningIcon color={"red"} />
-                              </Flex>
-                            ))
+                            )
                           ) : (
                             <Text color={"textContrastSecondary"}>
                               scan for ticket QR

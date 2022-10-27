@@ -39,7 +39,7 @@ export const MenuBreakpointValue = () =>
             </MenuItem>
             <MenuItem>
               <NextLink href={Routes.EventExplorer} passHref>
-                <Link>Explore events</Link>
+                <Link>Explore</Link>
               </NextLink>
             </MenuItem>
             <MenuItem>
@@ -50,11 +50,11 @@ export const MenuBreakpointValue = () =>
                 </Badge>
               </Flex>
             </MenuItem>
-            <MenuItem>
+            {/* <MenuItem>
               <NextLink href={Routes.FAQ} passHref>
                 <Link>FAQ</Link>
               </NextLink>
-            </MenuItem>
+            </MenuItem> */}
           </MenuList>
         </Menu>
       ),
@@ -63,7 +63,7 @@ export const MenuBreakpointValue = () =>
           <Menu>
             <MenuButton>
               <Flex align={"center"} gap={".5rem"} fontWeight="medium">
-                Products
+                Create
                 <ChevronDownIcon />
               </Flex>
             </MenuButton>
@@ -124,20 +124,20 @@ export const MenuBreakpointValue = () =>
           <Flex align={"center"} gap=".5rem">
             <NextLink href={Routes.EventExplorer}>
               <Text fontSize={"md"} fontWeight="medium" cursor={"pointer"}>
-                Explore events
+                Explore
               </Text>
               {/* <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
             soon
           </Badge> */}
             </NextLink>
           </Flex>
-          <Link href={Routes.FAQ}>
+          {/* <Link href={Routes.FAQ}>
             <NextLink href={Routes.FAQ} passHref>
               <Text fontSize={"md"} fontWeight="medium" cursor={"pointer"}>
                 FAQ
               </Text>
             </NextLink>
-          </Link>
+          </Link> */}
         </Flex>
       ),
     },

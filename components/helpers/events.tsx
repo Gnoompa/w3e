@@ -69,15 +69,15 @@ export const getEventParticipantsAmountLabel = (
   ticketTiers: { ticketsSoldAmount: BigNumberish }[]
 ) =>
   ((ticketTiersSoldTicketAmount) =>
-    `${ticketTiersSoldTicketAmount || 0} ${pluralize(
+    `${+ticketTiersSoldTicketAmount || 0} ${pluralize(
       "ticket",
       ticketTiersSoldTicketAmount
     )} sold`)(
-    ticketTiers.length
+    ticketTiers.length > 1
       ? ticketTiers.reduceRight(
           (a, b) => +a.ticketsSoldAmount + +b.ticketsSoldAmount
         )
-      : 0
+      : ticketTiers?.[0]?.ticketsSoldAmount || 0
   );
 
 export const getEventTicketTierLeftSupply = (ticketTier: {
