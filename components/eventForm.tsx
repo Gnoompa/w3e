@@ -543,7 +543,7 @@ const EventForm = () => {
             eventFormData.ticketPosters?.[ticketIndex] ||
             defaultEventPosterImageFile!,
         })
-          .then((response) => ticketMetadataUrls[ticketIndex] = response)
+          .then((response) => (ticketMetadataUrls[ticketIndex] = response))
           .catch(console.error)
       ),
     ]);
@@ -577,7 +577,10 @@ const EventForm = () => {
           ({ subscriptionDuration }) => subscriptionDuration
         ),
         beneficiary: eventPersistedFormData.beneficiary,
-        managers: [eventPersistedFormData.beneficiary],
+        managers: [
+          eventPersistedFormData.beneficiary,
+          ...eventPersistedFormData.eventManagers,
+        ],
         eventMetadataUri: eventMetadataUrl || "",
         ticketMetadataUri: ticketMetadataUrls,
       },
@@ -589,7 +592,10 @@ const EventForm = () => {
       ticketPrice: ticketsData.map(({ ticketPrice }) => ticketPrice),
       ticketParams: ticketsData.map(({ params }) => params),
       beneficiary: eventPersistedFormData.beneficiary,
-      managers: [eventPersistedFormData.beneficiary],
+      managers: [
+        eventPersistedFormData.beneficiary,
+        ...eventPersistedFormData.eventManagers,
+      ],
       eventMetadataUri: eventMetadataUrl,
       ticketMetadataUri: ticketMetadataUrls,
     });

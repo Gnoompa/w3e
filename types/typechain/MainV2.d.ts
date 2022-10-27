@@ -471,11 +471,12 @@ export class MainV2 extends BaseContract {
       overrides?: CallOverrides
     ): Promise<
       [
-        ([BigNumber, BigNumber, BigNumber, BigNumber] & {
+        ([BigNumber, BigNumber, BigNumber, BigNumber, string] & {
           eventTokenId: BigNumber;
           params: BigNumber;
           price: BigNumber;
           tier: BigNumber;
+          owner: string;
         })[]
       ]
     >;
@@ -503,11 +504,12 @@ export class MainV2 extends BaseContract {
       overrides?: CallOverrides
     ): Promise<
       [
-        [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        [BigNumber, BigNumber, BigNumber, BigNumber, string] & {
           eventTokenId: BigNumber;
           params: BigNumber;
           price: BigNumber;
           tier: BigNumber;
+          owner: string;
         }
       ]
     >;
@@ -648,11 +650,12 @@ export class MainV2 extends BaseContract {
     ticketTokenIds: BigNumberish[],
     overrides?: CallOverrides
   ): Promise<
-    ([BigNumber, BigNumber, BigNumber, BigNumber] & {
+    ([BigNumber, BigNumber, BigNumber, BigNumber, string] & {
       eventTokenId: BigNumber;
       params: BigNumber;
       price: BigNumber;
       tier: BigNumber;
+      owner: string;
     })[]
   >;
 
@@ -676,11 +679,12 @@ export class MainV2 extends BaseContract {
     ticketTokenId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, BigNumber, BigNumber, BigNumber] & {
+    [BigNumber, BigNumber, BigNumber, BigNumber, string] & {
       eventTokenId: BigNumber;
       params: BigNumber;
       price: BigNumber;
       tier: BigNumber;
+      owner: string;
     }
   >;
 
@@ -822,11 +826,12 @@ export class MainV2 extends BaseContract {
       ticketTokenIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<
-      ([BigNumber, BigNumber, BigNumber, BigNumber] & {
+      ([BigNumber, BigNumber, BigNumber, BigNumber, string] & {
         eventTokenId: BigNumber;
         params: BigNumber;
         price: BigNumber;
         tier: BigNumber;
+        owner: string;
       })[]
     >;
 
@@ -850,11 +855,12 @@ export class MainV2 extends BaseContract {
       ticketTokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [BigNumber, BigNumber, BigNumber, BigNumber, string] & {
         eventTokenId: BigNumber;
         params: BigNumber;
         price: BigNumber;
         tier: BigNumber;
+        owner: string;
       }
     >;
 

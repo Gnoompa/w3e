@@ -20,7 +20,7 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface MainInterface extends ethers.utils.Interface {
+interface MainV4Interface extends ethers.utils.Interface {
   functions: {
     "TICKET_BOUGHT_BIT()": FunctionFragment;
     "TICKET_SPENT_BIT()": FunctionFragment;
@@ -41,9 +41,17 @@ interface MainInterface extends ethers.utils.Interface {
     "getOwnedEventTicket(address,uint256)": FunctionFragment;
     "getSlippageRate()": FunctionFragment;
     "initialize(address,address)": FunctionFragment;
+    "initializeV2()": FunctionFragment;
+    "initializeV3()": FunctionFragment;
+    "initializeV4()": FunctionFragment;
+    "name()": FunctionFragment;
     "owner()": FunctionFragment;
     "proxiableUUID()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
+    "setContractName(string)": FunctionFragment;
+    "setEventTicketMetadata(uint256,uint256,string)": FunctionFragment;
+    "setEventTicketSupply(uint256,uint256,uint256)": FunctionFragment;
+    "setEventTicketTierPrice(uint256,uint256,uint256)": FunctionFragment;
     "setFeeCollector(address)": FunctionFragment;
     "setFeeRate(uint8)": FunctionFragment;
     "setSlippageRate(uint8)": FunctionFragment;
@@ -141,6 +149,19 @@ interface MainInterface extends ethers.utils.Interface {
     functionFragment: "initialize",
     values: [string, string]
   ): string;
+  encodeFunctionData(
+    functionFragment: "initializeV2",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "initializeV3",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "initializeV4",
+    values?: undefined
+  ): string;
+  encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "proxiableUUID",
@@ -149,6 +170,22 @@ interface MainInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setContractName",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setEventTicketMetadata",
+    values: [BigNumberish, BigNumberish, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setEventTicketSupply",
+    values: [BigNumberish, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setEventTicketTierPrice",
+    values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setFeeCollector",
@@ -245,6 +282,19 @@ interface MainInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "initializeV2",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "initializeV3",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "initializeV4",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "proxiableUUID",
@@ -252,6 +302,22 @@ interface MainInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setContractName",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setEventTicketMetadata",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setEventTicketSupply",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setEventTicketTierPrice",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -345,7 +411,7 @@ export type TicketTierCreatedEvent = TypedEvent<
 
 export type UpgradedEvent = TypedEvent<[string] & { implementation: string }>;
 
-export class Main extends BaseContract {
+export class MainV4 extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -386,7 +452,7 @@ export class Main extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: MainInterface;
+  interface: MainV4Interface;
 
   functions: {
     TICKET_BOUGHT_BIT(overrides?: CallOverrides): Promise<[number]>;
@@ -515,11 +581,51 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    initializeV2(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    initializeV3(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    initializeV4(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    name(overrides?: CallOverrides): Promise<[string]>;
+
     owner(overrides?: CallOverrides): Promise<[string]>;
 
     proxiableUUID(overrides?: CallOverrides): Promise<[string]>;
 
     renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setContractName(
+      _name: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setEventTicketMetadata(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      metadataUri: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setEventTicketSupply(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      supply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setEventTicketTierPrice(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      price: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -685,11 +791,51 @@ export class Main extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  initializeV2(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  initializeV3(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  initializeV4(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  name(overrides?: CallOverrides): Promise<string>;
+
   owner(overrides?: CallOverrides): Promise<string>;
 
   proxiableUUID(overrides?: CallOverrides): Promise<string>;
 
   renounceOwnership(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setContractName(
+    _name: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setEventTicketMetadata(
+    eventTokenId: BigNumberish,
+    ticketTier: BigNumberish,
+    metadataUri: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setEventTicketSupply(
+    eventTokenId: BigNumberish,
+    ticketTier: BigNumberish,
+    supply: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setEventTicketTierPrice(
+    eventTokenId: BigNumberish,
+    ticketTier: BigNumberish,
+    price: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -855,11 +1001,42 @@ export class Main extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    initializeV2(overrides?: CallOverrides): Promise<void>;
+
+    initializeV3(overrides?: CallOverrides): Promise<void>;
+
+    initializeV4(overrides?: CallOverrides): Promise<void>;
+
+    name(overrides?: CallOverrides): Promise<string>;
+
     owner(overrides?: CallOverrides): Promise<string>;
 
     proxiableUUID(overrides?: CallOverrides): Promise<string>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
+    setContractName(_name: string, overrides?: CallOverrides): Promise<void>;
+
+    setEventTicketMetadata(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      metadataUri: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setEventTicketSupply(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      supply: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setEventTicketTierPrice(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      price: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     setFeeCollector(
       newFeeCollector: string,
@@ -1136,11 +1313,51 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    initializeV2(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    initializeV3(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    initializeV4(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    name(overrides?: CallOverrides): Promise<BigNumber>;
+
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     proxiableUUID(overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setContractName(
+      _name: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setEventTicketMetadata(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      metadataUri: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setEventTicketSupply(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      supply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setEventTicketTierPrice(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      price: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1279,11 +1496,51 @@ export class Main extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    initializeV2(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    initializeV3(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    initializeV4(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     proxiableUUID(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setContractName(
+      _name: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setEventTicketMetadata(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      metadataUri: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setEventTicketSupply(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      supply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setEventTicketTierPrice(
+      eventTokenId: BigNumberish,
+      ticketTier: BigNumberish,
+      price: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
