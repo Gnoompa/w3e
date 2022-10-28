@@ -1,5 +1,9 @@
 import { Flex, Heading } from "@chakra-ui/react";
-import { getPageRouteURLEndpoint, useRouterQuery } from "helpers/hooks";
+import {
+  getIsTestInstanse,
+  getPageRouteURLEndpoint,
+  useRouterQuery,
+} from "helpers/hooks";
 import { Routes } from "helpers/routes";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -23,9 +27,11 @@ export const Component = () => {
     >
       {eventId && (
         <iframe
-          src={`${getPageRouteURLEndpoint(
-            Routes.EmbedWidget
-          )}?eventId=${eventId}`}
+          src={`${
+            getIsTestInstanse()
+              ? "https://test.widget.web3events.ai"
+              : "https://widget.web3events.ai"
+          }${Routes.EmbedWidget}.html?eventId=${eventId}`}
           style={{
             borderRadius: "36px",
             border: "none",

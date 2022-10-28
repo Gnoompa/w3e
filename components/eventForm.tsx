@@ -32,6 +32,7 @@ import {
   SocialMediaIds,
   useScrollShadow,
   uploadMetadata,
+  defaultTimeFormat,
 } from "helpers/hooks";
 import { BigNumber, BigNumberish, ethers, FixedNumber } from "ethers";
 import dynamic from "next/dynamic";
@@ -245,6 +246,24 @@ const EventForm = () => {
           ? date.format(
               new Date(eventPersistedFormData.eventEndDate),
               defaultDateFormat
+            )
+          : "",
+      ].filter(Boolean),
+      time: [
+        eventPersistedFormData.eventStartTime
+          ? date.format(
+              new Date(
+                date.parse(eventPersistedFormData.eventStartTime, "hh:mm")
+              ),
+              defaultTimeFormat
+            )
+          : "",
+        eventPersistedFormData.eventEndTime
+          ? date.format(
+              new Date(
+                date.parse(eventPersistedFormData.eventEndTime, "hh:mm")
+              ),
+              defaultTimeFormat
             )
           : "",
       ].filter(Boolean),

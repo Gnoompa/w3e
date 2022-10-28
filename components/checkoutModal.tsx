@@ -13,8 +13,13 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import React, { KeyboardEventHandler, useEffect, useState } from "react";
+import date from "date-and-time";
 import { CreatableSelect } from "chakra-react-select";
-import { formatWalletAddress, useAppSelector } from "helpers/hooks";
+import {
+  defaultDateFormat,
+  formatWalletAddress,
+  useAppSelector,
+} from "helpers/hooks";
 import { isAddress } from "ethers/lib/utils";
 import { CalendarIcon } from "@chakra-ui/icons";
 import {
@@ -165,6 +170,11 @@ export const Component = (props: CheckoutModalProps) => {
               {!props.hasTicket && (
                 <Button
                   variant={"accent"}
+                  isDisabled={
+                    !!ticketRecievers?.filter(
+                      ({ value }) => value == connectedWalletAddress
+                    ).length
+                  }
                   onClick={() =>
                     setTicketRecievers([
                       ...ticketRecievers,
@@ -194,16 +204,34 @@ export const Component = (props: CheckoutModalProps) => {
               >
                 {props.event.name}
               </Text>
+              <Flex mt={"1rem"} gap={".5rem"} alignItems={"center"}>
+                <Image
+                  src="/icons/ticket.svg"
+                  opacity={0.8}
+                  w={"1rem"}
+                  h={"1rem"}
+                  mt=".25rem"
+                  alignSelf={"flex-start"}
+                ></Image>
+                <Text color={"textContrastAccent"}>
+                  {props.ticketTier.name}
+                </Text>
+              </Flex>
               {props.event.startDate && (
-                <Flex gap={".75rem"} mt=".5rem" alignItems={"center"}>
+                <Flex gap={".75rem"} alignItems={"center"}>
                   <Image
                     src="/icons/calendar.svg"
                     opacity={0.8}
                     w={"1rem"}
                     h={"1rem"}
+                    mt=".25rem"
+                    alignSelf={"flex-start"}
                   ></Image>
                   <Text color={"textContrastAccent"}>
-                    {props.event.startDate}
+                    {date.format(
+                      new Date(props.event.startDate),
+                      defaultDateFormat
+                    )}
                   </Text>
                 </Flex>
               )}
@@ -214,26 +242,22 @@ export const Component = (props: CheckoutModalProps) => {
                     opacity={0.8}
                     w={"1rem"}
                     h={"1rem"}
+                    mt=".25rem"
+                    alignSelf={"flex-start"}
                   ></Image>
                   <Text color={"textContrastAccent"}>
                     {props.event.location}
                   </Text>
                 </Flex>
               )}
-              <Flex gap={".75rem"} alignItems={"center"}>
-                <Image
-                  src="/icons/ticket.svg"
-                  opacity={0.8}
-                  w={"1rem"}
-                  h={"1rem"}
-                ></Image>
-                <Text color={"textContrastAccent"}>
-                  {props.ticketTier.name}
-                </Text>
-              </Flex>
             </Flex>
           </Flex>
-          <Flex justifyContent={"space-between"} alignItems={"flex-end"}>
+          <Flex
+            flexDirection={["column", "row"]}
+            justifyContent={["space-between"]}
+            gap={"1rem"}
+            alignItems={["center", "flex-end"]}
+          >
             <Flex direction={"column"} mt=".5rem">
               <Flex align={"flex-start"} flexDir="column">
                 <Text color={"textAccent"} fontSize={"2xl"} fontWeight="bold">
@@ -258,7 +282,7 @@ export const Component = (props: CheckoutModalProps) => {
             </Flex>
             <Button
               variant={"accent"}
-              alignSelf={"flex-end"}
+              alignSelf={["center", "flex-end"]}
               isLoading={props.isCompletingPurchase}
               isDisabled={!ticketRecievers.length}
               onClick={() =>

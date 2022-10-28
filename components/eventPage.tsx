@@ -42,6 +42,12 @@ import {
   Icon,
   AlertIcon,
   Link,
+  useBreakpointValue,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverCloseButton,
+  PopoverBody,
 } from "@chakra-ui/react";
 import {
   getIPFSUri,
@@ -838,6 +844,22 @@ const EventPage = () => {
     onOpenEventManagerModal();
   };
 
+  const SwipeIcon = useBreakpointValue({
+    base: () => (
+      <motion.img
+        animate={{ rotate: [0, 15, 0, -15, 0] }}
+        transition={{
+          repeat: Infinity,
+          type: "spring",
+          duration: 1,
+        }}
+        style={{ width: "3rem", margin: "0 auto" }}
+        src="/icons/swipe.svg"
+      />
+    ),
+    md: () => <></>,
+  });
+
   return (
     <Container
       mt={["-3.5rem", "-3.5rem", "-2.5rem"]}
@@ -957,6 +979,22 @@ const EventPage = () => {
                             eventMetadata,
                             "Event Start Date"
                           )}
+                          {getMetadataAttribute(
+                            eventMetadata,
+                            "Event Start Time"
+                          ) && (
+                            <Text
+                              color={"textContrast"}
+                              whiteSpace={"nowrap"}
+                              lineHeight={".5rem"}
+                              fontSize={["xs"]}
+                            >
+                              {getMetadataAttribute(
+                                eventMetadata,
+                                "Event Start Time"
+                              )}
+                            </Text>
+                          )}
                         </Text>
                         {getMetadataAttribute(
                           eventMetadata,
@@ -973,51 +1011,106 @@ const EventPage = () => {
                                 eventMetadata,
                                 "Event End Date"
                               )}
+                              {getMetadataAttribute(
+                                eventMetadata,
+                                "Event End Time"
+                              ) && (
+                                <Text
+                                  color={"textContrast"}
+                                  whiteSpace={"nowrap"}
+                                  lineHeight={".5rem"}
+                                  fontSize={["xs"]}
+                                >
+                                  {getMetadataAttribute(
+                                    eventMetadata,
+                                    "Event End Time"
+                                  )}
+                                </Text>
+                              )}
                             </Text>
                           </Flex>
                         )}
                       </Flex>
                     )}
                     {eventHasSetLocation && (
-                      <Flex gap={".5rem"} align={"center"}>
-                        <Image src="/icons/location.svg"></Image>
-                        <Text
-                          color={"textContrast"}
-                          whiteSpace={"nowrap"}
-                          maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
-                          fontSize={["sm"]}
-                          overflow={"hidden"}
-                          textOverflow={"ellipsis"}
-                        >
-                          {[
-                            getMetadataAttribute(eventMetadata, "Location"),
-                            getMetadataAttribute(
-                              eventMetadata,
-                              "Additional Location Info"
-                            ),
-                          ]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </Text>
-                      </Flex>
+                      <Popover>
+                        <PopoverTrigger>
+                          <Flex
+                            gap={".5rem"}
+                            align={"center"}
+                            cursor={"pointer"}
+                          >
+                            <Image src="/icons/location.svg"></Image>
+                            <Text
+                              color={"textContrast"}
+                              whiteSpace={"nowrap"}
+                              maxW={[
+                                "13rem",
+                                "13rem",
+                                "13rem",
+                                "13rem",
+                                "19rem",
+                              ]}
+                              fontSize={["sm"]}
+                              overflow={"hidden"}
+                              textOverflow={"ellipsis"}
+                            >
+                              {[
+                                getMetadataAttribute(eventMetadata, "Location"),
+                                getMetadataAttribute(
+                                  eventMetadata,
+                                  "Additional Location Info"
+                                ),
+                              ]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </Text>
+                          </Flex>
+                        </PopoverTrigger>
+                        <PopoverContent>
+                          <PopoverCloseButton />
+                          <PopoverBody>
+                            {[
+                              getMetadataAttribute(eventMetadata, "Location"),
+                              getMetadataAttribute(
+                                eventMetadata,
+                                "Additional Location Info"
+                              ),
+                            ]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </PopoverBody>
+                        </PopoverContent>
+                      </Popover>
                     )}
                   </Flex>
-                  <Heading
-                    position={"absolute"}
-                    top={
-                      eventHasSetDates || eventHasSetLocation
-                        ? ["-3rem", "-3rem", "-4rem"]
-                        : ["-1rem", "-1rem", "-2rem"]
-                    }
-                    color={"textContrast"}
-                    maxW={"95%"}
-                    fontSize={["2xl", "2xl", "4xl"]}
-                    whiteSpace={"nowrap"}
-                    overflow={"hidden"}
-                    textOverflow={"ellipsis"}
-                  >
-                    {eventMetadata?.name}
-                  </Heading>
+                  <Popover>
+                    <PopoverTrigger>
+                      <Heading
+                        cursor={"pointer"}
+                        position={"absolute"}
+                        top={
+                          eventHasSetDates || eventHasSetLocation
+                            ? ["-3rem", "-3rem", "-4rem"]
+                            : ["-1rem", "-1rem", "-2rem"]
+                        }
+                        color={"textContrast"}
+                        maxW={"95%"}
+                        fontSize={["2xl", "2xl", "4xl"]}
+                        whiteSpace={["nowrap"]}
+                        overflow={"hidden"}
+                        textOverflow={"ellipsis"}
+                      >
+                        {eventMetadata?.name}
+                      </Heading>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <PopoverCloseButton />
+                      <PopoverBody>
+                        <Text>{eventMetadata?.name}</Text>
+                      </PopoverBody>
+                    </PopoverContent>
+                  </Popover>
                   {getMetadataAttribute(eventMetadata, "media") && (
                     <Flex
                       pos={"absolute"}
@@ -1588,7 +1681,11 @@ const EventPage = () => {
                   >
                     Short Description
                   </Heading>
-                  <Text color={"textContrast"} mt={".5rem"}>
+                  <Text
+                    color={"textContrast"}
+                    mt={".5rem"}
+                    whiteSpace={"pre-wrap"}
+                  >
                     {eventMetadata?.description}
                   </Text>
                 </Flex>
@@ -1603,7 +1700,11 @@ const EventPage = () => {
                     >
                       Long Description
                     </Heading>
-                    <Text color={"textContrast"} mt={".5rem"}>
+                    <Text
+                      color={"textContrast"}
+                      mt={".5rem"}
+                      whiteSpace={"pre-wrap"}
+                    >
                       {getMetadataAttribute(eventMetadata, "Long Description")}
                     </Text>
                   </Flex>
@@ -1705,7 +1806,7 @@ const EventPage = () => {
               flex={1}
               alignItems={"center"}
               justify={"space-between"}
-              paddingX={"2rem"}
+              paddingX={["1rem", "2rem"]}
             >
               <Heading color="textContrast">Select ticket</Heading>
               <ModalCloseButton
@@ -1719,12 +1820,10 @@ const EventPage = () => {
             <Container
               as={Flex}
               variant={"scrollableOverlap"}
+              justifyContent={["initial", "initial", "center"]}
               gap={"1.5rem"}
-              style={{
-                maxWidth: "100%",
-                paddingRight: "2rem",
-                paddingLeft: "2rem",
-              }}
+              maxW={"100%"}
+              px={["1rem", "2rem"]}
             >
               {eventTicketTiers?.[0] &&
                 eventTicketMetadatas?.length &&
@@ -1768,6 +1867,7 @@ const EventPage = () => {
                     />
                   ))}
             </Container>
+            <SwipeIcon />
           </Flex>
         </ModalContent>
       </Modal>
