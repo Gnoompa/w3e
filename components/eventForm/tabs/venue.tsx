@@ -225,6 +225,7 @@ const VenueTab = () => {
               autoFocus
               value={eventPersistedFormData.eventAdditionalLocationInfo}
               placeholder=" "
+              maxLength={200}
               onChange={(event) =>
                 dispatch(
                   upsertEvent({

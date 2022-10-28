@@ -13,6 +13,7 @@ import { generateMediaPlaceholder } from "./hooks/mediaPlaceholderGenerator";
 import { Routes } from "./routes";
 
 export const defaultDateFormat = "ddd, MMM DD YYYY";
+export const defaultTimeFormat = "hh:mm A";
 export const defaulyIPFSgateway = /.*test|localhost.*/.test(
   global.location?.href
 )
@@ -47,6 +48,10 @@ export function useDebounce<T>(value: T, delay?: number): T {
   }, [value, delay]);
 
   return debouncedValue;
+}
+
+export function getIsTestInstanse(): Boolean {
+  return /.*test|localhost.*/.test(global.location?.href);
 }
 
 export function useScrollShadow(element: HTMLElement | null): boolean {
@@ -150,7 +155,9 @@ export const getMetadataAttribute = (
   )[0]?.value;
 
 export const getPageRouteURLEndpoint = (route: Routes) =>
-  /.*test|localhost.*/.test(global.location?.href) ? route : `${route}.html`;
+  /http(s?):\/\/localhost.*/.test(global.location?.href)
+    ? route
+    : `${route}.html`;
 
 export const useAppDispatch: () => AppDispatch = useDispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

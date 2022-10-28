@@ -13,6 +13,11 @@ import {
   ModalBody,
   ModalContent,
   Button,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverCloseButton,
+  PopoverBody,
 } from "@chakra-ui/react";
 import { ArrowForwardIcon, LinkIcon } from "@chakra-ui/icons";
 import { SocialMediaIds, socialMediaIdToComponentMap } from "helpers/hooks";
@@ -32,6 +37,7 @@ export type EventProps = {
   image?: string | JSX.Element;
   location?: string | JSX.Element;
   date?: (string | JSX.Element)[];
+  time?: (string | JSX.Element)[];
   mediaLinks?: { [key in SocialMediaIds]?: string };
   eventTicketPriceLabel?: string | JSX.Element;
   eventTicketsSupplyLabel?: string | number | JSX.Element;
@@ -206,9 +212,19 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
                   fontSize={["sm"]}
                 >
                   {eventData?.date?.[0] || "date"}
+                  {eventData?.time?.[0] && (
+                    <Text
+                      color={"textContrast"}
+                      whiteSpace={"nowrap"}
+                      lineHeight={".5rem"}
+                      fontSize={["xs"]}
+                    >
+                      {eventData?.time?.[0]}
+                    </Text>
+                  )}
                 </Text>
                 {eventData?.date?.[1] && (
-                  <Flex gap={".5rem"}>
+                  <Flex gap={".5rem"} align={"center"}>
                     <ArrowForwardIcon color={"textContrast"} />
                     <Text
                       color={"textContrast"}
@@ -216,23 +232,42 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
                       fontSize={["sm"]}
                     >
                       {eventData?.date?.[1]}
+                      {eventData?.time?.[1] && (
+                        <Text
+                          color={"textContrast"}
+                          whiteSpace={"nowrap"}
+                          lineHeight={".5rem"}
+                          fontSize={["xs"]}
+                        >
+                          {eventData?.time?.[1]}
+                        </Text>
+                      )}
                     </Text>
                   </Flex>
                 )}
               </Flex>
-              <Flex gap={".5rem"} align={"center"}>
-                <Image src="/icons/location.svg"></Image>
-                <Text
-                  color={"textContrast"}
-                  whiteSpace={"nowrap"}
-                  maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
-                  fontSize={["sm"]}
-                  overflow={"hidden"}
-                  textOverflow={"ellipsis"}
-                >
-                  {eventData?.location || "location"}
-                </Text>
-              </Flex>
+
+              <Popover>
+                <PopoverTrigger>
+                  <Flex gap={".5rem"} align={"center"} cursor={"pointer"}>
+                    <Image src="/icons/location.svg"></Image>
+                    <Text
+                      color={"textContrast"}
+                      maxW={["13rem", "13rem", "13rem", "13rem", "19rem"]}
+                      fontSize={["sm"]}
+                      whiteSpace={"nowrap"}
+                      overflow={"hidden"}
+                      textOverflow={"ellipsis"}
+                    >
+                      {eventData?.location || "location"}
+                    </Text>
+                  </Flex>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <PopoverCloseButton />
+                  <PopoverBody>{eventData?.location || "location"}</PopoverBody>
+                </PopoverContent>
+              </Popover>
             </Flex>
             <Flex
               pos={"absolute"}
@@ -245,8 +280,8 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
               <Heading
                 color={"textContrast"}
                 maxW={"100%"}
-                whiteSpace={"nowrap"}
                 overflow={"hidden"}
+                fontSize="3xl"
                 textOverflow={"ellipsis"}
               >
                 {eventData?.name || "event title"}
@@ -293,60 +328,67 @@ const EventPreview = ({ eventData = {} }: { eventData?: EventProps }) => {
               </Flex>
             </Flex>
           </Container>
-          <Flex direction={"column"} px={"1rem"}>
-            <Heading
-              fontSize={"md"}
-              color={"textContrastSecondary"}
-              fontWeight={"md"}
-            >
-              Short Description
-            </Heading>
-            <Text color={"textContrast"} mt={".5rem"}>
-              {eventData?.shortDescription || "-"}
-            </Text>
-          </Flex>
-          <Flex direction={"column"} px={"1rem"}>
-            <Heading
-              fontSize={"md"}
-              color={"textContrastSecondary"}
-              fontWeight={"md"}
-            >
-              Long Description
-            </Heading>
-            <Text color={"textContrast"} mt={".5rem"}>
-              {eventData?.longDescription || "-"}
-            </Text>
-          </Flex>
-          <Flex direction={"column"} px={"1rem"}>
-            <Heading
-              fontSize={"md"}
-              color={"textContrastSecondary"}
-              fontWeight={"md"}
-            >
-              Contact Information
-            </Heading>
-            {eventData?.mediaLinks?.[SocialMediaIds.Site] ? (
-              <Link
-                mt="1rem"
-                href={eventData.mediaLinks[SocialMediaIds.Site]!}
-                target={"_blank"}
+          <Flex
+            flexDir={"column"}
+            gap={"2rem"}
+            maxH={"18rem"}
+            overflowY={"scroll"}
+          >
+            <Flex direction={"column"} px={"1rem"}>
+              <Heading
+                fontSize={"md"}
+                color={"textContrastSecondary"}
+                fontWeight={"md"}
               >
-                <Button
-                  variant={"icon"}
-                  p={"1rem"}
-                  as={motion.div}
-                  initial={fadeRightSlideAnimation["false"]}
-                  animate={fadeRightSlideAnimation["true"]}
-                >
-                  {eventData.mediaLinks[SocialMediaIds.Site]}
-                  <LinkIcon ml=".5rem" />
-                </Button>
-              </Link>
-            ) : (
-              <Text color={"textContrast"} mt={".5rem"}>
-                -
+                Short Description
+              </Heading>
+              <Text color={"textContrast"} mt={".5rem"} whiteSpace={"pre-wrap"}>
+                {eventData?.shortDescription || "-"}
               </Text>
-            )}
+            </Flex>
+            <Flex direction={"column"} px={"1rem"}>
+              <Heading
+                fontSize={"md"}
+                color={"textContrastSecondary"}
+                fontWeight={"md"}
+              >
+                Long Description
+              </Heading>
+              <Text color={"textContrast"} mt={".5rem"} whiteSpace={"pre-wrap"}>
+                {eventData?.longDescription || "-"}
+              </Text>
+            </Flex>
+            <Flex direction={"column"} px={"1rem"}>
+              <Heading
+                fontSize={"md"}
+                color={"textContrastSecondary"}
+                fontWeight={"md"}
+              >
+                Contact Information
+              </Heading>
+              {eventData?.mediaLinks?.[SocialMediaIds.Site] ? (
+                <Link
+                  mt="1rem"
+                  href={eventData.mediaLinks[SocialMediaIds.Site]!}
+                  target={"_blank"}
+                >
+                  <Button
+                    variant={"icon"}
+                    p={"1rem"}
+                    as={motion.div}
+                    initial={fadeRightSlideAnimation["false"]}
+                    animate={fadeRightSlideAnimation["true"]}
+                  >
+                    {eventData.mediaLinks[SocialMediaIds.Site]}
+                    <LinkIcon ml=".5rem" />
+                  </Button>
+                </Link>
+              ) : (
+                <Text color={"textContrast"} mt={".5rem"}>
+                  -
+                </Text>
+              )}
+            </Flex>
           </Flex>
         </Flex>
       </Container>

@@ -18,7 +18,7 @@ export default () => {
 
   const validationSchema = (value: Partial<typeof eventPersistedForm>) =>
     object({
-      eventTitle: string().required().min(3).max(45),
+      eventTitle: string().required().min(3).max(50),
       eventShortDescription: string().required(),
       ticketPrice: object().test(
         (ticketPrice) =>

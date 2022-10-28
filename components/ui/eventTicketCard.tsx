@@ -90,7 +90,7 @@ const EventTicket = (props: PropsType) => {
             zIndex="dropdown"
             borderRadius="sm"
             boxShadow="0 1px 5px var(--chakra-colors-accentPrimaryContrast)"
-            opacity={.9}
+            opacity={0.9}
             aria-label="share"
             onClick={props.onShareButtonClick}
             icon={<Image src="/icons/share.svg" />}
@@ -149,13 +149,13 @@ const EventTicket = (props: PropsType) => {
       </Flex>
       <Flex
         direction={"column"}
-        p={"1rem 1.5rem"}
-        gap={"1rem"}
+        p={[".75rem 1rem", "1rem 1.5rem"]}
+        gap={[".5rem", "1rem"]}
         flex={1}
         justifyContent={"space-between"}
         borderTop="1px solid #565656"
       >
-        <Flex direction={"column"} gap={"1rem"}>
+        <Flex direction={"column"} gap={[".5rem", "1rem"]}>
           <Text
             fontSize="2xl"
             lineHeight={"1.75rem"}
@@ -181,11 +181,14 @@ const EventTicket = (props: PropsType) => {
                 alignItems={"center"}
               >
                 <CheckIcon
+                  mt=".25rem"
+                  alignSelf={"flex-start"}
                   color={benefit ? "success" : "textContrastSecondary"}
                 />
                 <Text
                   color={benefit ? "textContrast" : "textContrastSecondary"}
                   fontWeight="semibold"
+                  whiteSpace={"pre-wrap"}
                 >
                   {benefit.substring(0, 55) || "benefit"}
                 </Text>
@@ -238,6 +241,7 @@ const EventTicket = (props: PropsType) => {
             color={
               props.ticketData.desc ? "textContrast" : "textContrastSecondary"
             }
+            whiteSpace={"pre-wrap"}
           >
             {props.ticketData.desc?.substring(0, 300) || "ticket description"}
           </Text>
@@ -275,12 +279,16 @@ const EventTicket = (props: PropsType) => {
               </Text>
             </Flex>
           )}
-          <Flex justifyContent={"space-between"}>
+          <Flex
+            flexDir={["column", "row"]}
+            gap={".75rem"}
+            justifyContent={"space-between"}
+          >
             <Flex direction={"column"} gap={"0"}>
               {/* <Text color="textContrast" fontSize={"sm"} fontWeight="medium">
               Minting price
             </Text> */}
-              <Flex align={"flex-start"} flexDir="column">
+              <Flex align={["center", "flex-start"]} flexDir="column">
                 <Flex gap=".5rem" alignItems={"flex-end"}>
                   <Text color={"textAccent"} fontSize={"2xl"} fontWeight="bold">
                     {props.ticketData.priceLabel ||

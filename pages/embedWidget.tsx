@@ -145,11 +145,13 @@ export const EmbedWidget = () => {
       <Container
         as={Flex}
         variant={"scrollableOverlap"}
+        justifyContent={["initial", "initial", "center"]}
         gap={"1.5rem"}
         px={["1rem", "2rem"]}
         maxW={"100%"}
       >
         {event?.ticketTypes.map((ticketTier, ticketTierIndex) => (
+          console.log(ticketTier.metadata.__ticketTierBenefits)||
           <EventTicket
             ticketData={{
               title: ticketTier.name,
@@ -163,6 +165,7 @@ export const EmbedWidget = () => {
                 ticketsSoldAmount: ticketTier.sold,
                 ticketParams: ticketTier.params,
               }),
+              benefits: ticketTier.metadata.__ticketTierBenefits
             }}
             isAbleToBuy={
               getEventTicketTierLeftSupply({
