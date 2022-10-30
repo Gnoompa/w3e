@@ -80,8 +80,7 @@ export const MenuBreakpointValue = () =>
                         fontSize="sm"
                         color={"textContrastSecondary"}
                       >
-                        General event creation platform, backed by NFT
-                        technology
+                        all-in-one event constructor backed by NFTs
                       </Text>
                     </Flex>
                     <ChevronRightIcon w={"1.5rem"} h="1.5rem" />
@@ -108,8 +107,8 @@ export const MenuBreakpointValue = () =>
                       fontSize="sm"
                       color={"textContrastSecondary"}
                     >
-                      Tie physical world subscriptions to blockchain backed
-                      infrastructure
+                      blockchain based subscriptions for online and offline
+                      experiences
                     </Text>
                   </Flex>
                   <ChevronRightIcon

@@ -67,15 +67,19 @@ const useTicketManager = (props: IProps) => {
     ...buyEventTicketWriteConfigToPrepare,
   });
 
-  const { data: buyEventTicketWriteResponse, write: buyEventTicketWrite } =
-    buyEventTicketContractCall(preparedBuyEventTicketWriteConfig);
+  const {
+    data: buyEventTicketWriteResponse,
+    isError: isErrorBuyEventTicketWrite,
+    error: buyEventTicketWriteError,
+    write: buyEventTicketWrite,
+  } = buyEventTicketContractCall(preparedBuyEventTicketWriteConfig);
 
   const {
     isLoading: isLoadingBuyEventTicketWrite,
     data: buyEventTicketWriteData,
     isSuccess: isSuccessBuyEventTicketWrite,
-    isError: isErrorBuyEventTicketWrite,
-    error: buyEventTicketWriteError,
+    isError: isErrorWaitForBuyEventTicketWrite,
+    error: waitForBuyEventTicketWriteError,
   } = useWaitForTransaction({
     hash: buyEventTicketWriteResponse?.hash,
     wait: buyEventTicketWriteResponse?.wait,
@@ -84,6 +88,10 @@ const useTicketManager = (props: IProps) => {
   const [eventTicketTierIdToBeBought, setEventTicketTierIdToBeBought] =
     useState<number>();
   const isBuyingEventTicket = eventTicketTierIdToBeBought !== undefined;
+
+  useEffect(() => {
+    isErrorBuyEventTicketWrite && setEventTicketTierIdToBeBought(undefined);
+  }, [isErrorBuyEventTicketWrite]);
 
   useEffect(() => {
     refetchConnectedWalletEventTicketBoughtEvents();
@@ -101,11 +109,11 @@ const useTicketManager = (props: IProps) => {
     refetchConnectedWalletEventTicketBoughtEvents();
   }, [isSuccessBuyEventTicketWrite]);
 
-  useEffect(() => {
-    isWalletConnected &&
-      isBuyingEventTicket &&
-      buyEventTicket(eventTicketTierIdToBeBought);
-  }, [isWalletConnected, isBuyingEventTicket]);
+  // useEffect(() => {
+  //   isWalletConnected &&
+  //     isBuyingEventTicket &&
+  //     buyEventTicket(eventTicketTierIdToBeBought);
+  // }, [isWalletConnected, isBuyingEventTicket]);
 
   useEffect(() => {
     buyEventTicketWriteConfigToPrepare &&
@@ -121,12 +129,16 @@ const useTicketManager = (props: IProps) => {
       setEventTicketTierIdToBeBought(undefined));
   }, [buyEventTicketWriteData, isSuccessBuyEventTicketWrite]);
 
-  const buyEventTicket = (ticketTierId: number) => {
+  const buyEventTicket = (ticketTierId: number, _for: string[]) => {
     setEventTicketTierIdToBeBought(ticketTierId);
 
     (props.eventTokenId && eventTicketTiers && mbConnectWallet()) ||
       setBuyEventTicketWriteConfigToPrepare({
-        args: [props.eventTokenId!, ticketTierId, [connectedWalletAddress!]],
+        args: [
+          props.eventTokenId!,
+          ticketTierId,
+          _for || [connectedWalletAddress!],
+        ],
         overrides: {
           value: getEventTicketPrice(ticketTierId),
         },

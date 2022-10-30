@@ -92,6 +92,8 @@ export const EmbedWidget = () => {
   } = getNativeCurrencyToUsdPrice();
   const refetchNativeCurrencyToUsdPriceInterval = 10000;
 
+  const [hasBoughtTicket, setHasBoughtTicket] = useState(false);
+
   useEffect(() => {
     setInterval(
       refetchNativeCurrencyToUsdPrice,
@@ -100,29 +102,27 @@ export const EmbedWidget = () => {
   }, []);
 
   useEffect(() => {
+    isSuccessBuyEventTicketWrite && setHasBoughtTicket(true);
+  }, [isSuccessBuyEventTicketWrite]);
+
+  useEffect(() => {
     isWalletConnected &&
       eventTicketTierToBuy !== undefined &&
       onOpenCheckoutModal();
   }, [isWalletConnected]);
 
   useEffect(() => {
-    isSuccessBuyEventTicketWrite &&
+    isSuccessBuyEventTicketWrite && setHasBoughtTicket(true);
+
+    isErrorBuyEventTicketWrite &&
       (setEventTicketTierToBuy(undefined),
-      onCloseCheckoutModal(),
       toast({
-        title: "A ticket has been bought",
-        status: "success",
+        title: "Couldn't buy a ticket",
+        status: "error",
         isClosable: true,
-      })),
-      isErrorBuyEventTicketWrite &&
-        (setEventTicketTierToBuy(undefined),
-        toast({
-          title: "Couldn't buy a ticket",
-          status: "error",
-          isClosable: true,
-        }),
-        console.error(buyEventTicketWriteError));
-  }, [isSuccessBuyEventTicketWrite]);
+      }),
+      console.error(buyEventTicketWriteError));
+  }, [isSuccessBuyEventTicketWrite, isErrorBuyEventTicketWrite]);
 
   const onBuyEventTicketButtonClick = (ticketTierIndex: number) => {
     setEventTicketTierToBuy(ticketTierIndex);
@@ -150,37 +150,41 @@ export const EmbedWidget = () => {
         px={["1rem", "2rem"]}
         maxW={"100%"}
       >
-        {event?.ticketTypes.map((ticketTier, ticketTierIndex) => (
-          console.log(ticketTier.metadata.__ticketTierBenefits)||
-          <EventTicket
-            ticketData={{
-              title: ticketTier.name,
-              desc: ticketTier.description,
-              image: getIPFSUri(ticketTier.image),
-              imagePlaceholder: ticketTier.imagePlaceholder,
-              price: ticketTier.price,
-              isFree: !+ticketTier.price,
-              supplyLabel: getEventTicketTierLeftSupplyLabel({
-                ticketSupply: ticketTier.supply,
-                ticketsSoldAmount: ticketTier.sold,
-                ticketParams: ticketTier.params,
-              }),
-              benefits: ticketTier.metadata.__ticketTierBenefits
-            }}
-            isAbleToBuy={
-              getEventTicketTierLeftSupply({
-                ticketParams: ticketTier.params,
-                ticketsSoldAmount: ticketTier.sold,
-                ticketSupply: ticketTier.supply,
-              }) > 0
-            }
-            nativeCurrencyToUsdPrice={nativeCurrencyToUsdPrice?.[0]?.answer}
-            isBuyingTicket={isBuyingEventTicket}
-            onBuyButtonClick={() =>
-              onBuyEventTicketButtonClick(ticketTierIndex)
-            }
-          />
-        ))}
+        {event?.ticketTypes &&
+          [...event.ticketTypes]
+            .sort((a, b) =>
+              a.__ticketTierOrder > b.__ticketTierOrder ? 1 : -1
+            )
+            .map((ticketTier, ticketTierIndex) => (
+              <EventTicket
+                ticketData={{
+                  title: ticketTier.name,
+                  desc: ticketTier.description,
+                  image: getIPFSUri(ticketTier.image),
+                  imagePlaceholder: ticketTier.imagePlaceholder,
+                  price: ticketTier.price,
+                  isFree: !+ticketTier.price,
+                  supplyLabel: getEventTicketTierLeftSupplyLabel({
+                    ticketSupply: ticketTier.supply,
+                    ticketsSoldAmount: ticketTier.sold,
+                    ticketParams: ticketTier.params,
+                  }),
+                  benefits: ticketTier.metadata.__ticketTierBenefits,
+                }}
+                isAbleToBuy={
+                  getEventTicketTierLeftSupply({
+                    ticketParams: ticketTier.params,
+                    ticketsSoldAmount: ticketTier.sold,
+                    ticketSupply: ticketTier.supply,
+                  }) > 0
+                }
+                nativeCurrencyToUsdPrice={nativeCurrencyToUsdPrice?.[0]?.answer}
+                isBuyingTicket={isBuyingEventTicket}
+                onBuyButtonClick={() =>
+                  onBuyEventTicketButtonClick(ticketTierIndex)
+                }
+              />
+            ))}
       </Container>
       {event && (
         <Flex flexDir={"column"} gap="1rem">
@@ -241,6 +245,7 @@ export const EmbedWidget = () => {
       {eventTicketTierToBuy !== undefined && (
         <CheckoutModal
           event={{
+            id: routerQuery.eventId,
             name: event.name,
             location: event.locationName,
             startDate: event.startDate,
@@ -252,11 +257,16 @@ export const EmbedWidget = () => {
             price: event.ticketTypes[eventTicketTierToBuy].price,
           }}
           isOpen={isCheckoutModalOpen}
-          onClose={onCloseCheckoutModal}
+          onClose={() => (
+            setHasBoughtTicket(false),
+            setEventTicketTierToBuy(undefined),
+            onCloseCheckoutModal()
+          )}
           isCompletingPurchase={isBuyingEventTicket}
+          isPurchaseCompleted={!!hasBoughtTicket}
           hasTicket={!!connectedWalletEventTicketBoughtEvents?.[0]?.length}
-          onCompletePurchaseButtonClick={() =>
-            buyEventTicket(eventTicketTierToBuy!)
+          onCompletePurchaseButtonClick={(_for) =>
+            buyEventTicket(eventTicketTierToBuy!, _for)
           }
         />
       )}
