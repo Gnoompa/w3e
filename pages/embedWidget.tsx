@@ -145,7 +145,11 @@ export const EmbedWidget = () => {
       <Container
         as={Flex}
         variant={"scrollableOverlap"}
-        justifyContent={["initial", "initial", "center"]}
+        justifyContent={[
+          "initial",
+          "initial",
+          event?.ticketTypes?.length <= 2 ? "center" : "initial",
+        ]}
         gap={"1.5rem"}
         px={["1rem", "2rem"]}
         maxW={"100%"}

@@ -496,6 +496,7 @@ const EventPage = () => {
 
   useEffect(() => {
     buyEventTicketWriteData &&
+      isBuyingATicket &&
       (isSuccessBuyEventTicketWrite &&
         (refetchEventTicketBoughtEvents(),
         refetchEventTicketTiers(),
@@ -1820,7 +1821,11 @@ const EventPage = () => {
             <Container
               as={Flex}
               variant={"scrollableOverlap"}
-              justifyContent={["initial", "initial", "center"]}
+              justifyContent={[
+                "initial",
+                "initial",
+                eventTicketTiers?.[0]?.length <= 2 ? "center" : "initial",
+              ]}
               gap={"1.5rem"}
               maxW={"100%"}
               px={["1rem", "2rem"]}
