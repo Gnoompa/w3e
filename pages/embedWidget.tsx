@@ -157,7 +157,9 @@ export const EmbedWidget = () => {
         {event?.ticketTypes &&
           [...event.ticketTypes]
             .sort((a, b) =>
-              a.__ticketTierOrder > b.__ticketTierOrder ? 1 : -1
+              a.metadata?.__ticketTierOrder > b.metadata?.__ticketTierOrder
+                ? 1
+                : -1
             )
             .map((ticketTier, ticketTierIndex) => (
               <EventTicket
@@ -185,7 +187,7 @@ export const EmbedWidget = () => {
                 nativeCurrencyToUsdPrice={nativeCurrencyToUsdPrice?.[0]?.answer}
                 isBuyingTicket={isBuyingEventTicket}
                 onBuyButtonClick={() =>
-                  onBuyEventTicketButtonClick(ticketTierIndex)
+                  onBuyEventTicketButtonClick(+ticketTier.tier)
                 }
               />
             ))}
