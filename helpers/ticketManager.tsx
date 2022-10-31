@@ -62,6 +62,7 @@ const useTicketManager = (props: IProps) => {
   const {
     config: preparedBuyEventTicketWriteConfig,
     refetch: refetchPreparedBuyEventTicketWriteConfig,
+    isError: isErrorPrepareBuyEventTicketWrite,
     error: preparedBuyEventTicketWriteConfigError,
   } = prepareBuyEventTicket({
     ...buyEventTicketWriteConfigToPrepare,
@@ -164,6 +165,7 @@ const useTicketManager = (props: IProps) => {
     connectedWalletEventTicketBoughtEvents,
     buyEventTicket,
     isSuccessBuyEventTicketWrite,
+    isErrorPrepareBuyEventTicketWrite,
     isErrorBuyEventTicketWrite,
     buyEventTicketWriteError,
     isBuyingEventTicket,

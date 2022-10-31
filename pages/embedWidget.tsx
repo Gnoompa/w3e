@@ -76,6 +76,7 @@ export const EmbedWidget = () => {
     buyEventTicket,
     isSuccessBuyEventTicketWrite,
     isErrorBuyEventTicketWrite,
+    isErrorPrepareBuyEventTicketWrite,
     buyEventTicketWriteError,
     isBuyingEventTicket,
   } = useTicketManager({ eventTokenId: routerQuery.eventId });
@@ -114,7 +115,7 @@ export const EmbedWidget = () => {
   useEffect(() => {
     isSuccessBuyEventTicketWrite && setHasBoughtTicket(true);
 
-    isErrorBuyEventTicketWrite &&
+    (isErrorBuyEventTicketWrite || isErrorPrepareBuyEventTicketWrite) &&
       (setEventTicketTierToBuy(undefined),
       toast({
         title: "Couldn't buy a ticket",
@@ -122,13 +123,22 @@ export const EmbedWidget = () => {
         isClosable: true,
       }),
       console.error(buyEventTicketWriteError));
-  }, [isSuccessBuyEventTicketWrite, isErrorBuyEventTicketWrite]);
+  }, [
+    isSuccessBuyEventTicketWrite,
+    isErrorBuyEventTicketWrite,
+    isErrorPrepareBuyEventTicketWrite,
+  ]);
 
   const onBuyEventTicketButtonClick = (ticketTierIndex: number) => {
     setEventTicketTierToBuy(ticketTierIndex);
 
     mbConnectWallet() || onOpenCheckoutModal();
   };
+
+  const getEventTicketTierById = (ticketTierId: number | string) =>
+    event.ticketTypes.filter(
+      (ticketTier) => ticketTier.tier == ticketTierId
+    )[0];
 
   const mbConnectWallet = () =>
     isWalletConnected ? false : (setOpenWalletConnectModal(true), true);
@@ -259,8 +269,8 @@ export const EmbedWidget = () => {
             image: getIPFSUri(event.image),
           }}
           ticketTier={{
-            name: event.ticketTypes[eventTicketTierToBuy].name,
-            price: event.ticketTypes[eventTicketTierToBuy].price,
+            name: getEventTicketTierById(eventTicketTierToBuy).name,
+            price: getEventTicketTierById(eventTicketTierToBuy).price,
           }}
           isOpen={isCheckoutModalOpen}
           onClose={() => (
