@@ -409,6 +409,30 @@ const EventPage = () => {
     });
   }, []);
 
+  const scrollableRef = useRef();
+
+  useEffect(() => {
+    isEventTicketsModalOpen &&
+      setTimeout(() => {
+        scrollableRef.current &&
+          (scrollableRef.current.removeEventListener(
+            "wheel",
+            scrollableHandler,
+            {
+              passive: false,
+            }
+          ),
+          scrollableRef.current.addEventListener("wheel", scrollableHandler, {
+            passive: false,
+          }));
+      });
+  }, [isEventTicketsModalOpen]);
+
+  const scrollableHandler = (e) => {
+    scrollableRef.current.scrollLeft -= e.deltaY - e.deltaX;
+    e.preventDefault();
+  };
+
   useEffect(() => {
     eventTicketTiers &&
       !eventTicketTiersRef.current?.length &&
@@ -1829,6 +1853,7 @@ const EventPage = () => {
               gap={"1.5rem"}
               maxW={"100%"}
               px={["1rem", "2rem"]}
+              ref={scrollableRef}
             >
               {eventTicketTiers?.[0] &&
                 eventTicketMetadatas?.length &&
