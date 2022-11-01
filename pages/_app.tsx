@@ -99,7 +99,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 <meta property="twitter:card" content="summary_large_image" data-rh="true"/>
 <meta property="twitter:site" content="@Web3Events_ai" data-rh="true"/>
 <meta property="twitter:creator" content="@petr_kuznetsof" data-rh="true"/>
-<meta property="twitter:image" content="/twitter-cover.png" data-rh="true"/>
+<meta property="twitter:image" content="https://web3events.ai/twitter-cover.png" data-rh="true"/>
 <meta property="twitter:image:width" content="400"/>
 <meta property="twitter:image:height" content="400"/>
 
