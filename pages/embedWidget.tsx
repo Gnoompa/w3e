@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { useAccount, useProvider } from "wagmi";
 import { useModal } from "connectkit";
@@ -95,12 +95,29 @@ export const EmbedWidget = () => {
 
   const [hasBoughtTicket, setHasBoughtTicket] = useState(false);
 
+  const scrollableRef = useRef();
+
   useEffect(() => {
     setInterval(
       refetchNativeCurrencyToUsdPrice,
       refetchNativeCurrencyToUsdPriceInterval
     );
+
+    setTimeout(() => {
+      scrollableRef.current &&
+        (scrollableRef.current.removeEventListener("wheel", scrollableHandler, {
+          passive: false,
+        }),
+        scrollableRef.current.addEventListener("wheel", scrollableHandler, {
+          passive: false,
+        }));
+    });
   }, []);
+
+  const scrollableHandler = (e) => {
+    scrollableRef.current.scrollLeft -= e.deltaY - e.deltaX;
+    e.preventDefault();
+  };
 
   useEffect(() => {
     isSuccessBuyEventTicketWrite && setHasBoughtTicket(true);
@@ -163,6 +180,7 @@ export const EmbedWidget = () => {
         gap={"1.5rem"}
         px={["1rem", "2rem"]}
         maxW={"100%"}
+        ref={scrollableRef}
       >
         {event?.ticketTypes &&
           [...event.ticketTypes]
