@@ -504,10 +504,10 @@ const EventPage = () => {
       !BigNumber.from(eventTicketStartingPrice).eq(0) &&
       nativeCurrencyToUsdPrice &&
       setEventTicketNativeCurrencyPriceLabel(
-        `~${(+ethers.utils.formatUnits(
-          nativeCurrencyToUsdPrice.mul(eventTicketStartingPrice).toString(),
-          26
-        )).toFixed(4)} MATIC`
+        `~${(
+          +ethers.utils.formatUnits(eventTicketStartingPrice, 18) /
+          +ethers.utils.formatUnits(nativeCurrencyToUsdPrice, 8)
+        ).toFixed(4)} MATIC`
       );
   }, [eventTicketStartingPrice, nativeCurrencyToUsdPrice]);
 
@@ -656,9 +656,9 @@ const EventPage = () => {
   const getEventTicketPrice = (ticketIndex: number, inNativeCurrency = false) =>
     inNativeCurrency
       ? eventTicketTiers[0][ticketIndex].ticketPrice
-      : nativeCurrencyToUsdPrice
-          .mul(eventTicketTiers[0][ticketIndex].ticketPrice.toString())
-          .div(10 ** 8);
+      : eventTicketTiers[0][ticketIndex].ticketPrice
+          .div(nativeCurrencyToUsdPrice)
+          .mul(10 ** 8);
 
   const getEventTicketPriceLabel = (ticketIndex: number) =>
     eventTicketTiers?.[0]?.[ticketIndex] &&

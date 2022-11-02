@@ -59,10 +59,10 @@ export const getEventTicketNativeCurrencyPriceLabel = (
   nativeCurrencyToUsdPrice?: BigNumber
 ) =>
   ticket.price && nativeCurrencyToUsdPrice
-    ? `~${(+ethers.utils.formatUnits(
-        nativeCurrencyToUsdPrice.mul(ticket.price),
-        26
-      )).toFixed(4)} MATIC`
+    ? `~${(
+        +ethers.utils.formatUnits(ticket.price, 18) /
+        +ethers.utils.formatUnits(nativeCurrencyToUsdPrice, 8)
+      ).toFixed(4)} MATIC`
     : "";
 
 export const getEventParticipantsAmountLabel = (
