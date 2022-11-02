@@ -135,7 +135,8 @@ export const EmbedWidget = () => {
     (isErrorBuyEventTicketWrite || isErrorPrepareBuyEventTicketWrite) &&
       (setEventTicketTierToBuy(undefined),
       toast({
-        title: "Couldn't buy a ticket",
+        title:
+          "Couldn't buy a ticket: either insufficient funds or ticket recipient already has a ticket",
         status: "error",
         isClosable: true,
       }),
