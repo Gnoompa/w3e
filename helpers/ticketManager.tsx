@@ -91,8 +91,10 @@ const useTicketManager = (props: IProps) => {
   const isBuyingEventTicket = eventTicketTierIdToBeBought !== undefined;
 
   useEffect(() => {
-    isErrorBuyEventTicketWrite && setEventTicketTierIdToBeBought(undefined);
-  }, [isErrorBuyEventTicketWrite]);
+    isErrorBuyEventTicketWrite ||
+      (isErrorPrepareBuyEventTicketWrite &&
+        setEventTicketTierIdToBeBought(undefined));
+  }, [isErrorBuyEventTicketWrite, isErrorPrepareBuyEventTicketWrite]);
 
   useEffect(() => {
     refetchConnectedWalletEventTicketBoughtEvents();

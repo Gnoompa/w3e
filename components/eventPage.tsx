@@ -446,7 +446,7 @@ const EventPage = () => {
       buyEventTicketWriteConfigToPrepare &&
       preparedBuyEventTicketWriteConfigError &&
       toast({
-        title: "Can't complete the purchase: some address already has a ticket",
+        title: "Can't complete the purchase",
         status: "error",
         isClosable: true,
       });
@@ -520,7 +520,7 @@ const EventPage = () => {
 
   useEffect(() => {
     buyEventTicketWriteData &&
-      isBuyingATicket &&
+      isBuyingATicket !== undefined &&
       (isSuccessBuyEventTicketWrite &&
         (refetchEventTicketBoughtEvents(),
         refetchEventTicketTiers(),
@@ -536,7 +536,8 @@ const EventPage = () => {
       isErrorBuyEventTicketWrite &&
         (setIsBuyingATicket(undefined),
         toast({
-          title: "Couldn't buy a ticket",
+          title:
+            "Couldn't buy a ticket: either insufficient funds or ticket recipient already has a ticket",
           status: "error",
           isClosable: true,
         }),
