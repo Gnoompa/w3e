@@ -128,8 +128,8 @@ const TicketsTab = () => {
         ) : eventPersistedFormData.ticketPrice[editingTicketIndex] &&
           nativeCurrencyToUsdPrice ? (
           `~${(
-            +ethers.utils.formatUnits(nativeCurrencyToUsdPrice, 8) *
-            +(eventPersistedFormData.ticketPrice[editingTicketIndex] || 0)
+            +(eventPersistedFormData.ticketPrice[editingTicketIndex] || 0) /
+            +ethers.utils.formatUnits(nativeCurrencyToUsdPrice, 8)
           ).toFixed(2)} MATIC`
         ) : eventPersistedFormData.ticketPrice[editingTicketIndex] &&
           !nativeCurrencyToUsdPrice ? (

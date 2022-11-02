@@ -147,13 +147,9 @@ const useTicketManager = (props: IProps) => {
   };
 
   const getEventTicketPrice = (ticketTierId: number) =>
-    BigNumber.from(nativeCurrencyToUsdPrice?.[0].answer)!
-      .mul(10 ** 10)
-      .mul(
-        +ethers.utils.formatEther(
-          eventTicketTiers[0][ticketTierId].ticketPrice.toString()
-        )
-      );
+    eventTicketTiers[0][ticketTierId].ticketPrice
+      .div(nativeCurrencyToUsdPrice?.[0].answer)
+      .mul(10 ** 8);
 
   const mbConnectWallet = () =>
     isWalletConnected ? false : (setWalletConnectModalOpen(true), true);
