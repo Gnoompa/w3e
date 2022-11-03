@@ -138,6 +138,7 @@ export const EmbedWidget = () => {
         title:
           "Couldn't buy a ticket: either insufficient funds or ticket recipient already has a ticket",
         status: "error",
+        duration: 8000,
         isClosable: true,
       }),
       console.error(buyEventTicketWriteError));

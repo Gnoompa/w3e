@@ -503,6 +503,7 @@ const TicketsTab = () => {
                       ]?.[managerIndex]
                     }
                     placeholder=" "
+                    maxLength={"60"}
                     onChange={(event) => {
                       let eventManagers = [
                         ...(eventPersistedFormData.ticketBenefits[
