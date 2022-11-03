@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Flex,
   Box,
@@ -10,11 +10,13 @@ import {
   ModalOverlay,
   ModalContent,
   IconButton,
+  useDimensions,
 } from "@chakra-ui/react";
 import { getIPFSUri } from "helpers/hooks";
 import { motion } from "framer-motion";
 import { fadeRightSlideAnimation, fadeTopSlideAnimation } from "styles/theme";
 import { BigNumber, BigNumberish, ethers } from "ethers";
+import { useSize } from "@chakra-ui/react-use-size";
 import {
   getEventTicketNativeCurrencyPriceLabel,
   getEventTicketPriceLabel,
@@ -47,10 +49,21 @@ export type PropsType = {
 
 const EventTicket = (props: PropsType) => {
   const [isTicketImageLoaded, setIsTicketImageLoaded] = useState(false);
+  const ticketTierBenefitsContainerRef = useRef();
+  const ticketTierBenefitsContainerSize = useSize(
+    ticketTierBenefitsContainerRef
+  );
+
+  console.log(ticketTierBenefitsContainerRef.current);
   const {
     isOpen: isTicketImagePreviewModalOpen,
     onOpen: onOpenTicketImagePreviewModal,
     onClose: onCloseTicketImagePreviewModal,
+  } = useDisclosure();
+  const {
+    isOpen: isTicketBenefitsContainerOpen,
+    onOpen: onOpenTicketBenefitsContainer,
+    onClose: onCloseTicketBenefitsContainer,
   } = useDisclosure();
 
   useEffect(() => {
@@ -149,8 +162,8 @@ const EventTicket = (props: PropsType) => {
       </Flex>
       <Flex
         direction={"column"}
-        p={[".75rem 1rem", "1rem 1.5rem"]}
-        gap={[".5rem", "1rem"]}
+        p={[".5rem 1rem"]}
+        gap={[".5rem"]}
         flex={1}
         justifyContent={"space-between"}
         borderTop="1px solid #565656"
@@ -167,11 +180,45 @@ const EventTicket = (props: PropsType) => {
             {props.ticketData.title?.substring(0, 50) || "Ticket title"}
           </Text>
           <Flex
+            ref={ticketTierBenefitsContainerRef}
             flexDirection={"column"}
             gap=".25rem"
-            maxH="7rem"
-            overflowY="scroll"
+            maxH={
+              isTicketBenefitsContainerOpen
+                ? "initial"
+                : props.ticketData.participantsLabel
+                ? "7rem"
+                : "9rem"
+            }
+            paddingBottom={isTicketBenefitsContainerOpen ? "1.75rem" : "0"}
+            overflow="hidden"
+            pos={"relative"}
           >
+            {(ticketTierBenefitsContainerRef?.current?.scrollHeight >
+              ticketTierBenefitsContainerSize?.height ||
+              isTicketBenefitsContainerOpen) && (
+              <Flex
+                pos={"absolute"}
+                bottom="0"
+                py=".25rem"
+                justifyContent={"center"}
+                boxShadow={"0 -10px 10px #2e2e2e"}
+                opacity={".95"}
+                cursor={"pointer"}
+                color={"textContrastAccent"}
+                bg={"accentPrimaryContrast"}
+                width={"100%"}
+                onClick={
+                  isTicketBenefitsContainerOpen
+                    ? onCloseTicketBenefitsContainer
+                    : onOpenTicketBenefitsContainer
+                }
+              >
+                <Text>
+                  {isTicketBenefitsContainerOpen ? "hide" : "show more"}
+                </Text>
+              </Flex>
+            )}
             {props.ticketData.benefits?.map((benefit) => (
               <Flex
                 as={motion.div}
@@ -189,8 +236,9 @@ const EventTicket = (props: PropsType) => {
                   color={benefit ? "textContrast" : "textContrastSecondary"}
                   fontWeight="semibold"
                   whiteSpace={"pre-wrap"}
+                  overflow={"hidden"}
                 >
-                  {benefit.substring(0, 55) || "benefit"}
+                  {benefit.substring(0, 60) || "benefit"}
                 </Text>
               </Flex>
             ))}
@@ -233,20 +281,22 @@ const EventTicket = (props: PropsType) => {
               </Flex>
             )}
           </Flex>
-          <Text
-            fontSize="md"
-            lineHeight={"1.25rem"}
-            maxH="4rem"
-            overflowY="scroll"
-            color={
-              props.ticketData.desc ? "textContrast" : "textContrastSecondary"
-            }
-            whiteSpace={"pre-wrap"}
-          >
-            {props.ticketData.desc?.substring(0, 300) || "ticket description"}
-          </Text>
+          {!isTicketBenefitsContainerOpen && (
+            <Text
+              fontSize="md"
+              lineHeight={"1.25rem"}
+              maxH="5rem"
+              overflowY="scroll"
+              color={
+                props.ticketData.desc ? "textContrast" : "textContrastSecondary"
+              }
+              whiteSpace={"pre-wrap"}
+            >
+              {props.ticketData.desc?.substring(0, 300) || "ticket description"}
+            </Text>
+          )}
         </Flex>
-        <Flex flexDir={"column"} gap="1rem" w="100%">
+        <Flex flexDir={"column"} gap=".5rem" w="100%">
           {props.ticketData.participantsLabel && (
             <Flex gap=".5rem" alignItems={"center"}>
               <Flex>
