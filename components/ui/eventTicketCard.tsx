@@ -286,7 +286,7 @@ const EventTicket = (props: PropsType) => {
               fontSize="md"
               lineHeight={"1.25rem"}
               maxH={
-                props.ticketData.benefits
+                props.ticketData.benefits?.length
                   ? "5rem"
                   : props.ticketData.participantsLabel
                   ? "10rem"
