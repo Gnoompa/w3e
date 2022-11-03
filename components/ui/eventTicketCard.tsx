@@ -285,7 +285,13 @@ const EventTicket = (props: PropsType) => {
             <Text
               fontSize="md"
               lineHeight={"1.25rem"}
-              maxH="5rem"
+              maxH={
+                props.ticketData.benefits
+                  ? "5rem"
+                  : props.ticketData.participantsLabel
+                  ? "10rem"
+                  : "14rem"
+              }
               overflowY="scroll"
               color={
                 props.ticketData.desc ? "textContrast" : "textContrastSecondary"
