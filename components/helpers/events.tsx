@@ -75,7 +75,7 @@ export const getEventParticipantsAmountLabel = (
     )} sold`)(
     ticketTiers.length > 1
       ? ticketTiers.reduceRight(
-          (a, b) => +a.ticketsSoldAmount + +b.ticketsSoldAmount
+          (a, b) => +(a.ticketsSoldAmount ?? a) + +(b.ticketsSoldAmount ?? b)
         )
       : ticketTiers?.[0]?.ticketsSoldAmount || 0
   );

@@ -11,7 +11,13 @@ import {
 } from "helpers/contract";
 import { useAppSelector, useRouterQuery } from "helpers/hooks";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useAccount, useProvider, useWaitForTransaction } from "wagmi";
+import {
+  useAccount,
+  useNetwork,
+  useProvider,
+  useSwitchNetwork,
+  useWaitForTransaction,
+} from "wagmi";
 
 interface IProps {
   eventTokenId: string;
@@ -20,6 +26,8 @@ interface IProps {
 const useTicketManager = (props: IProps) => {
   const provider = useProvider();
   const { setOpen: setWalletConnectModalOpen } = useModal();
+  const { chain: connectedChain } = useNetwork();
+  const { chains, switchNetwork } = useSwitchNetwork();
   const {
     data: nativeCurrencyToUsdPrice,
     refetch: refetchNativeCurrencyToUsdPrice,
@@ -86,14 +94,16 @@ const useTicketManager = (props: IProps) => {
     wait: buyEventTicketWriteResponse?.wait,
   });
 
-  const [eventTicketTierIdToBeBought, setEventTicketTierIdToBeBought] =
-    useState<number>();
-  const isBuyingEventTicket = eventTicketTierIdToBeBought !== undefined;
+  const [buyEventTicketPayload, setBuyEventTicketPayload] = useState<{
+    ticketTierId: number;
+    _for: string[];
+  }>();
+  const isBuyingEventTicket = buyEventTicketPayload !== undefined;
 
   useEffect(() => {
     isErrorBuyEventTicketWrite ||
       (isErrorPrepareBuyEventTicketWrite &&
-        setEventTicketTierIdToBeBought(undefined));
+        setBuyEventTicketPayload(undefined));
   }, [isErrorBuyEventTicketWrite, isErrorPrepareBuyEventTicketWrite]);
 
   useEffect(() => {
@@ -126,16 +136,26 @@ const useTicketManager = (props: IProps) => {
   }, [buyEventTicketWriteConfigToPrepare, buyEventTicketWrite]);
 
   useEffect(() => {
+    connectedChain?.id == defaultChainId &&
+      buyEventTicketPayload !== undefined &&
+      buyEventTicket(
+        buyEventTicketPayload.ticketTierId,
+        buyEventTicketPayload._for
+      );
+  }, [connectedChain]);
+
+  useEffect(() => {
     buyEventTicketWriteData &&
       isSuccessBuyEventTicketWrite &&
       (refetchConnectedWalletEventTicketBoughtEvents(),
-      setEventTicketTierIdToBeBought(undefined));
+      setBuyEventTicketPayload(undefined));
   }, [buyEventTicketWriteData, isSuccessBuyEventTicketWrite]);
 
   const buyEventTicket = (ticketTierId: number, _for: string[]) => {
-    setEventTicketTierIdToBeBought(ticketTierId);
+    setBuyEventTicketPayload({ ticketTierId, _for });
 
     (props.eventTokenId && eventTicketTiers && mbConnectWallet()) ||
+      mbSwitchChain() ||
       setBuyEventTicketWriteConfigToPrepare({
         args: [
           props.eventTokenId!,
@@ -152,6 +172,11 @@ const useTicketManager = (props: IProps) => {
     eventTicketTiers[0][ticketTierId].ticketPrice
       .div(nativeCurrencyToUsdPrice?.[0].answer)
       .mul(10 ** 8);
+
+  const mbSwitchChain = () =>
+    connectedChain?.id == defaultChainId
+      ? false
+      : (switchNetwork?.(defaultChainId), true);
 
   const mbConnectWallet = () =>
     isWalletConnected ? false : (setWalletConnectModalOpen(true), true);
