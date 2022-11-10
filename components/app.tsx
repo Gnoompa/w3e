@@ -7,6 +7,15 @@ import {
   Link,
   Badge,
   Image,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Text,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import ConnectWallet from "./connectWallet";
@@ -19,12 +28,24 @@ import { initialState as appInitialState } from "features/app/appPersistedSlice"
 import persistStore from "redux-persist/es/persistStore";
 import { persistConfig, persistor } from "app/store";
 import Footer from "./footer";
+import FrillEmbeddedWidget from "./ui/frillEmbedWidget";
+import {
+  ChatIcon,
+  QuestionIcon,
+  QuestionOutlineIcon,
+  StarIcon,
+} from "@chakra-ui/icons";
 
 const App: React.FC = (props) => {
   const dispatch = useAppDispatch();
   const appState = appInitialState;
   const appPersistedVersion = useAppSelector((state) => state.appPersisted.ver);
   const persistorStore = persistor;
+  const {
+    isOpen: isOpenFrillWidgetModal,
+    onOpen: onOpenFrillWidgetModal,
+    onClose: onCloseFrillWidgetModal,
+  } = useDisclosure();
 
   const { CanvasContainer: MediaPlaceholderGeneratorCanvasContainer } =
     useMediaPlaceholderGenerator();
@@ -86,7 +107,45 @@ const App: React.FC = (props) => {
             </Link>
           </Flex>
           <MenuBreakpointValue />
-          <Flex flexGrow={1} flexBasis={0} justifyContent={"flex-end"}>
+          <Flex
+            flexGrow={1}
+            flexBasis={0}
+            justifyContent={"flex-end"}
+            align={"center"}
+            gap={"1rem"}
+          >
+            <Menu>
+              <MenuButton>
+                <IconButton
+                  aria-label="news and feature request"
+                  variant={"unstyled"}
+                  icon={<QuestionIcon />}
+                ></IconButton>
+              </MenuButton>
+              <MenuList>
+                <MenuItem onClick={onOpenFrillWidgetModal}>
+                  <Flex align={"center"} gap=".5rem">
+                    <StarIcon color="warn" />
+                    <Text fontSize={"md"} fontWeight="medium">
+                      What's New?
+                    </Text>
+                  </Flex>
+                </MenuItem>
+                <MenuItem>
+                  <Link
+                    href="https://roadmap.web3events.ai/b/j0x38r0q/feature-ideas"
+                    target={"_blank"}
+                  >
+                    <Flex align={"center"} gap=".5rem">
+                      <ChatIcon />
+                      <Text fontSize={"md"} fontWeight="medium">
+                        Request Features
+                      </Text>
+                    </Flex>
+                  </Link>
+                </MenuItem>
+              </MenuList>
+            </Menu>
             <ConnectWallet />
           </Flex>
         </Flex>
@@ -98,6 +157,12 @@ const App: React.FC = (props) => {
       </Flex>
       <Footer />
       <MediaPlaceholderGeneratorCanvasContainer />
+      <Modal isOpen={isOpenFrillWidgetModal} onClose={onCloseFrillWidgetModal}>
+        <ModalOverlay />
+        <ModalContent h="35rem" maxH={"calc(100vh - 7rem)"} overflow={"hidden"}>
+          <FrillEmbeddedWidget />
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 };

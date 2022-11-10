@@ -31,80 +31,191 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Head>
         <title>web3events</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-        <link rel="apple-touch-icon" sizes="57x57" href="/mobile/apple-icon-57x57.png"/>
-        <link rel="apple-touch-icon" sizes="60x60" href="/mobile/apple-icon-60x60.png"/>
-        <link rel="apple-touch-icon" sizes="72x72" href="/mobile/apple-icon-72x72.png"/>
-        <link rel="apple-touch-icon" sizes="76x76" href="/mobile/apple-icon-76x76.png"/>
-        <link rel="apple-touch-icon" sizes="114x114" href="/mobile/apple-icon-114x114.png"/>
-        <link rel="apple-touch-icon" sizes="120x120" href="/mobile/apple-icon-120x120.png"/>
-        <link rel="apple-touch-icon" sizes="144x144" href="/mobile/apple-icon-144x144.png"/>
-        <link rel="apple-touch-icon" sizes="152x152" href="/mobile/apple-icon-152x152.png"/>
-        <link rel="apple-touch-icon" sizes="180x180" href="/mobile/apple-icon-180x180.png"/>
-        <link rel="manifest" href="/mobile/manifest.json"/>
-        <meta name="msapplication-TileColor" content="#ffffff"/>
-        <meta name="msapplication-TileImage" content="/mobile/ms-icon-144x144.png"/>
+        <link
+          rel="apple-touch-icon"
+          sizes="57x57"
+          href="/mobile/apple-icon-57x57.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="60x60"
+          href="/mobile/apple-icon-60x60.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="72x72"
+          href="/mobile/apple-icon-72x72.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="76x76"
+          href="/mobile/apple-icon-76x76.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="114x114"
+          href="/mobile/apple-icon-114x114.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="120x120"
+          href="/mobile/apple-icon-120x120.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="144x144"
+          href="/mobile/apple-icon-144x144.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="152x152"
+          href="/mobile/apple-icon-152x152.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/mobile/apple-icon-180x180.png"
+        />
+        <link rel="manifest" href="/mobile/manifest.json" />
+        <meta name="msapplication-TileColor" content="#ffffff" />
+        <meta
+          name="msapplication-TileImage"
+          content="/mobile/ms-icon-144x144.png"
+        />
         <meta name="theme-color" content="#ffffff"></meta>
-        <meta content="Web3Events is a platform for ticket management in web3 world. Create, distribute and verify tickets in an intuitive interface." name="description"/>
-        <meta httpEquiv="X-UA-Compatible" content="IE=edge"/>
-        <meta content="width=device-width, initial-scale=1, maximum-scale=5" name="viewport"/>
+        <meta
+          content="Web3Events is a platform for ticket management in web3 world. Create, distribute and verify tickets in an intuitive interface."
+          name="description"
+        />
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        <meta
+          content="width=device-width, initial-scale=1, maximum-scale=5"
+          name="viewport"
+        />
         // icons
-        <link rel="shortcut icon" type="image/x-icon" sizes="32x32" href="/favicon.ico"/>
-        <link rel="apple-touch-icon" sizes="256x256" href="/favicon.ico"/>
-        <link rel="icon" sizes="any" type="image/svg+xml" href="/favicon.ico"/>
-        <link rel="icon" type="image/png" sizes="192x192"  href="/mobile/android-icon-192x192.png"/>
-        <link rel="icon" type="image/png" sizes="32x32" href="/mobile/favicon-32x32.png"/>
-        <link rel="icon" type="image/png" sizes="96x96" href="/mobile/favicon-96x96.png"/>
-        <link rel="icon" type="image/png" sizes="16x16" href="/mobile/favicon-16x16.png"/>
-
-
-        <link rel="shortlink" href="https://web3Events.ai/"/>
-        <link rel="canonical" href="https://web3Events.ai/"/>
+        <link
+          rel="shortcut icon"
+          type="image/x-icon"
+          sizes="32x32"
+          href="/favicon.ico"
+        />
+        <link rel="apple-touch-icon" sizes="256x256" href="/favicon.ico" />
+        <link rel="icon" sizes="any" type="image/svg+xml" href="/favicon.ico" />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="192x192"
+          href="/mobile/android-icon-192x192.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/mobile/favicon-32x32.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="96x96"
+          href="/mobile/favicon-96x96.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="/mobile/favicon-16x16.png"
+        />
+        <link rel="shortlink" href="https://web3Events.ai/" />
+        <link rel="canonical" href="https://web3Events.ai/" />
         // Static speedup
-        <link rel="dns-prefetch" href="https://ik.imagekit.io"/>
-        <link rel="preconnect" href="https://ik.imagekit.io"/>
-        <link rel="dns-prefetch" href="https://static.web3events.ai"/>
-        <link rel="preconnect" href="https://static.web3events.ai"/>
-
+        <link rel="dns-prefetch" href="https://ik.imagekit.io" />
+        <link rel="preconnect" href="https://ik.imagekit.io" />
+        <link rel="dns-prefetch" href="https://static.web3events.ai" />
+        <link rel="preconnect" href="https://static.web3events.ai" />
         // Google
-        <meta name="google" content="notranslate"/>
-        <meta property="og:title" content="Ticketing Platform for Web3 Community - Web3Events"/>
-        <meta property="og:description" content="Web3Events is a platform for ticket management in web3 world. Create, distribute and verify tickets in an intuitive interface."/>
-        <meta property="og:image:alt" content="New building block for the people of the world." data-rh="true"/>
-        <meta property="og:locale" content="en_US"/>
-        <meta property="og:type" content="website"/>
-        <meta property="og:url" content="https://web3events.ai"/>
-        <meta property="og:site_name" content="Web3Events" data-rh="true"/>
-        <meta property="og:image:type" content="image/png" data-rh="true"/>
-        <meta property="og:image" content="/og-cover.png" data-rh="true"/>
-        <meta property="og:image:width" content="400"/>
-        <meta property="og:image:height" content="400"/>
-
+        <meta name="google" content="notranslate" />
+        <meta
+          property="og:title"
+          content="Ticketing Platform for Web3 Community - Web3Events"
+        />
+        <meta
+          property="og:description"
+          content="Web3Events is a platform for ticket management in web3 world. Create, distribute and verify tickets in an intuitive interface."
+        />
+        <meta
+          property="og:image:alt"
+          content="New building block for the people of the world."
+          data-rh="true"
+        />
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://web3events.ai" />
+        <meta property="og:site_name" content="Web3Events" data-rh="true" />
+        <meta property="og:image:type" content="image/png" data-rh="true" />
+        <meta property="og:image" content="/og-cover.png" data-rh="true" />
+        <meta property="og:image:width" content="400" />
+        <meta property="og:image:height" content="400" />
         // OpenGraph
-<meta property="og:title" content="Ticketing Platform for Web3 Community - Web3Events"/>
-<meta property="og:description" content="Web3Events is a platform for ticket management in web3 world. Create, distribute and verify tickets in an intuitive interface."/>
-<meta property="og:image:alt" content="New building block for the people of the world." data-rh="true"/>
-<meta property="og:locale" content="en_US"/>
-<meta property="og:type" content="website"/>
-<meta property="og:url" content="https://web3events.ai"/>
-<meta property="og:site_name" content="Web3Events" data-rh="true"/>
-<meta property="og:image:type" content="image/png" data-rh="true"/>
-<meta property="og:image" content="/og-cover.png" data-rh="true"/>
-<meta property="og:image:width" content="400"/>
-<meta property="og:image:height" content="400"/>
-
-// Twitter
-<meta property="twitter:title" content="Web3Events – Create &amp; Receive NFT Tickets" data-rh="true"/>
-<meta property="twitter:description" content="Web3Events is an all in one place to create, distribute and verify tickets for your event in a convenient way. Start building web3 community today. 🎫" data-rh="true"/>
-<meta property="twitter:image:alt" content="New building block for the people of the world." data-rh="true"/>
-<meta property="twitter:card" content="summary_large_image" data-rh="true"/>
-<meta property="twitter:site" content="@Web3Events_ai" data-rh="true"/>
-<meta property="twitter:creator" content="@petr_kuznetsof" data-rh="true"/>
-<meta property="twitter:image" content="https://web3events.ai/og-cover.png" data-rh="true"/>
-<meta property="twitter:image:width" content="400"/>
-<meta property="twitter:image:height" content="400"/>
-
-
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-470YTNYWWK"/>
+        <meta
+          property="og:title"
+          content="Ticketing Platform for Web3 Community - Web3Events"
+        />
+        <meta
+          property="og:description"
+          content="Web3Events is a platform for ticket management in web3 world. Create, distribute and verify tickets in an intuitive interface."
+        />
+        <meta
+          property="og:image:alt"
+          content="New building block for the people of the world."
+          data-rh="true"
+        />
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://web3events.ai" />
+        <meta property="og:site_name" content="Web3Events" data-rh="true" />
+        <meta property="og:image:type" content="image/png" data-rh="true" />
+        <meta property="og:image" content="/og-cover.png" data-rh="true" />
+        <meta property="og:image:width" content="400" />
+        <meta property="og:image:height" content="400" />
+        // Twitter
+        <meta
+          property="twitter:title"
+          content="Web3Events – Create &amp; Receive NFT Tickets"
+          data-rh="true"
+        />
+        <meta
+          property="twitter:description"
+          content="Web3Events is an all in one place to create, distribute and verify tickets for your event in a convenient way. Start building web3 community today. 🎫"
+          data-rh="true"
+        />
+        <meta
+          property="twitter:image:alt"
+          content="New building block for the people of the world."
+          data-rh="true"
+        />
+        <meta
+          property="twitter:card"
+          content="summary_large_image"
+          data-rh="true"
+        />
+        <meta property="twitter:site" content="@Web3Events_ai" data-rh="true" />
+        <meta
+          property="twitter:creator"
+          content="@petr_kuznetsof"
+          data-rh="true"
+        />
+        <meta
+          property="twitter:image"
+          content="https://web3events.ai/og-cover.png"
+          data-rh="true"
+        />
+        <meta property="twitter:image:width" content="400" />
+        <meta property="twitter:image:height" content="400" />
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-470YTNYWWK"
+        />
+        <script async src="https://widget.frill.co/v2/widget.js"></script>
         <style>{`
           ${resetCss}
           ${normalizeCss}
@@ -112,18 +223,19 @@ function MyApp({ Component, pageProps }: AppProps) {
       `}</style>
       </Head>
       <Script
-          dangerouslySetInnerHTML={{
-            __html: `window.dataLayer = window.dataLayer || [];
+        dangerouslySetInnerHTML={{
+          __html: `window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments)}
           gtag('js', new Date());
 
           gtag('config', 'G-470YTNYWWK');`,
-          }}
-        ></Script>
-        <Script
-        type="application/ld+json" data-rh="true"
-          dangerouslySetInnerHTML={{
-            __html: `{
+        }}
+      ></Script>
+      <Script
+        type="application/ld+json"
+        data-rh="true"
+        dangerouslySetInnerHTML={{
+          __html: `{
               "@context": "http://schema.org",
               "@type": "Organization",
               "name": "Web3Events",
@@ -133,12 +245,13 @@ function MyApp({ Component, pageProps }: AppProps) {
                 "url": "https://static.web3events.ai/external/og-cover.png"
               }
             }`,
-          }}
-        ></Script>
-        <Script
-        type="application/ld+json" data-rh="true"
-          dangerouslySetInnerHTML={{
-            __html: `{
+        }}
+      ></Script>
+      <Script
+        type="application/ld+json"
+        data-rh="true"
+        dangerouslySetInnerHTML={{
+          __html: `{
               "@context": "http://schema.org",
               "@type": "WebSite",
               "name": "Web3Events",
@@ -156,8 +269,8 @@ function MyApp({ Component, pageProps }: AppProps) {
                 "query-input": "required name=search_term"
               }
             }`,
-          }}
-        ></Script>
+        }}
+      ></Script>
       <Provider store={store}>
         {/* <StyledEngineProvider injectFirst> */}
         <ChakraProvider theme={theme}>
