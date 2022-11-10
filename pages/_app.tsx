@@ -29,7 +29,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>web3events</title>
+        <title>Web3Events</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
         <link
           rel="apple-touch-icon"
@@ -242,9 +242,15 @@ function MyApp({ Component, pageProps }: AppProps) {
               "url" : "https://app.web3events.ai",
               "logo": {
                 "@type": "ImageObject",
-                "url": "https://static.web3events.ai/external/og-cover.png"
+                "url": "https://web3events.ai/og-cover.png"
               }
             }`,
+        }}
+      ></Script>
+      <Script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: `[{ "@context" : "Schema.org - Schema.org", "@type" : "WebSite", "name" : "Web3Events", "alternateName" : "W3 Events", "url" : "Web3Events – Create & Receive NFT Tickets", "sameAs": [ "Web3Events_ai", "https://www.linkedin.com/company/web3events", "Web3Events", "https://www.instagram.com/vveb3events", "Web3Events - Crunchbase Company Profile & Funding" ], "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "Web3Events – Create & Receive NFT Tickets}" }, "query-input": "required name=search-term" } }, { "@context": "Schema.org - Schema.org", "@type": "Organization", "name": "Web3Events", "url" : "Web3Events – Create & Receive NFT Tickets", "logo": "https://web3events.ai/logo/logomd.png" "logo": { "@type": "ImageObject", "url": "https://web3events.ai/og-cover.png" } }]`,
         }}
       ></Script>
       <Script
