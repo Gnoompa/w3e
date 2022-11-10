@@ -75,7 +75,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <meta property="og:url" content="https://web3events.ai"/>
         <meta property="og:site_name" content="Web3Events" data-rh="true"/>
         <meta property="og:image:type" content="image/png" data-rh="true"/>
-        <meta property="og:image" content="/openGraph-cover.png" data-rh="true"/>
+        <meta property="og:image" content="/og-cover.png" data-rh="true"/>
         <meta property="og:image:width" content="400"/>
         <meta property="og:image:height" content="400"/>
 
@@ -88,7 +88,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 <meta property="og:url" content="https://web3events.ai"/>
 <meta property="og:site_name" content="Web3Events" data-rh="true"/>
 <meta property="og:image:type" content="image/png" data-rh="true"/>
-<meta property="og:image" content="/openGraph-cover.png" data-rh="true"/>
+<meta property="og:image" content="/og-cover.png" data-rh="true"/>
 <meta property="og:image:width" content="400"/>
 <meta property="og:image:height" content="400"/>
 
@@ -99,7 +99,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 <meta property="twitter:card" content="summary_large_image" data-rh="true"/>
 <meta property="twitter:site" content="@Web3Events_ai" data-rh="true"/>
 <meta property="twitter:creator" content="@petr_kuznetsof" data-rh="true"/>
-<meta property="twitter:image" content="https://web3events.ai/twitter-cover.png" data-rh="true"/>
+<meta property="twitter:image" content="https://web3events.ai/og-cover.png" data-rh="true"/>
 <meta property="twitter:image:width" content="400"/>
 <meta property="twitter:image:height" content="400"/>
 
@@ -130,7 +130,7 @@ function MyApp({ Component, pageProps }: AppProps) {
               "url" : "https://app.web3events.ai",
               "logo": {
                 "@type": "ImageObject",
-                "url": "https://static.web3events.ai/external/google-indexer-cover.png"
+                "url": "https://static.web3events.ai/external/og-cover.png"
               }
             }`,
           }}
