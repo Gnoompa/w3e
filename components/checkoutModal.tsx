@@ -280,47 +280,52 @@ export const Component = (props: CheckoutModalProps) => {
               </Flex>
             </Flex>
           </Flex>
-          <Flex
-            flexDirection={["column", "row"]}
-            justifyContent={["space-between"]}
-            gap={"1rem"}
-            alignItems={["center", "flex-end"]}
-          >
-            <Flex direction={"column"} mt=".5rem">
-              <Flex align={"flex-start"} flexDir="column">
-                <Text color={"textAccent"} fontSize={"2xl"} fontWeight="bold">
-                  {getEventTicketPriceLabel({
-                    price: props.ticketTier.price,
-                    isFree: !+props.ticketTier.price,
-                  })}
-                </Text>
-                {!!+props.ticketTier.price && nativeCurrencyToUsdPrice && (
-                  <Text
-                    color={"textContrastSecondary"}
-                    fontSize="sm"
-                    lineHeight={"1em"}
-                  >
-                    {getEventTicketNativeCurrencyPriceLabel(
-                      { price: props.ticketTier.price },
-                      nativeCurrencyToUsdPrice
-                    )}
-                  </Text>
-                )}
-              </Flex>
-            </Flex>
-            <Button
-              variant={"accent"}
-              alignSelf={["center", "flex-end"]}
-              isLoading={props.isCompletingPurchase}
-              isDisabled={!ticketRecievers.length}
-              onClick={() =>
-                props.onCompletePurchaseButtonClick(
-                  ticketRecievers?.map(({ value }) => value)
-                )
-              }
+          <Flex flexDir={"column"} gap="1rem">
+            <Flex
+              flexDirection={["column", "row"]}
+              justifyContent={["space-between"]}
+              gap={"1rem"}
+              alignItems={["center", "flex-end"]}
             >
-              Complete Purchase
-            </Button>
+              <Flex direction={"column"} mt=".5rem">
+                <Flex align={"flex-start"} flexDir="column">
+                  <Text color={"textAccent"} fontSize={"2xl"} fontWeight="bold">
+                    {getEventTicketPriceLabel({
+                      price: props.ticketTier.price,
+                      isFree: !+props.ticketTier.price,
+                    })}
+                  </Text>
+                  {!!+props.ticketTier.price && nativeCurrencyToUsdPrice && (
+                    <Text
+                      color={"textContrastSecondary"}
+                      fontSize="sm"
+                      lineHeight={"1em"}
+                    >
+                      {getEventTicketNativeCurrencyPriceLabel(
+                        { price: props.ticketTier.price },
+                        nativeCurrencyToUsdPrice
+                      )}
+                    </Text>
+                  )}
+                </Flex>
+              </Flex>
+              <Button
+                variant={"accent"}
+                alignSelf={["center", "flex-end"]}
+                isLoading={props.isCompletingPurchase}
+                isDisabled={!ticketRecievers.length}
+                onClick={() =>
+                  props.onCompletePurchaseButtonClick(
+                    ticketRecievers?.map(({ value }) => value)
+                  )
+                }
+              >
+                Complete Purchase
+              </Button>
+            </Flex>
+            <Text color="warn" lineHeight={".25rem"} mb={"-.5rem"} textAlign="center">
+              make sure you are on Polygon
+            </Text>
           </Flex>
         </Flex>
         {props.isPurchaseCompleted && (
