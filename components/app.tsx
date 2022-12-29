@@ -16,6 +16,8 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
+  useTheme,
+  useColorMode,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import ConnectWallet from "./connectWallet";
@@ -35,6 +37,7 @@ import {
   QuestionOutlineIcon,
   StarIcon,
 } from "@chakra-ui/icons";
+import { mode } from "@chakra-ui/theme-tools";
 
 const App: React.FC = (props) => {
   const dispatch = useAppDispatch();
@@ -96,7 +99,7 @@ const App: React.FC = (props) => {
           >
             <Link href="/" float={"left"}>
               <Flex align={"center"} gap={".75rem"}>
-                <Image src="/logo/logomd.png" w={"3rem"}></Image>
+                <Image src="/logo/nylogo.png" w={"3rem"}></Image>
                 <Heading as={"h1"} fontSize={"1.5rem"} lineHeight="1em">
                   Web3 <br></br> Events
                 </Heading>

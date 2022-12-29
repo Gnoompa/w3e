@@ -93,7 +93,7 @@ export function formatWalletAddress(address: string): string {
   return address ? `${address.slice(0, 5)}...${address.slice(-3)}` : "";
 }
 
-export const uploadMetadata = async (metadata: object) => {
+export const uploadMediaToIpfs = async (media: File) => {
   const uploadUrl = /.*test|localhost.*/.test(global.location?.href)
     ? "https://api.test.web3events.ai/upload"
     : "https://api.web3events.ai/upload";
@@ -102,14 +102,41 @@ export const uploadMetadata = async (metadata: object) => {
 
   metadataImageFormData.append(
     "file",
-    metadata.image,
-    `metadataImage_${+Date.now()}.${metadata.image.type.split("/")[1]}`
+    media,
+    `metadataImage_${+Date.now()}.${media.type.split("/")[1]}`
   );
 
   const imageUploadResponse = await axios.post(
     uploadUrl,
     metadataImageFormData
   );
+
+  return `ipfs://${imageUploadResponse.data.data.ipfs}`;
+};
+
+export const uploadMetadata = async (metadata: object) => {
+  const uploadUrl = /.*test|localhost.*/.test(global.location?.href)
+    ? "https://api.test.web3events.ai/upload"
+    : "https://api.web3events.ai/upload";
+
+  let imageUploadResponse = undefined;
+
+  if (typeof metadata.image == "object") {
+    let metadataImageFormData = new FormData();
+
+    metadataImageFormData.append(
+      "file",
+      metadata.image,
+      `metadataImage_${+Date.now()}.${
+        metadata.image.type.split("/")[1]
+      }`.replace(/svg\+xml/, "xml")
+    );
+
+    const imageUploadResponse = await axios.post(
+      uploadUrl,
+      metadataImageFormData
+    );
+  }
 
   let metadataFormData = new FormData();
 
@@ -119,8 +146,16 @@ export const uploadMetadata = async (metadata: object) => {
       [
         JSON.stringify({
           ...metadata,
-          image: `ipfs://${imageUploadResponse.data.data.ipfs}`,
-          imagePlaceholder: await generateMediaPlaceholder(metadata.image),
+          image: imageUploadResponse
+            ? `ipfs://${imageUploadResponse?.data.data.ipfs}`
+            : metadata.image,
+          ...(imageUploadResponse
+            ? {
+                imagePlaceholder: await generateMediaPlaceholder(
+                  metadata.image
+                ),
+              }
+            : {}),
         }),
       ],
       { type: "application/json" }

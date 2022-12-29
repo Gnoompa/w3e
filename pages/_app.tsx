@@ -2,7 +2,7 @@ import normalizeCss from "../node_modules/normalize.css/normalize.css";
 import resetCss from "../styles/reset.css";
 import globalCss from "../styles/index.css";
 import theme from "../styles/theme";
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, ColorModeProvider } from "@chakra-ui/react";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import Script from "next/script";
@@ -13,6 +13,8 @@ import process from "process";
 import { WagmiConfig, createClient, chain } from "wagmi";
 import { ConnectKitProvider, getDefaultClient } from "connectkit";
 import { defaultChainId } from "helpers/contract";
+import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
+import { LensProvider } from "@memester-xyz/lens-use/dist/context/LensContext";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const client = createClient(
@@ -25,6 +27,14 @@ function MyApp({ Component, pageProps }: AppProps) {
           : [chain.polygonMumbai, chain.polygon],
     })
   );
+
+  // const APIURL = "https://api.lens.dev/";
+  const APIURL = "https://api-sandbox-mumbai.lens.dev";
+
+  const apolloClient = new ApolloClient({
+    uri: APIURL,
+    cache: new InMemoryCache(),
+  });
 
   return (
     <>
@@ -280,13 +290,19 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Provider store={store}>
         {/* <StyledEngineProvider injectFirst> */}
         <ChakraProvider theme={theme}>
-          <WagmiConfig client={client}>
-            <ConnectKitProvider
-              options={{ walletConnectName: "Zerion & Wallet Connect" }}
-            >
-              <Component {...pageProps} />
-            </ConnectKitProvider>
-          </WagmiConfig>
+          <ColorModeProvider>
+            <WagmiConfig client={client}>
+              <ApolloProvider client={apolloClient}>
+                <LensProvider lensHubAddress="0x7582177F9E536aB0b6c721e11f383C326F2Ad1D5">
+                  <ConnectKitProvider
+                    options={{ walletConnectName: "Zerion & Wallet Connect" }}
+                  >
+                    <Component {...pageProps} />
+                  </ConnectKitProvider>
+                </LensProvider>
+              </ApolloProvider>
+            </WagmiConfig>
+          </ColorModeProvider>
         </ChakraProvider>
         {/* </StyledEngineProvider> */}
       </Provider>

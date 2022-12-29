@@ -3,6 +3,7 @@ export enum Routes {
   EventForm = "/#eventForm",
   EventPage = "/#event",
   EventExplorer = "/#eventExplorer",
+  ExpressEvent = "/#expressEvent",
   EmbedWidget = "/embedWidget",
   EmbedWidgetExample = "/embedWidgetExample",
   Dashboard = "/#dashboard",

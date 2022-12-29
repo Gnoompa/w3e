@@ -38,6 +38,11 @@ export const MenuBreakpointValue = () =>
               </NextLink>
             </MenuItem>
             <MenuItem>
+              <NextLink href={Routes.ExpressEvent} passHref>
+                <Link>Express Event</Link>
+              </NextLink>
+            </MenuItem>
+            <MenuItem>
               <NextLink href={Routes.EventExplorer} passHref>
                 <Link>Explore</Link>
               </NextLink>
@@ -120,6 +125,16 @@ export const MenuBreakpointValue = () =>
               </MenuItem>
             </MenuList>
           </Menu>
+          <Flex align={"center"} gap=".5rem">
+            <NextLink href={Routes.ExpressEvent}>
+              <Text fontSize={"md"} fontWeight="medium" cursor={"pointer"}>
+                Express Event
+              </Text>
+              {/* <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
+            soon
+          </Badge> */}
+            </NextLink>
+          </Flex>
           <Flex align={"center"} gap=".5rem">
             <NextLink href={Routes.EventExplorer}>
               <Text fontSize={"md"} fontWeight="medium" cursor={"pointer"}>
