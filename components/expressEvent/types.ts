@@ -4,14 +4,10 @@ export enum ProfileType {
   TWITTER,
 }
 
-export enum CurrencyTypes {
-  USDC,
-  DAI,
-  USDT,
-}
-
 export interface IProfile {
+  chainID: number;
   id: string;
+  address: string;
   handle: string;
   type: ProfileType;
   isDefault: boolean;
@@ -44,5 +40,11 @@ export type PostHook = (props: {
   content?: string;
   attachments?: Blob[];
   priceToCollect?: number;
-  priceToCollectCurrencyType?: CurrencyTypes;
 }) => PostHookReturnData;
+
+export type ExpressEventMetadata = {
+  title: string;
+  details: string;
+  profiles: IProfile[];
+  v: string;
+};

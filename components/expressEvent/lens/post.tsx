@@ -37,8 +37,14 @@ export const usePost: PostHook = ({
     version: "2.0.0",
     description:
       "Made with [Express Event](https://web3events.ai/#expressEvent) - single post to host an event",
-    name: "Post by @gnoompa.lens",
-    tags: ["event", "express"],
+    tags: [
+      "event",
+      "express",
+      "web3events",
+      "web3event",
+      "events",
+      "expressevent",
+    ],
     mainContentFocus: "TEXT_ONLY",
     locale: "en-US",
     appId: "Express_Event",
@@ -122,16 +128,12 @@ export const usePost: PostHook = ({
   const getEventLink = (eventMetadataId: string): string =>
     `${location.origin}${Routes.ExpressEvent}?id=${eventMetadataId}`;
 
-  const sendPost = async () => {
-    const eventMetadataId = (
-      await uploadMetadata({
-        v: "0.1",
-        publishingProfile: profile,
-      })
-    ).replace("ipfs://", "");
+  const sendPost = async (eventMetadataId: string) => {
+    console.log(eventMetadataId)
 
-    const postNftImage =
-      "https://arweave.net/" + (await getPlaceholderNftUrl("test title", true));
+    return;
+    // const postNftImage =
+    //   "https://arweave.net/" + (await getPlaceholderNftUrl("test title", true));
 
     const config = {
       profileId: profile!.id,
@@ -139,6 +141,7 @@ export const usePost: PostHook = ({
         "https://arweave.net/" +
         (await uploadToArweave({
           ...postMetadata,
+          name: `Express Event by ${profile!.handle}`,
           // metadata_id: `${profile!.id}-${+Date.now()}`,
           metadata_id: eventMetadataId,
           // image: postNftImage,
@@ -150,13 +153,7 @@ export const usePost: PostHook = ({
             eventMetadataId
           )})`,
           external_url: getEventLink(eventMetadataId),
-          attributes: [
-            {
-              traitType: "string",
-              displayType: "string",
-              value: eventMetadataId,
-            },
-          ],
+          tags: [eventMetadataId],
         })),
       collectModule: {
         freeCollectModule: {

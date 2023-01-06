@@ -26,3 +26,37 @@ export const getProfiles = gql`
     }
   }
 `;
+
+export const loginGetMessage = gql`
+  mutation loginGetMessage(
+    $domain: String!
+    $address: AddressEVM!
+    $chainID: ChainID!
+  ) {
+    loginGetMessage(
+      input: { domain: $domain, address: $address, chainID: $chainID }
+    ) {
+      message
+    }
+  }
+`;
+
+export const loginVerify = gql`
+  mutation loginVerify(
+    $domain: String!
+    $address: AddressEVM!
+    $chainID: ChainID!
+    $signature: String!
+  ) {
+    loginVerify(
+      input: {
+        domain: $domain
+        address: $address
+        chainID: $chainID
+        signature: $signature
+      }
+    ) {
+      accessToken
+    }
+  }
+`;

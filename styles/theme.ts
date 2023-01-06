@@ -57,6 +57,14 @@ const theme = extendTheme({
         default: "linear-gradient(90deg, #ABFE2C 0%, #DDFFA8 100%)",
         _dark: "linear-gradient(90deg, #ABFE2C 0%, #DDFFA8 100%)",
       },
+      cyberConnectGradient: {
+        default: "linear-gradient(90deg, #FFFFFF 0%, #D1D1D1 100%)",
+        _dark: "linear-gradient(90deg, #FFFFFF 0%, #D1D1D1 100%)",
+      },
+      twitterGradient: {
+        default: "linear-gradient(270deg, #3396FE 0%, #0072EA 100%)",
+        _dark: "linear-gradient(270deg, #3396FE 0%, #0072EA 100%)",
+      },
     },
   },
   colors: {

@@ -1,11 +1,14 @@
 import { useProfiles as lensUseProfiles } from "@memester-xyz/lens-use";
 import { useMemo } from "react";
 import { IProfile, ProfilesHook, ProfileType } from "../types";
+import { chain } from "wagmi";
 
 const getProfile = (profile: object | undefined): IProfile | undefined =>
   profile
     ? {
+        chainID: chain.polygon.id,
         id: profile?.id,
+        address: profile!.ownedBy,
         handle: profile?.handle,
         isDefault: profile?.isDefault,
         type: ProfileType.LENS,

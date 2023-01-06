@@ -7,7 +7,9 @@ import { getProfiles as getProfilesQuery } from "./queries";
 const getProfile = (profile: Object | undefined): IProfile | undefined =>
   profile
     ? {
-        id: profile!.id,
+        chainID: chain.mainnet.id,
+        id: profile!.profileID,
+        address: profile!.owner?.address,
         handle: profile!.handle,
         isDefault: profile!.isPrimary,
         type: ProfileType.CC,
@@ -18,11 +20,8 @@ export const useProfiles: ProfilesHook = (props) => {
   const [profiles, setProfiles] = useState<IProfile[]>();
   const defaultProfile = useMemo(
     () =>
-      getProfile(
-        profiles?.data?.address?.wallet?.profiles?.edges.filter(
-          ({ node }) => node?.isPrimary
-        )[0]?.node
-      ),
+      getProfile(profiles?.filter(({ node }) => node?.isPrimary)[0]?.node) ||
+      profiles?.[0],
     [profiles]
   );
 

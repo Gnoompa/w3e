@@ -343,3 +343,24 @@ export const CREATE_POST_TYPED_DATA = gql`
     }
   }
 `;
+
+export const RelayerResultFieldsFragmentDoc = gql`
+  fragment RelayerResultFields on RelayResult {
+    ... on RelayerResult {
+      txHash
+      txId
+    }
+    ... on RelayError {
+      reason
+    }
+  }
+`;
+
+export const CreatePostViaDispatcherDocument = gql`
+  mutation CreatePostViaDispatcher($request: CreatePublicPostRequest!) {
+    createPostViaDispatcher(request: $request) {
+      ...RelayerResultFields
+    }
+  }
+  ${RelayerResultFieldsFragmentDoc}
+`;

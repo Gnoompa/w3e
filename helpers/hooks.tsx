@@ -71,7 +71,7 @@ export function useRouterQuery<T = Record<string, any>>(router: NextRouter): T {
   const getRouterQuery = (routePath: string): T =>
     [...new URL(`d:dummy?${routePath.split("?")[1]}`).searchParams.entries()]
       .map((entry) => ({ [entry[0]]: entry[1] }))
-      .reduce((a, b) => ({ ...a, ...b })) as T;
+      .reduce((a, b) => ({ ...a, ...b }), []) as T;
 
   const [query, setQuery] = useState<T>(getRouterQuery(router.asPath));
 
