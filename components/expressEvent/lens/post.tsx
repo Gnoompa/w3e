@@ -14,17 +14,20 @@ import { uploadMediaToIpfs, uploadMetadata } from "../../../helpers/hooks";
 import { Routes } from "helpers/routes";
 import getPlaceholderNftUrl from "../getPlaceholderNftUrl";
 import { useMutation, useLazyQuery } from "@apollo/client";
-import { CREATE_POST_TYPED_DATA } from "./queries";
+import { CREATE_POST_TYPED_DATA, GET_PUBLICATIONS } from "./queries";
 import client from "./client";
 import { omit } from "lodash";
 import { uploadFileToArweave, uploadToArweave } from "../uploadToArweave";
+import { useQuery } from "@apollo/client";
+import { stables } from "../constants";
+import { defaultChainId } from "helpers/contract";
 
 export const usePost: PostHook = ({
   profile,
   content,
   attachments,
   priceToCollect,
-  priceToCollectCurrencyType,
+  eventMetadataId,
 }) => {
   const addressOrName = useLensHubAddress();
   const collectModule = ethers.constants.AddressZero;
@@ -32,6 +35,22 @@ export const usePost: PostHook = ({
   const collectModuleInitData = ethers.constants.HashZero;
   const referenceModule = ethers.constants.AddressZero;
   const referenceModuleInitData = "0x";
+
+  const { data: fetchedPost } = useQuery(GET_PUBLICATIONS, {
+    variables: {
+      request: {
+        profileId: profile?.id,
+        publicationTypes: ["POST"],
+        sources: ["Express_Event"],
+        metadata: {
+          tags: {
+            oneOf: [eventMetadataId],
+          },
+        },
+      },
+    },
+    skip: !profile?.id || !eventMetadataId,
+  });  
 
   const postMetadata = {
     version: "2.0.0",
@@ -55,7 +74,7 @@ export const usePost: PostHook = ({
     write,
     data,
     error: writeError,
-    status,
+    status: writeStatus,
   } = useContractWrite({
     addressOrName,
     contractInterface: hubABI,
@@ -64,6 +83,7 @@ export const usePost: PostHook = ({
     functionName: "postWithSig",
   });
 
+  const [status, setStatus] = useState<string>("idle");
   const [postData, setPostData] = useState<object>();
   const [getPostTypedData, { data: postTypedData }] = useMutation(
     CREATE_POST_TYPED_DATA,
@@ -76,8 +96,21 @@ export const usePost: PostHook = ({
   const { signTypedDataAsync } = useSignTypedData();
 
   useEffect(() => {
+    status !== "idle" && setStatus("idle");
+  }, [status]);
+
+  useEffect(() => {
+    writeStatus == "error" && setStatus("error");
+    writeStatus == "success" && setStatus("success");
+  }, [writeStatus]);
+
+  useEffect(() => {
     postData && getPostTypedData();
   }, [postData]);
+
+  useEffect(() => {
+    postData && getPostTypedData();
+  }, [eventMetadataId]);
 
   useEffect(() => {
     if (postTypedData) {
@@ -104,24 +137,26 @@ export const usePost: PostHook = ({
           postTypedData.createPostTypedData.typedData.value,
           "__typename"
         ),
-      }).then((signature) => {
-        const { v, r, s } = ethers.utils.splitSignature(signature);
-        const sig = { v, r, s, deadline };
+      })
+        .then((signature) => {
+          const { v, r, s } = ethers.utils.splitSignature(signature);
+          const sig = { v, r, s, deadline };
 
-        const inputStruct = {
-          profileId,
-          contentURI,
-          collectModule,
-          collectModuleInitData,
-          referenceModule,
-          referenceModuleInitData,
-          sig,
-        };
+          const inputStruct = {
+            profileId,
+            contentURI,
+            collectModule,
+            collectModuleInitData,
+            referenceModule,
+            referenceModuleInitData,
+            sig,
+          };
 
-        write({
-          recklesslySetUnpreparedArgs: [inputStruct],
-        });
-      });
+          write({
+            recklesslySetUnpreparedArgs: [inputStruct],
+          });
+        })
+        .catch((e) => setStatus("error"));
     }
   }, [postTypedData]);
 
@@ -129,9 +164,6 @@ export const usePost: PostHook = ({
     `${location.origin}${Routes.ExpressEvent}?id=${eventMetadataId}`;
 
   const sendPost = async (eventMetadataId: string) => {
-    console.log(eventMetadataId)
-
-    return;
     // const postNftImage =
     //   "https://arweave.net/" + (await getPlaceholderNftUrl("test title", true));
 
@@ -149,16 +181,30 @@ export const usePost: PostHook = ({
           //   "https://ipfs.io/ipfs/QmY9dUwYu67puaWBMxRKW98LPbXCznPwHUbhX5NeWnCJbX",
           // imageMimeType: "image/svg+xml",
           // imageMimeType: "image/jpeg",
-          content: `${content} \n\n [EVENT PAGE](${getEventLink(
+          content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost or collect\n\nEvent Page - ${getEventLink(
             eventMetadataId
-          )})`,
+          )}`,
           external_url: getEventLink(eventMetadataId),
           tags: [eventMetadataId],
         })),
       collectModule: {
-        freeCollectModule: {
-          followerOnly: true,
-        },
+        ...(priceToCollect
+          ? {
+              feeCollectModule: {
+                amount: {
+                  currency: stables[defaultChainId],
+                  value: `${priceToCollect}`,
+                },
+                recipient: profile?.address,
+                referralFee: 0,
+                followerOnly: false,
+              },
+            }
+          : {
+              freeCollectModule: {
+                followerOnly: false,
+              },
+            }),
       },
       referenceModule: {
         followerOnlyReferenceModule: false,
@@ -220,6 +266,7 @@ export const usePost: PostHook = ({
 
   return {
     send: sendPost,
+    post: fetchedPost?.publications?.items?.[0],
     response: data,
     error: writeError || undefined,
     status,

@@ -1,9 +1,14 @@
 export enum ProfileType {
-  LENS,
-  CC,
-  TWITTER,
+  LENS = "lens",
+  CC = "cc",
+  TWITTER = "twitter",
 }
 
+// export enum ProfileType {
+//   LENS,
+//   CC,
+//   TWITTER,
+// }
 export interface IProfile {
   chainID: number;
   id: string;
@@ -30,6 +35,7 @@ export type ProfilesHook = (props: ProfilesHookProps) => ProfilesHookReturnData;
 
 export type PostHookReturnData = {
   send: any;
+  post: object | undefined;
   error: object | undefined;
   response: object | undefined;
   status: string;
@@ -40,6 +46,7 @@ export type PostHook = (props: {
   content?: string;
   attachments?: Blob[];
   priceToCollect?: number;
+  eventMetadataId?: string;
 }) => PostHookReturnData;
 
 export type ExpressEventMetadata = {

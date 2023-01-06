@@ -15,7 +15,11 @@ import {
   Textarea,
   useColorMode,
 } from "@chakra-ui/react";
-import { ExternalLinkIcon } from "@chakra-ui/icons";
+import {
+  ExternalLinkIcon,
+  WarningIcon,
+  WarningTwoIcon,
+} from "@chakra-ui/icons";
 import React, { useEffect, useMemo, useState } from "react";
 import LensIcon from "public/icons/lens";
 import CyberConnectIcon from "public/icons/cyberConnect";
@@ -40,7 +44,7 @@ import TwitterIcon from "public/icons/twitter";
 import TicketIcon from "public/icons/brandTicket";
 import UsdcIcon from "public/icons/usdc";
 import { motion, AnimatePresence } from "framer-motion";
-import { uploadMetadata, useRouterQuery } from "helpers/hooks";
+import { getRouterQuery, uploadMetadata, useRouterQuery } from "helpers/hooks";
 import { useRouter } from "next/router";
 import { Routes } from "helpers/routes";
 import dynamic from "next/dynamic";
@@ -62,14 +66,18 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
   const [eventTitle, setEventTitle] = useState<string>();
   const [eventDetails, setEventDetails] = useState<string>();
   const [eventConfigId, setEventConfigId] = useState<string>();
-  const postContent = `${eventTitle}\n\n${eventDetails}`;
+  const postContent = `${eventTitle || "Express Event"}\n\n${
+    eventDetails || ""
+  }`;
   const [postPayload, setPostPayload] = useState<Parameters<PostHook>[0]>();
 
   useEffect(() => {
+    setEventId(getRouterQuery(router.asPath).id);
+
     eventId &&
       eventId !== queryEventId &&
-      router.push(`${Routes.EventExplorer}?${eventId}`);
-  }, [eventId]);
+      router.push(`${Routes.ExpressEvent}?id=${eventId}`);
+  }, [eventId, router.query]);
 
   useEffect(() => {
     setPostPayload({ ...postPayload, content: postContent });
@@ -112,9 +120,19 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
       process: lensPost,
       // isComplete: true,
       // process: (configId) => {},
-      isComplete: !!lensPostData,
+      isComplete: lensPostStatus == "success",
     },
     [ProfileType.CC]: {
+      id: ProfileType.CC,
+      label: "Processing",
+      subtitle: "CyberConnect",
+      bg: "var(--chakra-colors-cyberConnectGradient)",
+      color: "#222",
+      icon: CyberConnectIcon,
+      process: (configId) => {},
+      isComplete: true,
+    },
+    [ProfileType.TWITTER]: {
       id: ProfileType.CC,
       label: "Processing",
       subtitle: "CyberConnect",
@@ -138,39 +156,48 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
   };
 
   const finalEventProcessingStage = {
-    id: 999,
+    id: "final",
     label: "All done",
     subtitle: "enjoy 😊",
     bg: "var(--chakra-colors-bg)",
     color: "var(--chakra-colors-text)",
     icon: TicketIcon,
     isComplete: true,
-    process: () =>
+    process: (eventConfigId) =>
       setTimeout(
         () => (
-          setEventProcessingStageId(undefined), setEventConfigId(undefined)
+          setEventProcessingStageId(undefined),
+          router.push(`${Routes.ExpressEvent}?id=${eventConfigId}`),
+          setEventTitle(""),
+          setEventDetails(""),
+          setEventConfigId(undefined)
         ),
         2000
       ),
   };
 
-  // console.log(
-  //   useQuery(GET_PUBLICATIONS, {
-  //     variables: {
-  //       request: {
-  //         profileId: lensDefaultProfile?.id,
-  //         publicationTypes: ["POST"],
-  //         sources: ["Express_Event"],
-  //         metadata: {
-  //           tags: {
-  //             oneOf: ["QmPWn7YjoedkeqzbuL53oFRSucCgkcncV45akE3mJVoUxm"],
-  //           },
-  //         },
-  //       },
-  //     },
-  //     skip: !lensDefaultProfile?.id,
-  //   })
-  // );
+  const faultyEventProcessingStage = {
+    id: "error",
+    label: "Oops",
+    subtitle: "smth went wrong 😅",
+    bg: "var(--chakra-colors-bg)",
+    color: "var(--chakra-colors-text)",
+    icon: (props) => (
+      <WarningTwoIcon
+        {...props}
+        color={"#e91e63 !important"}
+        transform={"scale(12)!important"}
+      />
+    ),
+    isComplete: true,
+    process: () =>
+      setTimeout(
+        () => (
+          setEventProcessingStageId(undefined), setEventConfigId(undefined)
+        ),
+        3000
+      ),
+  };
 
   const publishingProfileTypes = [
     {
@@ -245,11 +272,20 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
   }, [defaultProfiles]);
 
   useEffect(() => {
+    eventProcessingStages &&
+      eventProcessingStages[eventProcessingStageId]?.id == ProfileType.LENS &&
+      (lensPostStatus == "success" &&
+        setEventProcessingStageId(eventProcessingStageId + 1),
+      lensPostStatus == "error" &&
+        setEventProcessingStageId(eventProcessingStages.length - 1));
+  }, [lensPostStatus, eventProcessingStages, eventProcessingStageId]);
+
+  useEffect(() => {
     eventConfigId &&
       eventProcessingStageId !== undefined &&
       eventProcessingStages &&
       (eventProcessingStages[eventProcessingStageId]?.isComplete &&
-      eventProcessingStages[eventProcessingStageId + 1]
+      eventProcessingStages[eventProcessingStageId + 2]
         ? setTimeout(
             () => setEventProcessingStageId(eventProcessingStageId + 1),
             2500
@@ -276,6 +312,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
         profileTypeToEventProcessingStage[ProfileType.LENS],
         profileTypeToEventProcessingStage[ProfileType.CC],
         finalEventProcessingStage,
+        faultyEventProcessingStage,
       ]
     );
 
@@ -508,7 +545,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                         BASIC
                       </Text>
                       <Text fontWeight={"bold"} fontSize={"xs"} opacity={0.7}>
-                        FOR FOLLOWERS AND SUBSCRIBERS
+                        FOR FOLLOWERS
                       </Text>
                     </Flex>
                   </Flex>
@@ -648,7 +685,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                             }
                           </Text>
                           <Text
-                            fontWeight={"bold"}
+                            fontWeight={"semibold"}
                             fontSize="xl"
                             lineHeight={".75em"}
                           >

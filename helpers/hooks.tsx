@@ -67,6 +67,11 @@ export function useScrollShadow(element: HTMLElement | null): boolean {
   return shouldShowShadow;
 }
 
+export const getRouterQuery = (routePath: string) =>
+  [...new URL(`d:dummy?${routePath.split("?")[1]}`).searchParams.entries()]
+    .map((entry) => ({ [entry[0]]: entry[1] }))
+    .reduce((a, b) => ({ ...a, ...b }), []);
+
 export function useRouterQuery<T = Record<string, any>>(router: NextRouter): T {
   const getRouterQuery = (routePath: string): T =>
     [...new URL(`d:dummy?${routePath.split("?")[1]}`).searchParams.entries()]

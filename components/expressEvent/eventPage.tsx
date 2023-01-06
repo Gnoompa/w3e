@@ -4,52 +4,40 @@ import {
   AccordionIcon,
   AccordionItem,
   AccordionPanel,
-  Box,
   Button,
   Container,
   Divider,
   Flex,
   Heading,
-  Icon,
   Image,
-  Input,
-  Link,
-  Select,
   Skeleton,
-  Spinner,
-  Switch,
   Text,
-  Textarea,
   useColorMode,
+  Link,
 } from "@chakra-ui/react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import LensIcon from "public/icons/lens";
-import CyberConnectIcon from "public/icons/cyberConnect";
-import PublishIcon from "public/icons/publish";
 import { useAccount } from "wagmi";
 import { useProfiles as useCCProfiles } from "./cc/profile";
-import { useProfiles as useLensProfiles } from "./lens/profile";
+import {
+  getProfileExternalLink,
+  useProfiles as useLensProfiles,
+} from "./lens/profile";
 import { useAuth as useLensAuth } from "./lens/auth";
 import { useAuth as useCCAuth } from "./cc/auth";
-import Snowfall from "react-snowfall";
 import { useModal } from "connectkit";
-import {
-  ExpressEventConfig,
-  ExpressEventMetadata,
-  IProfile,
-  PostHook,
-  ProfileType,
-} from "./types";
-import { xor } from "lodash";
-import TwitterIcon from "public/icons/twitter";
-import TicketIcon from "public/icons/brandTicket";
-import UsdcIcon from "public/icons/usdc";
-import { motion, AnimatePresence } from "framer-motion";
-import { getIPFSUri, uploadMetadata, useRouterQuery } from "helpers/hooks";
+import { ExpressEventMetadata, ProfileType } from "./types";
+import { motion } from "framer-motion";
+import { getIPFSUri, useRouterQuery } from "helpers/hooks";
 import { useRouter } from "next/router";
-import { getTokenMetadataUris } from "helpers/contract";
 import BrandTicket from "public/icons/brandTicket";
+import { Routes } from "helpers/routes";
+import { usePost as useLensPost } from "./lens/post";
+import {
+  profileTypeToExternalLinkMap,
+  profileTypeToStylesMap,
+} from "./constants";
 
 export const EventPage: React.FC = (): JSX.Element => {
   const { setColorMode } = useColorMode();
@@ -62,6 +50,12 @@ export const EventPage: React.FC = (): JSX.Element => {
   // Lens
   const { isAuthed: isLensAuthed, auth: lensAuth } =
     useLensAuth(connectedAddress);
+  const { post: lensPost } = useLensPost({
+    profile: eventMetadata?.profiles.filter(
+      ({ type }) => type == ProfileType.LENS
+    )[0],
+    eventMetadataId: queryEventId,
+  });
   const { profiles: lensProfiles, defaultProfile: lensDefaultProfile } =
     useLensProfiles({
       address: connectedAddress,
@@ -73,6 +67,10 @@ export const EventPage: React.FC = (): JSX.Element => {
     useCCProfiles({
       address: connectedAddress,
     });
+
+  const profileTypeToPostMap = {
+    [ProfileType.LENS]: lensPost,
+  };
 
   useEffect(() => {
     setColorMode("dark");
@@ -158,18 +156,17 @@ export const EventPage: React.FC = (): JSX.Element => {
             bg={"accentPrimaryContrast"}
             borderRadius="sm"
             h={"7rem"}
-            p=".5rem 1.5rem"
+            p="1rem 1.5rem"
             cursor={"pointer"}
           >
-            <Text
-              fontWeight={"bold"}
-              fontSize={"2xl"}
-              overflowWrap={"initial"}
-              lineHeight="1em"
-              w={"5rem"}
-            >
-              Show ticket
-            </Text>
+            <Flex flexDir={"column"}>
+              <Text fontWeight={"bold"} fontSize={"2xl"} lineHeight="1.15em">
+                Show
+              </Text>
+              <Text fontWeight={"bold"} fontSize={"2xl"} lineHeight="1.15em">
+                ticket
+              </Text>
+            </Flex>
             <motion.div
               style={{
                 position: "absolute",
@@ -178,7 +175,7 @@ export const EventPage: React.FC = (): JSX.Element => {
               }}
               variants={{ idle: { scale: 1 }, hover: { scale: 1.1 } }}
             >
-              <BrandTicket width="5rem" height="5rem" />
+              <BrandTicket width="5.5rem" height="5.5rem" />
             </motion.div>
           </Container>
           <Container
@@ -193,18 +190,17 @@ export const EventPage: React.FC = (): JSX.Element => {
             bg={"accentPrimaryContrast"}
             borderRadius="sm"
             h={"7rem"}
-            p=".5rem 1.5rem"
+            p="1rem 1.5rem"
             cursor={"pointer"}
           >
-            <Text
-              fontWeight={"bold"}
-              fontSize={"2xl"}
-              overflowWrap={"initial"}
-              lineHeight="1em"
-              w="5rem"
-            >
-              Validate ticket
-            </Text>
+            <Flex flexDir={"column"}>
+              <Text fontWeight={"bold"} fontSize={"2xl"} lineHeight="1.15em">
+                Validate
+              </Text>
+              <Text fontWeight={"bold"} fontSize={"2xl"} lineHeight="1.15em">
+                tickets
+              </Text>
+            </Flex>
             <motion.div
               style={{
                 position: "absolute",
@@ -213,7 +209,7 @@ export const EventPage: React.FC = (): JSX.Element => {
               }}
               variants={{ idle: { scale: 1 }, hover: { scale: 1.1 } }}
             >
-              <Image src="/icons/qr.png" width="5rem" height="5rem" />
+              <Image src="/icons/qr.png" width="5.5rem" height="5.5rem" />
             </motion.div>
           </Container>
         </Flex>
@@ -241,11 +237,10 @@ export const EventPage: React.FC = (): JSX.Element => {
               pos={"relative"}
               flexDir={"column"}
               gap={".5rem"}
-              cursor={"pointer"}
             >
-              <Flex flexDir={"column"} gap={"1rem"} mt="1rem">
+              <Flex flexDir={"column"} gap={"1rem"} mt=".5rem" mb=".5rem">
                 <Flex flexDir={"column"} ml={"4.5rem"}>
-                  <Text fontWeight={"bold"} fontSize={"xl"}>
+                  <Text fontWeight={"bold"} fontSize={"2xl"}>
                     Basic
                   </Text>
                   <Text
@@ -254,31 +249,51 @@ export const EventPage: React.FC = (): JSX.Element => {
                     lineHeight={"1em"}
                     fontSize={"sm"}
                   >
-                    SUBSCRIBE OR FOLLOW ANY PROFILE
+                    FOLLOW ANY PROFILE
                   </Text>
                 </Flex>
-                <Flex gap=".5rem" ml={"4.5rem"} w={"fit-content"}>
-                  <Container
-                    as={Flex}
-                    alignItems={"center"}
-                    gap={"1rem"}
-                    bg={"lensGradient"}
-                    p={".5rem 1rem"}
-                    borderRadius={"sm"}
-                  >
-                    <LensIcon width={"1.25rem"} height={"1.25rem"} />
-                    <ExternalLinkIcon color={"lensText"} />
-                  </Container>
-                </Flex>
+                {eventMetadata?.profiles?.length ? (
+                  <Flex gap=".5rem" ml={"4.5rem"} w={"fit-content"}>
+                    {eventMetadata?.profiles.map((profile) => (
+                      <Link
+                        href={profileTypeToExternalLinkMap[
+                          profile.type
+                        ].profile?.(profile.handle)}
+                        target="_blank"
+                      >
+                        <Container
+                          as={Flex}
+                          alignItems={"center"}
+                          gap={"1rem"}
+                          bg={profileTypeToStylesMap[profile.type].bg}
+                          p={".5rem 1rem"}
+                          borderRadius={"sm"}
+                          transition={".2s"}
+                          _hover={{ opacity: 0.8 }}
+                        >
+                          {profileTypeToStylesMap[profile.type].icon({
+                            width: "1.25rem",
+                            height: "1.25rem",
+                          })}
+                          <ExternalLinkIcon
+                            color={profileTypeToStylesMap[profile.type].color}
+                          />
+                        </Container>
+                      </Link>
+                    ))}
+                  </Flex>
+                ) : (
+                  <Skeleton h={"2.25rem"} ml={"4.5rem"} />
+                )}
                 <motion.div
                   style={{
                     position: "absolute",
-                    left: "-3rem",
-                    top: "1rem",
+                    left: "-3.5rem",
+                    top: ".5rem",
                   }}
-                  variants={{ idle: { scale: 1 }, hover: { scale: 1.1 } }}
+                  variants={{ idle: { scale: 1 }, hover: { scale: 1.05 } }}
                 >
-                  <BrandTicket width="6rem" height="6rem" />
+                  <BrandTicket width="7rem" height="7rem" />
                 </motion.div>
               </Flex>
             </Container>
@@ -291,11 +306,10 @@ export const EventPage: React.FC = (): JSX.Element => {
               pos={"relative"}
               flexDir={"column"}
               gap={".5rem"}
-              cursor={"pointer"}
             >
               <Flex flexDir={"column"} gap={"1rem"}>
                 <Flex flexDir={"column"} ml={"4.5rem"}>
-                  <Text fontWeight={"bold"} fontSize={"xl"}>
+                  <Text fontWeight={"bold"} fontSize={"2xl"}>
                     VIP
                   </Text>
                   <Text
@@ -304,33 +318,55 @@ export const EventPage: React.FC = (): JSX.Element => {
                     lineHeight={"1em"}
                     fontSize={"sm"}
                   >
-                    REPOST OR COLLECT ANY POST
+                    REPOST AND COLLECT ANY POST
                   </Text>
                 </Flex>
-                <Flex gap=".5rem" ml={"4.5rem"} w={"fit-content"}>
-                  <Container
-                    as={Flex}
-                    alignItems={"center"}
-                    gap={"1rem"}
-                    bg={"lensGradient"}
-                    p={".5rem 1rem"}
-                    borderRadius={"sm"}
-                  >
-                    <LensIcon width={"1.25rem"} height={"1.25rem"} />
-                    <ExternalLinkIcon color={"lensText"} />
-                  </Container>
-                </Flex>
+                {eventMetadata?.profiles?.length ? (
+                  <Flex gap=".5rem" ml={"4.5rem"} w={"fit-content"}>
+                    {eventMetadata?.profiles
+                      .filter(({ type }) => type !== ProfileType.CC)
+                      .map((profile) => (
+                        <Link
+                          href={profileTypeToExternalLinkMap[
+                            profile.type
+                          ].post?.(profileTypeToPostMap[profile.type]?.id)}
+                          target="_blank"
+                        >
+                          <Container
+                            as={Flex}
+                            alignItems={"center"}
+                            gap={"1rem"}
+                            bg={profileTypeToStylesMap[profile.type].bg}
+                            p={".5rem 1rem"}
+                            borderRadius={"sm"}
+                            transition={".2s"}
+                            _hover={{ opacity: 0.8 }}
+                          >
+                            {profileTypeToStylesMap[profile.type].icon({
+                              width: "1.25rem",
+                              height: "1.25rem",
+                            })}
+                            <ExternalLinkIcon
+                              color={profileTypeToStylesMap[profile.type].color}
+                            />
+                          </Container>
+                        </Link>
+                      ))}
+                  </Flex>
+                ) : (
+                  <Skeleton h={"2.25rem"} ml={"4.5rem"} />
+                )}
                 <motion.div
                   style={{
                     position: "absolute",
-                    left: "-3rem",
+                    left: "-3.5rem",
                     top: "0rem",
                   }}
-                  variants={{ idle: { scale: 1 }, hover: { scale: 1.1 } }}
+                  variants={{ idle: { scale: 1 }, hover: { scale: 1.05 } }}
                 >
                   <BrandTicket
-                    width="6rem"
-                    height="6rem"
+                    width="7rem"
+                    height="7rem"
                     filter={"hue-rotate(270deg)"}
                   />
                 </motion.div>
@@ -338,6 +374,14 @@ export const EventPage: React.FC = (): JSX.Element => {
             </Container>
           </Flex>
         </Flex>
+        <Button
+          variant={"accent"}
+          borderRadius="sm"
+          color={"text"}
+          onClick={() => router.push(Routes.ExpressEvent)}
+        >
+          Host more events
+        </Button>
       </Flex>
     </Flex>
   );

@@ -162,9 +162,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <meta property="og:url" content="https://web3events.ai" />
         <meta property="og:site_name" content="Web3Events" data-rh="true" />
         <meta property="og:image:type" content="image/png" data-rh="true" />
-        <meta property="og:image" content="/og-cover.png" data-rh="true" />
-        <meta property="og:image:width" content="400" />
-        <meta property="og:image:height" content="400" />
+        <meta property="og:image" content="/og-cover.png" data-rh="true" />        
         // OpenGraph
         <meta
           property="og:title"
