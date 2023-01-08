@@ -1,0 +1,62 @@
+export enum ProfileType {
+  LENS = "lens",
+  CC = "cc",
+  TWITTER = "twitter",
+}
+
+export enum TicketTiers {
+  BASIC = "basic",
+  VIP = "vip",
+}
+
+// export enum ProfileType {
+//   LENS,
+//   CC,
+//   TWITTER,
+// }
+export interface IProfile {
+  chainID: number;
+  id: string;
+  address: string;
+  handle: string;
+  type: ProfileType;
+  isDefault: boolean;
+}
+
+export type ProfilesHookProps = {
+  address: string | undefined;
+};
+
+export type ProfilesHookReturnData = {
+  profiles: IProfile[] | undefined;
+  defaultProfile: IProfile | undefined;
+};
+
+export type ProfilesHook = (props: ProfilesHookProps) => ProfilesHookReturnData;
+
+// export type PostHookProps = {
+//   profile: IProfile | undefined;
+// };
+
+export type PostHookReturnData = {
+  send: any;
+  post: object | undefined;
+  error: object | undefined;
+  response: object | undefined;
+  status: string;
+};
+
+export type PostHook = (props: {
+  profile?: IProfile;
+  content?: string;
+  attachments?: Blob[];
+  priceToCollect?: number;
+  eventMetadataId?: string;
+}) => PostHookReturnData;
+
+export type ExpressEventMetadata = {
+  title: string;
+  details: string;
+  profiles: IProfile[];
+  v: string;
+};

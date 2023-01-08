@@ -1,7 +1,11 @@
-import { extendTheme } from "@chakra-ui/react";
+import { extendTheme, ThemeConfig } from "@chakra-ui/react";
 import { mode } from "@chakra-ui/theme-tools";
 
 const theme = extendTheme({
+  config: {
+    initialColorMode: "light",
+    useSystemColorMode: false,
+  } as ThemeConfig,
   styles: {
     global: (props) => ({
       body: {
@@ -9,20 +13,70 @@ const theme = extendTheme({
       },
     }),
   },
+  semanticTokens: {
+    colors: {
+      text: {
+        default: "#333",
+        _dark: "#fff",
+      },
+      textContrast: {
+        default: "#fff",
+        _dark: "#333",
+      },
+      bg: {
+        default: "#F1F1F1",
+        _dark: "linear-gradient(111.62deg, #171717 0%, #202020 96.72%)",
+      },
+      bgContrast: {
+        default: "#202020",
+        _dark: "#F1F1F1",
+      },
+      bgContrastAccent: {
+        default: "#747474",
+        _dark: "#747474",
+      },
+      transparentOverlay: {
+        default:
+          "linear-gradient(270deg, #1E1E1E 0%, rgba(30, 30, 30, 0.85) 100%)",
+        _dark:
+          "linear-gradient(270deg, #1E1E1E 0%, rgba(30, 30, 30, 0.85) 100%)",
+      },
+      accent: {
+        default: "#3396FE",
+        _dark: "#3396FE",
+      },
+      border: {
+        default: "#C4C4C4",
+        _dark: "#202020",
+      },
+      lensText: {
+        default: "#00501E",
+        _dark: "#00501E",
+      },
+      lensGradient: {
+        default: "linear-gradient(90deg, #ABFE2C 0%, #DDFFA8 100%)",
+        _dark: "linear-gradient(90deg, #ABFE2C 0%, #DDFFA8 100%)",
+      },
+      cyberConnectGradient: {
+        default: "linear-gradient(90deg, #FFFFFF 0%, #D1D1D1 100%)",
+        _dark: "linear-gradient(90deg, #FFFFFF 0%, #D1D1D1 100%)",
+      },
+      twitterGradient: {
+        default: "linear-gradient(270deg, #3396FE 0%, #0072EA 100%)",
+        _dark: "linear-gradient(270deg, #3396FE 0%, #0072EA 100%)",
+      },
+    },
+  },
   colors: {
-    bg: "#F1F1F1",
     bgAccent: "#fff",
-    text: "#333",
     textAccent: "#EC2CB6",
     textSecondary: "#3F3F3F",
-    textContrast: "#fff",
     textContrastSecondary: "#747474",
     textContrastAccent: "#BCBCBC",
     accentPrimary: "#202020",
     accentPrimaryContrast: "#2E2E2E",
     accentPrimaryFaded: "#0000000F",
     accentSecondary: "#3396FE",
-    border: "#C4C4C4",
     warn: "#FFB21C",
     success: "#4caf50",
     accentGradient: "linear-gradient(194.04deg, #3396FE 0%, #00FFFF 100%)",
@@ -80,7 +134,7 @@ const theme = extendTheme({
         }),
         walletConnect: (props) => ({
           bg: "accentPrimary",
-          color: "textContrast",
+          color: "#fff",
         }),
         accent: (props) => ({
           color: "textContrast",
@@ -165,13 +219,14 @@ const theme = extendTheme({
         px: "0",
       },
       variants: {
-        mainNav: {
+        mainNav: (props) => ({
           backdropFilter: "blur(10px)",
           borderBottom: "1px solid",
           borderColor: "border",
-          bg: "#f1f1f1d1",
+          bg: mode("#f1f1f1d1", "#2e2e2ebd")(props),
           zIndex: "overlay",
-        },
+          transition: "background .2s",
+        }),
         padded: {
           px: ["1rem", "2rem"],
         },
@@ -299,10 +354,31 @@ const theme = extendTheme({
         },
       },
     },
-    Heading: {
-      baseStyle: {
-        textTransform: "capitalize",
+    Switch: {
+      baseStyle: (props) => ({
+        track: {
+          p: ".25rem",
+          bg: "bg",
+          _checked: {
+            bg: "bg",
+          },
+        },
+        thumb: {
+          bg: "bgContrastAccent",
+          _checked: {
+            bg: "accent",
+          },
+        },
+      }),
+      defaultProps: {
+        size: "lg",
       },
+    },
+    Heading: {
+      baseStyle: (props) => ({
+        textTransform: "capitalize",
+        color: "text",
+      }),
       variants: {
         contrast: {
           color: "textContrast",

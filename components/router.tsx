@@ -1,11 +1,12 @@
 import type { NextPage } from "next";
 import dynamic from "next/dynamic";
-import { Spinner } from "@chakra-ui/react";
+import { Spinner, useColorMode } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { Routes } from "helpers/routes";
 import StartPage from "./startPage";
 import { useState, useEffect } from "react";
 import App from "./app";
+import ExpressEvent from "./expressEvent";
 
 const StylizedSpinner = () => (
   <Spinner
@@ -33,16 +34,22 @@ const Dashboard = dynamic(() => import("./dashboard"), {
 const Router: React.FC = () => {
   const router = useRouter();
   const [routePath, setRoutePath] = useState<Routes>();
+  const { setColorMode } = useColorMode();
 
   useEffect(() => {
     setRoutePath(router.asPath.split("?")[0] as Routes);
   }, [router.asPath]);
+
+  useEffect(() => {
+    routePath !== Routes.ExpressEvent && setColorMode("light");
+  }, [routePath]);
 
   const RouteToComponentMap = {
     [Routes.StartPage]: () => <StartPage />,
     [Routes.EventForm]: () => <EventForm />,
     [Routes.EventPage]: () => <EventPage />,
     [Routes.EventExplorer]: () => <EventExplorer />,
+    [Routes.ExpressEvent]: () => <ExpressEvent />,
     [Routes.FAQ]: () => <StartPage />,
     [Routes.Dashboard]: () => <Dashboard />,
   };
