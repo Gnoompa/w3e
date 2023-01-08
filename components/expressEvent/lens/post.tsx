@@ -1,26 +1,91 @@
-import {
-  usePrepareContractWrite,
-  useContractWrite,
-  chain,
-  useSignTypedData,
-} from "wagmi";
+import { useContractWrite, chain, useSignTypedData } from "wagmi";
 import { hub as hubABI } from "./abi";
 import { useLensHubAddress } from "@memester-xyz/lens-use/dist/context/LensContext";
-import { useContractPost } from "@memester-xyz/lens-use";
-import { CurrencyTypes, PostHook } from "../types";
+import { PostHook } from "../types";
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
-import { uploadMediaToIpfs, uploadMetadata } from "../../../helpers/hooks";
 import { Routes } from "helpers/routes";
-import getPlaceholderNftUrl from "../getPlaceholderNftUrl";
-import { useMutation, useLazyQuery } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import { CREATE_POST_TYPED_DATA, GET_PUBLICATIONS } from "./queries";
 import client from "./client";
 import { omit } from "lodash";
-import { uploadFileToArweave, uploadToArweave } from "../uploadToArweave";
-import { useQuery } from "@apollo/client";
+import { uploadToArweave } from "../uploadToArweave";
+import { gql, useQuery } from "@apollo/client";
 import { stables } from "../constants";
 import { defaultChainId } from "helpers/contract";
+import { getDefaultProfile } from "./profile";
+
+export const hasCollectedPost = async (
+  postCollectNftAddress: string,
+  who: string /** ethereum address */
+): Promise<boolean> =>
+  !!(
+    await client.query({
+      query: gql`
+        query Nfts($request: NFTsRequest!) {
+          nfts(request: $request) {
+            items {
+              tokenId
+            }
+          }
+        }
+      `,
+      variables: {
+        request: {
+          ownerAddress: who,
+          contractAddress: postCollectNftAddress,
+          limit: 1,
+          chainIds: [defaultChainId],
+        },
+      },
+    })
+  )?.data?.nfts?.items?.length;
+
+export const hasMirroredPost = async (
+  publicationId: string,
+  who: string /** ethereum address */
+): Promise<boolean> => {
+  const defaultProfile = await getDefaultProfile(who);
+
+  return !!(
+    defaultProfile &&
+    (
+      await client.query({
+        query: gql`
+          query Publications(
+            $publicationId: InternalPublicationId!
+            $who: ProfileId!
+          ) {
+            publications(
+              request: { publicationIds: [$publicationId], limit: 1 }
+            ) {
+              items {
+                __typename
+                ... on Post {
+                  mirrors(by: $who)
+                }
+              }
+            }
+          }
+        `,
+        variables: {
+          publicationId,
+          who: defaultProfile.id,
+        },
+      })
+    )?.data?.publications?.items?.length
+  );
+};
+
+// hasCollectedPost(
+//   "0xfE96AAc921140b4E99Cd3917adDC7A7CB1FdcA41",
+//   "0xadfa1b280548095f91b22c4568DAae073B477689"
+// ).then(a => console.log(a, 32423));
+
+// hasMirroredPost(
+//   "0x0121-0x36",
+//   "0x5b3999bc2e8c46f75BF629DA951559D83E34FBdD"
+// ).then(a => console.log(a, 111));
 
 export const usePost: PostHook = ({
   profile,
@@ -50,7 +115,7 @@ export const usePost: PostHook = ({
       },
     },
     skip: !profile?.id || !eventMetadataId,
-  });  
+  });
 
   const postMetadata = {
     version: "2.0.0",
@@ -181,7 +246,7 @@ export const usePost: PostHook = ({
           //   "https://ipfs.io/ipfs/QmY9dUwYu67puaWBMxRKW98LPbXCznPwHUbhX5NeWnCJbX",
           // imageMimeType: "image/svg+xml",
           // imageMimeType: "image/jpeg",
-          content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost or collect\n\nEvent Page - ${getEventLink(
+          content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost and collect\n\nEvent Page - ${getEventLink(
             eventMetadataId
           )}`,
           external_url: getEventLink(eventMetadataId),

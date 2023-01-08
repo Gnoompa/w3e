@@ -31,25 +31,25 @@ export const MenuBreakpointValue = () =>
             fontSize={"3xl"}
             icon={<HamburgerIcon />}
           />
-          <MenuList>
+          <MenuList bg={"bg"}>
             <MenuItem>
               <NextLink href={Routes.EventForm} passHref>
-                <Link>Events</Link>
+                <Link color={"text"}>Events</Link>
               </NextLink>
             </MenuItem>
             <MenuItem>
               <NextLink href={Routes.ExpressEvent} passHref>
-                <Link>Express Event</Link>
+                <Link color={"text"}>Express Event</Link>
               </NextLink>
             </MenuItem>
             <MenuItem>
               <NextLink href={Routes.EventExplorer} passHref>
-                <Link>Explore</Link>
+                <Link color={"text"}>Explore</Link>
               </NextLink>
             </MenuItem>
             <MenuItem>
               <Flex align={"center"} gap=".5rem">
-                <Link>Subscriptions</Link>
+                <Link color={"text"}>Subscriptions</Link>
                 <Badge variant={"solid"} color={"warn"} bg={"accentPrimary"}>
                   soon
                 </Badge>
@@ -72,7 +72,7 @@ export const MenuBreakpointValue = () =>
                 <ChevronDownIcon />
               </Flex>
             </MenuButton>
-            <MenuList>
+            <MenuList bg={"bg"}>
               <MenuItem>
                 <NextLink href={Routes.EventForm}>
                   <Flex align={"center"} gap={"2rem"}>

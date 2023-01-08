@@ -14,21 +14,33 @@ import {
   Text,
   useColorMode,
   Link,
+  Box,
+  Icon,
+  Modal,
+  ModalContent,
+  CloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { ExternalLinkIcon } from "@chakra-ui/icons";
-import React, { useEffect, useState } from "react";
+import {
+  ExternalLinkIcon,
+  Search2Icon,
+  SearchIcon,
+  WarningTwoIcon,
+} from "@chakra-ui/icons";
+import React, { useEffect, useRef, useState } from "react";
 import LensIcon from "public/icons/lens";
-import { useAccount } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 import { useProfiles as useCCProfiles } from "./cc/profile";
 import {
   getProfileExternalLink,
   useProfiles as useLensProfiles,
 } from "./lens/profile";
+import TicketIcon from "public/icons/brandTicket";
 import { useAuth as useLensAuth } from "./lens/auth";
 import { useAuth as useCCAuth } from "./cc/auth";
 import { useModal } from "connectkit";
 import { ExpressEventMetadata, ProfileType } from "./types";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { getIPFSUri, useRouterQuery } from "helpers/hooks";
 import { useRouter } from "next/router";
 import BrandTicket from "public/icons/brandTicket";
@@ -38,6 +50,9 @@ import {
   profileTypeToExternalLinkMap,
   profileTypeToStylesMap,
 } from "./constants";
+import QRCode from "qrcode.react";
+import QrScanner from "@components/ui/qrScanner";
+import { ethers } from "ethers";
 
 export const EventPage: React.FC = (): JSX.Element => {
   const { setColorMode } = useColorMode();
@@ -68,9 +83,84 @@ export const EventPage: React.FC = (): JSX.Element => {
       address: connectedAddress,
     });
 
+  const ticketMessageToSign =
+    "Sign this message to show your ticket. It is free";
+  const {
+    data: signedTicketData,
+    isError: signTicketError,
+    isLoading: signTicketLoading,
+    isSuccess: signTicketSuccess,
+    signMessage: signTicketMessage,
+  } = useSignMessage({
+    message: ticketMessageToSign,
+  });
+
   const profileTypeToPostMap = {
     [ProfileType.LENS]: lensPost,
   };
+
+  const processingStages = {
+    signing: {
+      id: 0,
+      label: "Preparing",
+      subtitle: "Please, sign",
+      bg: "rgba(32, 32, 32, 1)",
+      color: "var(--chakra-colors-text)",
+      icon: BrandTicket,
+    },
+  } as {
+    [key: string | number]: {
+      id: string | number;
+      label: string;
+      subtitle: string;
+      bg: string;
+      color: string;
+      icon: React.FC;
+    };
+  };
+
+  const ticketTypes = {
+    basic: {
+      title: "Basic",
+      icon: () => BrandTicket,
+    },
+    vip: {
+      title: "VIP",
+      icon: () => BrandTicket,
+    },
+    invalid: {
+      title: "Invalid",
+      icon: (props) => (
+        <WarningTwoIcon {...props} color={"#e91e63 !important"} />
+      ),
+    },
+    processing: {
+      title: "Validating",
+      icon: (props) => (
+        <Search2Icon
+          {...props}
+          w="6rem"
+          h="6rem"
+          mt={"-2rem"}
+          pr={"1.75rem"}
+          color={"#fff"}
+        />
+      ),
+    },
+  };
+
+  const [activeProcessingStageId, setActiveProcessingStageId] =
+    useState<number>();
+  const [activeProcessingStages, setActiveProcessingStages] =
+    useState<typeof processingStages["signing"][]>();
+
+  const [ticketQrData, setTicketQrData] = useState<any>();
+  const [scannedTicketData, setScannedTicketData] = useState<string>();
+  const [scannedTicket, setScannedTicket] = useState<object>();
+  const scannedTicketCleanupTimeout = useRef(0);
+  const [isValidatingTicket, setIsValidatingTicket] = useState<boolean>(false);
+  const [isUserMediaAvailable, setIsUserMediaAvailable] =
+    useState<boolean>(true);
 
   useEffect(() => {
     setColorMode("dark");
@@ -80,11 +170,90 @@ export const EventPage: React.FC = (): JSX.Element => {
     queryEventId && getEventMetadata();
   }, [queryEventId]);
 
+  useEffect(() => {
+    activeProcessingStageId === 0 &&
+      connectedAddress &&
+      !signTicketLoading &&
+      !signTicketSuccess &&
+      showTicket();
+  }, [connectedAddress, activeProcessingStageId]);
+
+  useEffect(() => {
+    signedTicketData && setTicketQrData(signedTicketData);
+  }, [signedTicketData]);
+
+  useEffect(() => {
+    !isValidatingTicket &&
+      (setTicketQrData(undefined), setScannedTicket(undefined));
+  }, [isValidatingTicket]);
+
+  useEffect(() => {
+    try {
+      if (
+        scannedTicketData &&
+        scannedTicket?.title !== ticketTypes.processing.title
+      ) {
+        const ticketOwnerAddress = ethers.utils.verifyMessage(
+          ticketMessageToSign,
+          scannedTicketData
+        );
+
+        ethers.utils.isAddress(ticketOwnerAddress)
+          ? setScannedTicket(ticketTypes.processing)
+          : setScannedTicket(ticketTypes.invalid);
+      }
+    } catch (e) {
+      setScannedTicket(ticketTypes.invalid);
+    }
+  }, [scannedTicketData]);
+
+  useEffect(() => {
+    scannedTicket &&
+      scannedTicket?.title !== ticketTypes.processing.title &&
+      (clearTimeout(scannedTicketCleanupTimeout.current),
+      (scannedTicketCleanupTimeout.current = setTimeout(
+        () => setScannedTicket(undefined),
+        3000
+      )));
+  }, [scannedTicket]);
+
+  useEffect(() => {
+    activeProcessingStageId === undefined && setTicketQrData(undefined);
+  }, [activeProcessingStageId]);
+
+  useEffect(() => {
+    signTicketError &&
+      activeProcessingStages?.length &&
+      (setActiveProcessingStageId(activeProcessingStages?.length - 1),
+      setTimeout(() => setActiveProcessingStageId(undefined), 3000));
+  }, [signTicketError]);
+
   const getEventMetadata = () =>
     queryEventId &&
     fetch(getIPFSUri(`ipfs://${queryEventId}`))
       .then((res) => res.json())
       .then((json) => setEventMetadata(json));
+
+  const showTicket = () => {
+    setActiveProcessingStageId(0);
+
+    connectedAddress
+      ? (setActiveProcessingStages([
+          processingStages.signing,
+          {
+            id: "error",
+            label: "Oops",
+            subtitle: "smth went wrong 😅",
+            bg: "var(--chakra-colors-bg)",
+            color: "var(--chakra-colors-text)",
+            icon: (props) => (
+              <WarningTwoIcon {...props} color={"#e91e63 !important"} />
+            ),
+          },
+        ]),
+        signTicketMessage())
+      : setOpenWalletConnectModal(true);
+  };
 
   return (
     <Flex
@@ -158,6 +327,7 @@ export const EventPage: React.FC = (): JSX.Element => {
             h={"7rem"}
             p="1rem 1.5rem"
             cursor={"pointer"}
+            onClick={showTicket}
           >
             <Flex flexDir={"column"}>
               <Text fontWeight={"bold"} fontSize={"2xl"} lineHeight="1.15em">
@@ -192,6 +362,7 @@ export const EventPage: React.FC = (): JSX.Element => {
             h={"7rem"}
             p="1rem 1.5rem"
             cursor={"pointer"}
+            onClick={() => setIsValidatingTicket(true)}
           >
             <Flex flexDir={"column"}>
               <Text fontWeight={"bold"} fontSize={"2xl"} lineHeight="1.15em">
@@ -383,6 +554,333 @@ export const EventPage: React.FC = (): JSX.Element => {
           Host more events
         </Button>
       </Flex>
+      <AnimatePresence>
+        {connectedAddress &&
+          activeProcessingStageId !== undefined &&
+          activeProcessingStages &&
+          activeProcessingStages[activeProcessingStageId] && (
+            <Container
+              as={motion.div}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
+              w={"100%"}
+              h={"100%"}
+              pos={"fixed"}
+              bg={"#00000078"}
+              backdropFilter={"blur(10px)"}
+              top={0}
+              left={0}
+              zIndex={9999}
+              overflow="hidden"
+            >
+              <AnimatePresence>
+                <motion.div
+                  key={activeProcessingStages[activeProcessingStageId]!.id}
+                  variants={{
+                    default: {
+                      scale: 1,
+                      x: "-50%",
+                      y: "-50%",
+                      opacity: 1,
+                      marginTop: 0,
+                    },
+                    qrView: {
+                      scale: 1,
+                      x: "-50%",
+                      y: "-50%",
+                      width: "350px",
+                      height: "350px",
+                      background: "rgba(32, 32, 32, 0)",
+                      marginTop: 0,
+                      opacity: 1,
+                      overflow: "initial",
+                      transition: {
+                        overflow: {
+                          delay: 1,
+                        },
+                      },
+                    },
+                  }}
+                  initial={{
+                    scale: 0.7,
+                    x: "-50%",
+                    y: "-50%",
+                    opacity: 0,
+                    marginTop: "5rem",
+                  }}
+                  animate={ticketQrData ? "qrView" : "default"}
+                  exit={{
+                    scale: 0.7,
+                    x: "-50%",
+                    y: "-50%",
+                    opacity: 0,
+                    marginTop: "-5rem",
+                  }}
+                  style={{
+                    position: "fixed",
+                    top: "50%",
+                    left: "50%",
+                    height: "11rem",
+                    width: "22.5rem",
+                    padding: ".5rem 2rem",
+                    color:
+                      activeProcessingStages[activeProcessingStageId].color,
+                    background:
+                      activeProcessingStages[activeProcessingStageId].bg,
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Flex alignItems={"center"} gap="1.5rem">
+                    <motion.div
+                      variants={{
+                        default: { opacity: 1 },
+                        qrView: { opacity: 0 },
+                      }}
+                    >
+                      <Flex flexDir={"column"}>
+                        <Text fontWeight={"bold"} fontSize="4xl">
+                          {
+                            activeProcessingStages[activeProcessingStageId]
+                              .label
+                          }
+                        </Text>
+                        <Text
+                          fontWeight={"semibold"}
+                          fontSize="xl"
+                          lineHeight={".75em"}
+                        >
+                          {
+                            activeProcessingStages[activeProcessingStageId]
+                              .subtitle
+                          }
+                        </Text>
+                      </Flex>
+                    </motion.div>
+                    <motion.div
+                      style={{
+                        width: "10rem",
+                        height: "10rem",
+                        position: "fixed",
+                        right: "-2.5rem",
+                        bottom: "-4rem",
+                      }}
+                      variants={{
+                        qrView: {
+                          top: "1rem",
+                          left: "1rem",
+                          y: "0",
+                          width: "20rem",
+                          height: "20rem",
+                          transition: {
+                            width: {
+                              delay: 0.2,
+                            },
+                            height: {
+                              delay: 0.2,
+                            },
+                          },
+                        },
+                        default: {
+                          y: [-10, 0, -10],
+                          transition: {
+                            duration: 2,
+                            repeat: Infinity,
+                          },
+                        },
+                      }}
+                    >
+                      <Icon
+                        w={"100%"}
+                        h={"100%"}
+                        as={
+                          activeProcessingStages[activeProcessingStageId].icon
+                        }
+                      />
+
+                      <AnimatePresence>
+                        {ticketQrData && (
+                          <motion.div
+                            animate={{
+                              opacity: 1,
+                              transition: {
+                                delay: 0.75,
+                              },
+                            }}
+                            style={{
+                              opacity: 0,
+                              top: "4rem",
+                              left: "4rem",
+                              position: "fixed",
+                            }}
+                          >
+                            <QRCode
+                              renderAs="canvas"
+                              size={190}
+                              bgColor="transparent"
+                              fgColor="#222"
+                              value={ticketQrData}
+                            />
+                            <CloseButton
+                              onClick={() =>
+                                setActiveProcessingStageId(undefined)
+                              }
+                              color={"text"}
+                              pos={"fixed"}
+                              left={"50%"}
+                              top={"22rem"}
+                              fontSize={"2rem"}
+                              transform={"translateX(-50%)"}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  </Flex>
+                </motion.div>
+              </AnimatePresence>
+            </Container>
+          )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isValidatingTicket && (
+          <Container
+            as={motion.div}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            w={"100%"}
+            h={"100%"}
+            pos={"fixed"}
+            bg={"#00000078"}
+            backdropFilter={"blur(10px)"}
+            top={0}
+            left={0}
+            zIndex={9999}
+            overflow="hidden"
+          >
+            <Box
+              w="22rem"
+              pos={"fixed"}
+              left={"50%"}
+              top={"50%"}
+              transform={"translate(-50%, -50%)"}
+            >
+              <Box display={isUserMediaAvailable ? "block" : "none"}>
+                <QrScanner
+                  showResult={false}
+                  onResult={setScannedTicketData}
+                  onError={(error) =>
+                    setIsUserMediaAvailable(
+                      error == "Camera not found." ? false : true
+                    )
+                  }
+                />
+              </Box>
+              <AnimatePresence>
+                {scannedTicket && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                      position: "fixed",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      height: "6rem",
+                      marginTop: "2.5rem",
+                      width: "15.5rem",
+                      padding: ".5rem 2rem",
+                      color: "var(--chakra-colors-text)",
+                      background: "var(--chakra-colors-bg)",
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Text fontWeight={"semibold"} fontSize="3xl">
+                      {scannedTicket.title}
+                    </Text>
+                    <motion.div
+                      style={{
+                        fontSize: "5rem",
+                        width: "10rem",
+                        height: "10rem",
+                        position: "fixed",
+                        right: "-6rem",
+                        bottom: "-5rem",
+                      }}
+                      animate={{
+                        y: [-10, 0, -10],
+                        transition: {
+                          duration: 2,
+                          repeat: Infinity,
+                        },
+                      }}
+                    >
+                      {scannedTicket.icon()}
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              {!isUserMediaAvailable && (
+                <Container
+                  style={{
+                    position: "fixed",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    height: "11rem",
+                    width: "22.5rem",
+                    padding: ".5rem 2rem",
+                    color: "var(--chakra-colors-text)",
+                    background: "var(--chakra-colors-bg)",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Text fontWeight={"bold"} fontSize="3xl">
+                    Turn on the camera
+                  </Text>
+                  <Text fontWeight={"semibold"} fontSize="xl">
+                    to scan tickets
+                  </Text>
+                  <motion.div
+                    style={{
+                      fontSize: "5rem",
+                      width: "10rem",
+                      height: "10rem",
+                      position: "fixed",
+                      right: "-6rem",
+                      bottom: "-5rem",
+                    }}
+                    animate={{
+                      y: [-10, 0, -10],
+                      transition: {
+                        duration: 2,
+                        repeat: Infinity,
+                      },
+                    }}
+                  >
+                    🫣
+                  </motion.div>
+                </Container>
+              )}
+            </Box>
+            <CloseButton
+              onClick={() => setIsValidatingTicket(false)}
+              color={"text"}
+              pos={"fixed"}
+              left={"50%"}
+              transform={"translateX(-50%)"}
+              mt={"9rem"}
+              top={"50%"}
+              fontSize={"2rem"}
+            />
+          </Container>
+        )}
+      </AnimatePresence>
     </Flex>
   );
 };

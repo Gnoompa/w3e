@@ -41,7 +41,7 @@ const Component = forwardRef((props, ref) => {
           justifyContent="space-between"
           gap={"2rem"}
         >
-          <Heading fontSize={"xx-large"} color={"textContrast"}>
+          <Heading fontSize={"xx-large"} color={"text"}>
             Web3Events
           </Heading>
           <Flex gap={"1rem"}>

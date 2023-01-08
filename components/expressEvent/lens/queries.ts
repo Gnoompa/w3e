@@ -213,6 +213,7 @@ export const GET_PUBLICATIONS = gql`
     reaction(request: null)
     mirrors(by: null)
     hasCollectedByMe
+    collectNftAddress
   }
   fragment MirrorBaseFields on Mirror {
     id

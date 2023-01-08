@@ -125,7 +125,7 @@ const App: React.FC = (props) => {
                   icon={<QuestionIcon />}
                 ></IconButton>
               </MenuButton>
-              <MenuList>
+              <MenuList bg={"bg"}>
                 <MenuItem onClick={onOpenFrillWidgetModal}>
                   <Flex align={"center"} gap=".5rem">
                     <StarIcon color="warn" />
@@ -140,8 +140,8 @@ const App: React.FC = (props) => {
                     target={"_blank"}
                   >
                     <Flex align={"center"} gap=".5rem">
-                      <ChatIcon />
-                      <Text fontSize={"md"} fontWeight="medium">
+                      <ChatIcon color={"text"} />
+                      <Text fontSize={"md"} color={"text"} fontWeight="medium">
                         Request Features
                       </Text>
                     </Flex>

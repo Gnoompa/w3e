@@ -25,7 +25,7 @@ const theme = extendTheme({
       },
       bg: {
         default: "#F1F1F1",
-        _dark: "#202020",
+        _dark: "linear-gradient(111.62deg, #171717 0%, #202020 96.72%)",
       },
       bgContrast: {
         default: "#202020",

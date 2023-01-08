@@ -41,10 +41,10 @@ export default () => (
               </Box>
             </Flex>
           </MenuButton>
-          <MenuList p={".5rem"}>
+          <MenuList p={".5rem"} bg={"bg"}>
             <MenuItem>
               <NextLink href={Routes.Dashboard} passHref>
-                <Link>Dashboard</Link>
+                <Link color={"text"}>Dashboard</Link>
               </NextLink>
             </MenuItem>
             <MenuDivider />

@@ -17,6 +17,7 @@ export const QrScanner = (props: QrScannerProps) => {
 
   useEffect(() => {
     let scanner = new QrScannerAdapter(videoRef.current, setResult, {
+      onDecodeError: props.onError,
       highlightScanRegion: true,
     });
 

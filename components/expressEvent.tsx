@@ -67,7 +67,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
   const [eventDetails, setEventDetails] = useState<string>();
   const [eventConfigId, setEventConfigId] = useState<string>();
   const postContent = `${eventTitle || "Express Event"}\n\n${
-    eventDetails || ""
+    eventDetails || "Single post to host an event 🎉"
   }`;
   const [postPayload, setPostPayload] = useState<Parameters<PostHook>[0]>();
 
@@ -300,8 +300,8 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
       await uploadMetadata({
         v: "0.1",
         profiles: eventProfiles,
-        title: eventTitle,
-        details: eventDetails,
+        title: eventTitle || "Express Event",
+        details: eventDetails || "Single post to host an event 🎉",
       } as ExpressEventMetadata)
     ).replace("ipfs://", "");
 
@@ -323,7 +323,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
 
   return (
     <>
-      <Snowfall snowflakeCount={35} color={"#ffffffbb"} />
+      {/* <Snowfall snowflakeCount={35} color={"#ffffffbb"} /> */}
       {eventId ? (
         <EventPage />
       ) : (
@@ -626,7 +626,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                   as={motion.div}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
                   w={"100%"}
                   h={"100%"}
                   pos={"fixed"}
@@ -634,7 +634,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                   backdropFilter={"blur(10px)"}
                   top={0}
                   left={0}
-                  zIndex={2}
+                  zIndex={9999}
                   overflow="hidden"
                 >
                   <AnimatePresence>
