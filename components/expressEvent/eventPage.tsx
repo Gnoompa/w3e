@@ -30,22 +30,35 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import LensIcon from "public/icons/lens";
 import { useAccount, useSignMessage } from "wagmi";
-import { useProfiles as useCCProfiles } from "./cc/profile";
+import {
+  useProfiles as useCCProfiles,
+  isFollowing as isCCFollowing,
+} from "./cc/profile";
 import {
   getProfileExternalLink,
+  isFollowing as isLensFollowing,
   useProfiles as useLensProfiles,
 } from "./lens/profile";
 import TicketIcon from "public/icons/brandTicket";
 import { useAuth as useLensAuth } from "./lens/auth";
 import { useAuth as useCCAuth } from "./cc/auth";
 import { useModal } from "connectkit";
-import { ExpressEventMetadata, ProfileType } from "./types";
+import {
+  ExpressEventMetadata,
+  IProfile,
+  ProfileType,
+  TicketTiers,
+} from "./types";
 import { AnimatePresence, motion } from "framer-motion";
 import { getIPFSUri, useRouterQuery } from "helpers/hooks";
 import { useRouter } from "next/router";
 import BrandTicket from "public/icons/brandTicket";
 import { Routes } from "helpers/routes";
-import { usePost as useLensPost } from "./lens/post";
+import {
+  hasCollectedPost,
+  hasMirroredPost,
+  usePost as useLensPost,
+} from "./lens/post";
 import {
   profileTypeToExternalLinkMap,
   profileTypeToStylesMap,
@@ -63,25 +76,25 @@ export const EventPage: React.FC = (): JSX.Element => {
   const [eventMetadata, setEventMetadata] = useState<ExpressEventMetadata>();
 
   // Lens
-  const { isAuthed: isLensAuthed, auth: lensAuth } =
-    useLensAuth(connectedAddress);
+  // const { isAuthed: isLensAuthed, auth: lensAuth } =
+  //   useLensAuth(connectedAddress);
   const { post: lensPost } = useLensPost({
     profile: eventMetadata?.profiles.filter(
       ({ type }) => type == ProfileType.LENS
     )[0],
     eventMetadataId: queryEventId,
   });
-  const { profiles: lensProfiles, defaultProfile: lensDefaultProfile } =
-    useLensProfiles({
-      address: connectedAddress,
-    });
+  // const { profiles: lensProfiles, defaultProfile: lensDefaultProfile } =
+  //   useLensProfiles({
+  //     address: connectedAddress,
+  //   });
 
   // CyberConnect
-  const { isAuthed: isCCAuthed, auth: CCAuth } = useCCAuth(connectedAddress);
-  const { profiles: CCProfiles, defaultProfile: CCDefaultProfile } =
-    useCCProfiles({
-      address: connectedAddress,
-    });
+  // const { isAuthed: isCCAuthed, auth: CCAuth } = useCCAuth(connectedAddress);
+  // const { profiles: CCProfiles, defaultProfile: CCDefaultProfile } =
+  //   useCCProfiles({
+  //     address: connectedAddress,
+  //   });
 
   const ticketMessageToSign =
     "Sign this message to show your ticket. It is free";
@@ -122,11 +135,11 @@ export const EventPage: React.FC = (): JSX.Element => {
   const ticketTypes = {
     basic: {
       title: "Basic",
-      icon: () => BrandTicket,
+      icon: (props) => <BrandTicket {...props} />,
     },
     vip: {
       title: "VIP",
-      icon: () => BrandTicket,
+      icon: (props) => <BrandTicket {...props} filter={"hue-rotate(270deg)"} />,
     },
     invalid: {
       title: "Invalid",
@@ -139,10 +152,10 @@ export const EventPage: React.FC = (): JSX.Element => {
       icon: (props) => (
         <Search2Icon
           {...props}
-          w="6rem"
-          h="6rem"
-          mt={"-2rem"}
-          pr={"1.75rem"}
+          width="5rem"
+          height="5rem"
+          pl={"1rem"}
+          mt={"-4rem"}
           color={"#fff"}
         />
       ),
@@ -161,6 +174,23 @@ export const EventPage: React.FC = (): JSX.Element => {
   const [isValidatingTicket, setIsValidatingTicket] = useState<boolean>(false);
   const [isUserMediaAvailable, setIsUserMediaAvailable] =
     useState<boolean>(true);
+
+  const profileTypeToTicketingRulesMap = {
+    [ProfileType.LENS]: {
+      [TicketTiers.BASIC]: (address: string) => [
+        isLensFollowing(getEventProfileByType(ProfileType.LENS)?.id, address),
+      ],
+      [TicketTiers.VIP]: (address: string) => [
+        hasMirroredPost(lensPost?.id, address),
+        hasCollectedPost(lensPost?.collectNftAddress, address),
+      ],
+    },
+    [ProfileType.CC]: {
+      [TicketTiers.BASIC]: (address) => [
+        isCCFollowing(getEventProfileByType(ProfileType.CC)?.address, address),
+      ],
+    },
+  };
 
   useEffect(() => {
     setColorMode("dark");
@@ -199,7 +229,7 @@ export const EventPage: React.FC = (): JSX.Element => {
         );
 
         ethers.utils.isAddress(ticketOwnerAddress)
-          ? setScannedTicket(ticketTypes.processing)
+          ? processScannedTicket(ticketOwnerAddress)
           : setScannedTicket(ticketTypes.invalid);
       }
     } catch (e) {
@@ -212,7 +242,7 @@ export const EventPage: React.FC = (): JSX.Element => {
       scannedTicket?.title !== ticketTypes.processing.title &&
       (clearTimeout(scannedTicketCleanupTimeout.current),
       (scannedTicketCleanupTimeout.current = setTimeout(
-        () => setScannedTicket(undefined),
+        () => (setScannedTicket(undefined), setScannedTicketData(undefined)),
         3000
       )));
   }, [scannedTicket]);
@@ -227,6 +257,53 @@ export const EventPage: React.FC = (): JSX.Element => {
       (setActiveProcessingStageId(activeProcessingStages?.length - 1),
       setTimeout(() => setActiveProcessingStageId(undefined), 3000));
   }, [signTicketError]);
+
+  const processScannedTicket = (scannedAddress: string) => {
+    setScannedTicket(ticketTypes.processing);
+
+    Promise.all(
+      eventMetadata?.profiles
+        ?.map(({ type }) => [
+          Promise.all(
+            profileTypeToTicketingRulesMap[type]?.[TicketTiers.BASIC]?.(
+              scannedAddress
+            ) || []
+          )
+            .then(
+              (result) =>
+                result.reduce((a, b) => a && b, []) === true &&
+                TicketTiers.BASIC
+            )
+            .catch(() => setScannedTicket(ticketTypes.invalid)),
+          Promise.all(
+            profileTypeToTicketingRulesMap[type]?.[TicketTiers.VIP]?.(
+              scannedAddress
+            ) || []
+          )
+            .then(
+              (result) =>
+                result.reduce((a, b) => a && b, []) === true && TicketTiers.VIP
+            )
+            .catch(() => setScannedTicket(ticketTypes.invalid)),
+        ])
+        ?.flat() || []
+    )
+      .then((result) =>
+        setScannedTicket(
+          result.includes(TicketTiers.VIP)
+            ? ticketTypes.vip
+            : result.includes(TicketTiers.BASIC)
+            ? ticketTypes.basic
+            : ticketTypes.invalid
+        )
+      )
+      .catch(() => setScannedTicket(ticketTypes.invalid));
+  };
+
+  const getEventProfileByType = (
+    profileType: ProfileType
+  ): IProfile | undefined =>
+    eventMetadata?.profiles?.filter(({ type }) => type == profileType)[0];
 
   const getEventMetadata = () =>
     queryEventId &&
@@ -409,7 +486,18 @@ export const EventPage: React.FC = (): JSX.Element => {
               flexDir={"column"}
               gap={".5rem"}
             >
-              <Flex flexDir={"column"} gap={"1rem"} mt=".5rem" mb=".5rem">
+              <Flex
+                flexDir={"column"}
+                gap={"1rem"}
+                mt=".5rem"
+                mb={
+                  !!eventMetadata?.profiles.filter(
+                    ({ type }) => type !== ProfileType.CC
+                  ).length
+                    ? ".5rem"
+                    : ".15rem"
+                }
+              >
                 <Flex flexDir={"column"} ml={"4.5rem"}>
                   <Text fontWeight={"bold"} fontSize={"2xl"}>
                     Basic
@@ -429,7 +517,11 @@ export const EventPage: React.FC = (): JSX.Element => {
                       <Link
                         href={profileTypeToExternalLinkMap[
                           profile.type
-                        ].profile?.(profile.handle)}
+                        ].profile?.(
+                          profile.type == ProfileType.CC
+                            ? profile.address
+                            : profile.handle
+                        )}
                         target="_blank"
                       >
                         <Container
@@ -468,81 +560,94 @@ export const EventPage: React.FC = (): JSX.Element => {
                 </motion.div>
               </Flex>
             </Container>
-            <Divider />
-            <Container
-              as={motion.div}
-              initial={"idle"}
-              whileHover={"hover"}
-              display={"flex"}
-              pos={"relative"}
-              flexDir={"column"}
-              gap={".5rem"}
-            >
-              <Flex flexDir={"column"} gap={"1rem"}>
-                <Flex flexDir={"column"} ml={"4.5rem"}>
-                  <Text fontWeight={"bold"} fontSize={"2xl"}>
-                    VIP
-                  </Text>
-                  <Text
-                    fontWeight={"bold"}
-                    opacity={0.7}
-                    lineHeight={"1em"}
-                    fontSize={"sm"}
-                  >
-                    REPOST AND COLLECT ANY POST
-                  </Text>
-                </Flex>
-                {eventMetadata?.profiles?.length ? (
-                  <Flex gap=".5rem" ml={"4.5rem"} w={"fit-content"}>
-                    {eventMetadata?.profiles
-                      .filter(({ type }) => type !== ProfileType.CC)
-                      .map((profile) => (
-                        <Link
-                          href={profileTypeToExternalLinkMap[
-                            profile.type
-                          ].post?.(profileTypeToPostMap[profile.type]?.id)}
-                          target="_blank"
-                        >
-                          <Container
-                            as={Flex}
-                            alignItems={"center"}
-                            gap={"1rem"}
-                            bg={profileTypeToStylesMap[profile.type].bg}
-                            p={".5rem 1rem"}
-                            borderRadius={"sm"}
-                            transition={".2s"}
-                            _hover={{ opacity: 0.8 }}
-                          >
-                            {profileTypeToStylesMap[profile.type].icon({
-                              width: "1.25rem",
-                              height: "1.25rem",
-                            })}
-                            <ExternalLinkIcon
-                              color={profileTypeToStylesMap[profile.type].color}
-                            />
-                          </Container>
-                        </Link>
-                      ))}
+            {(eventMetadata
+              ? !!eventMetadata?.profiles.filter(
+                  ({ type }) => type !== ProfileType.CC
+                ).length
+              : true) && <Divider />}
+
+            {(eventMetadata
+              ? !!eventMetadata?.profiles.filter(
+                  ({ type }) => type !== ProfileType.CC
+                ).length
+              : true) && (
+              <Container
+                as={motion.div}
+                initial={"idle"}
+                whileHover={"hover"}
+                display={"flex"}
+                pos={"relative"}
+                flexDir={"column"}
+                gap={".5rem"}
+              >
+                <Flex flexDir={"column"} gap={"1rem"}>
+                  <Flex flexDir={"column"} ml={"4.5rem"}>
+                    <Text fontWeight={"bold"} fontSize={"2xl"}>
+                      VIP
+                    </Text>
+                    <Text
+                      fontWeight={"bold"}
+                      opacity={0.7}
+                      lineHeight={"1em"}
+                      fontSize={"sm"}
+                    >
+                      REPOST AND COLLECT ANY POST
+                    </Text>
                   </Flex>
-                ) : (
-                  <Skeleton h={"2.25rem"} ml={"4.5rem"} />
-                )}
-                <motion.div
-                  style={{
-                    position: "absolute",
-                    left: "-3.5rem",
-                    top: "0rem",
-                  }}
-                  variants={{ idle: { scale: 1 }, hover: { scale: 1.05 } }}
-                >
-                  <BrandTicket
-                    width="7rem"
-                    height="7rem"
-                    filter={"hue-rotate(270deg)"}
-                  />
-                </motion.div>
-              </Flex>
-            </Container>
+                  {eventMetadata?.profiles?.length ? (
+                    <Flex gap=".5rem" ml={"4.5rem"} w={"fit-content"}>
+                      {eventMetadata?.profiles
+                        .filter(({ type }) => type !== ProfileType.CC)
+                        .map((profile) => (
+                          <Link
+                            href={profileTypeToExternalLinkMap[
+                              profile.type
+                            ].post?.(profileTypeToPostMap[profile.type]?.id)}
+                            target="_blank"
+                          >
+                            <Container
+                              as={Flex}
+                              alignItems={"center"}
+                              gap={"1rem"}
+                              bg={profileTypeToStylesMap[profile.type].bg}
+                              p={".5rem 1rem"}
+                              borderRadius={"sm"}
+                              transition={".2s"}
+                              _hover={{ opacity: 0.8 }}
+                            >
+                              {profileTypeToStylesMap[profile.type].icon({
+                                width: "1.25rem",
+                                height: "1.25rem",
+                              })}
+                              <ExternalLinkIcon
+                                color={
+                                  profileTypeToStylesMap[profile.type].color
+                                }
+                              />
+                            </Container>
+                          </Link>
+                        ))}
+                    </Flex>
+                  ) : (
+                    <Skeleton h={"2.25rem"} ml={"4.5rem"} />
+                  )}
+                  <motion.div
+                    style={{
+                      position: "absolute",
+                      left: "-3.5rem",
+                      top: "0rem",
+                    }}
+                    variants={{ idle: { scale: 1 }, hover: { scale: 1.05 } }}
+                  >
+                    <BrandTicket
+                      width="7rem"
+                      height="7rem"
+                      filter={"hue-rotate(270deg)"}
+                    />
+                  </motion.div>
+                </Flex>
+              </Container>
+            )}
           </Flex>
         </Flex>
         <Button
@@ -781,9 +886,10 @@ export const EventPage: React.FC = (): JSX.Element => {
               <AnimatePresence>
                 {scannedTicket && (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    key={scannedTicket.title}
+                    initial={{ opacity: 0, marginTop: "4rem" }}
+                    animate={{ opacity: 1, marginTop: "2.5rem" }}
+                    exit={{ opacity: 0, marginTop: "4rem" }}
                     style={{
                       position: "fixed",
                       top: "50%",
@@ -805,11 +911,11 @@ export const EventPage: React.FC = (): JSX.Element => {
                     <motion.div
                       style={{
                         fontSize: "5rem",
-                        width: "10rem",
-                        height: "10rem",
+                        width: "7rem",
+                        height: "7rem",
                         position: "fixed",
-                        right: "-6rem",
-                        bottom: "-5rem",
+                        right: "-1.5rem",
+                        bottom: "-3rem",
                       }}
                       animate={{
                         y: [-10, 0, -10],
@@ -819,7 +925,7 @@ export const EventPage: React.FC = (): JSX.Element => {
                         },
                       }}
                     >
-                      {scannedTicket.icon()}
+                      {scannedTicket.icon({ width: "100%", height: "100%" })}
                     </motion.div>
                   </motion.div>
                 )}

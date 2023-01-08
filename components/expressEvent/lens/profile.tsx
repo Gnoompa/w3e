@@ -4,6 +4,7 @@ import { IProfile, ProfilesHook, ProfileType } from "../types";
 import { chain } from "wagmi";
 import client from "./client";
 import { gql } from "@apollo/client";
+import { defaultChainId } from "helpers/contract";
 
 const getProfile = (profile: object | undefined): IProfile | undefined =>
   profile
@@ -17,6 +18,22 @@ const getProfile = (profile: object | undefined): IProfile | undefined =>
       }
     : undefined;
 
+export const getLensProfile = async (profileId: string) =>
+  (
+    await client.query({
+      query: gql`
+        query Profile($profileId: ProfileId!) {
+          profile(request: { profileId: $profileId }) {
+            followNftAddress
+          }
+        }
+      `,
+      variables: {
+        profileId,
+      },
+    })
+  ).data?.profile;
+
 export const getDefaultProfile = async (address: string) =>
   (
     await client.query({
@@ -26,6 +43,7 @@ export const getDefaultProfile = async (address: string) =>
             id
             handle
             ownedBy
+            followNftAddress
           }
         }
       `,
@@ -39,25 +57,30 @@ export const isFollowing = async (
   profileId: string,
   who: string // ethereum address
 ): Promise<boolean> => {
-  const defaultProfile = await getDefaultProfile(who);
+  // const defaultProfile = await getDefaultProfile(who);
+  const profile = await getLensProfile(profileId);
 
-  return defaultProfile?.id
-    ? (
-        await client.query({
-          query: gql`
-            query Profile($profileId: ProfileId!, $who: ProfileId!) {
-              profile(request: { profileId: $profileId }) {
-                isFollowing(who: $who)
-              }
+  return !!(
+    await client.query({
+      query: gql`
+        query Nfts($request: NFTsRequest!) {
+          nfts(request: $request) {
+            items {
+              tokenId
             }
-          `,
-          variables: {
-            profileId,
-            who: defaultProfile?.id,
-          },
-        })
-      )?.data?.profile?.isFollowing
-    : false;
+          }
+        }
+      `,
+      variables: {
+        request: {
+          ownerAddress: who,
+          contractAddress: profile.followNftAddress,
+          limit: 1,
+          chainIds: [defaultChainId],
+        },
+      },
+    })
+  )?.data?.nfts?.items?.length;
 };
 
 // isFollowing("0x010e", "0xadfa1b280548095f91b22c4568DAae073B477689").then(console.log);
@@ -73,7 +96,7 @@ export const useProfiles: ProfilesHook = (props) => {
   );
 
   const defaultProfile =
-    profiles?.filter(({ isDefault }) => isDefault)[0] || profiles?.[0];
+    profiles?.filter(({ isDefault }) => isDefault)[0];
 
   return {
     profiles,

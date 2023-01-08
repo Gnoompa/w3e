@@ -216,7 +216,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
       type: ProfileType.CC,
       externalLink: "https://cyberconnect.me/",
       label: "CyberConnect",
-      subtitle: "for subscribers only",
+      subtitle: "for followers only",
       icon: CyberConnectIcon,
       bg: "cyberConnectGradient",
       color: "#222",
@@ -306,15 +306,13 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
     ).replace("ipfs://", "");
 
   const completeEventCreation = async () => {
-    setEventProcessingStages(
-      // eventProfiles?.map(({ type }) => profileTypeToEventProcessingStage[type])
-      [
-        profileTypeToEventProcessingStage[ProfileType.LENS],
-        profileTypeToEventProcessingStage[ProfileType.CC],
-        finalEventProcessingStage,
-        faultyEventProcessingStage,
-      ]
-    );
+    setEventProcessingStages([
+      ...eventProfiles?.map(
+        ({ type }) => profileTypeToEventProcessingStage[type]
+      ),
+      finalEventProcessingStage,
+      faultyEventProcessingStage,
+    ]);
 
     setEventProcessingStageId(0);
 

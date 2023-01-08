@@ -137,7 +137,7 @@ export const uploadMetadata = async (metadata: object) => {
       }`.replace(/svg\+xml/, "xml")
     );
 
-    const imageUploadResponse = await axios.post(
+    imageUploadResponse = await axios.post(
       uploadUrl,
       metadataImageFormData
     );
@@ -181,7 +181,7 @@ export function getIPFSUri(
   did: string,
   gateway: string = defaulyIPFSgateway
 ): string | undefined {
-  return did?.replace(/(ipfs:\/\/)|(https:\/\/ipfs.io\/ipfs\/)/, gateway);
+  return did?.replace?.(/(ipfs:\/\/)|(https:\/\/ipfs.io\/ipfs\/)/, gateway);
 }
 
 export const getMetadataAttribute = (

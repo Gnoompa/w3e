@@ -73,7 +73,7 @@ export const hasMirroredPost = async (
           who: defaultProfile.id,
         },
       })
-    )?.data?.publications?.items?.length
+    )?.data?.publications?.items?.[0]?.mirrors?.length
   );
 };
 

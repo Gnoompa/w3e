@@ -6,7 +6,7 @@ import { chain } from "wagmi";
 
 export const stables = {
   [chain.polygon.id]: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
-  [chain.polygonMumbai.id]: "0x001b3b4d0f3714ca98ba10f6042daebf0b1b7b6f",
+  [chain.polygonMumbai.id]: "0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e",
 };
 
 export const profileTypeToExternalLinkMap = {

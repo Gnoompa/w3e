@@ -4,6 +4,11 @@ export enum ProfileType {
   TWITTER = "twitter",
 }
 
+export enum TicketTiers {
+  BASIC = "basic",
+  VIP = "vip",
+}
+
 // export enum ProfileType {
 //   LENS,
 //   CC,

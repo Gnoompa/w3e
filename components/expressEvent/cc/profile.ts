@@ -3,6 +3,7 @@ import { chain } from "wagmi";
 import { IProfile, ProfilesHook, ProfileType } from "../types";
 import { client } from "./client";
 import { getProfiles as getProfilesQuery } from "./queries";
+import { gql } from "@apollo/client";
 
 const getProfile = (profile: Object | undefined): IProfile | undefined =>
   profile
@@ -16,12 +17,33 @@ const getProfile = (profile: Object | undefined): IProfile | undefined =>
       }
     : undefined;
 
+export const isFollowing = async (address: string, who: string) =>
+  !!(
+    await client.query({
+      query: gql`
+        query isFollower($address: AddressEVM!, $who: AddressEVM!) {
+          address(address: $address, chainID: 1) {
+            address
+            isFollowedBy(addresses: [$who])
+          }
+        }
+      `,
+      variables: {
+        address,
+        who,
+      },
+    })
+  ).data?.address?.isFollowedBy;
+
+// isFollowing(
+//   "0x5b3999bc2e8c46f75BF629DA951559D83E34FBdD",
+//   "0xdE088e6CB5149C5129cd1e476c9af4709D2aeEB9"
+// ).then((a) => console.log(a, 555));
+
 export const useProfiles: ProfilesHook = (props) => {
   const [profiles, setProfiles] = useState<IProfile[]>();
   const defaultProfile = useMemo(
-    () =>
-      getProfile(profiles?.filter(({ node }) => node?.isPrimary)[0]?.node) ||
-      profiles?.[0],
+    () => profiles?.filter(({ isDefault }) => isDefault)[0],
     [profiles]
   );
 

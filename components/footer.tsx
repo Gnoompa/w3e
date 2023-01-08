@@ -41,8 +41,8 @@ const Component = forwardRef((props, ref) => {
           justifyContent="space-between"
           gap={"2rem"}
         >
-          <Heading fontSize={"xx-large"} color={"text"}>
-            Web3Events
+          <Heading fontSize={"xx-large"} color={"text"} textTransform="none">
+            webΞevents
           </Heading>
           <Flex gap={"1rem"}>
             <Link href={"https://twitter.com/Web3Events_ai"} target={"_blank"}>
