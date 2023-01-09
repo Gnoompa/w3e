@@ -17,7 +17,7 @@ import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
 import { alchemyProvider } from "wagmi/providers/alchemy";
 import * as chain from "@wagmi/core/chains";
 import { ConnectKitProvider, getDefaultClient } from "connectkit";
-import isMobile from "is-mobile"
+import isMobile from "is-mobile";
 import { defaultChainId } from "helpers/contract";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 import { LensProvider } from "@memester-xyz/lens-use/dist/context/LensContext";
@@ -42,8 +42,6 @@ function MyApp({ Component, pageProps }: AppProps) {
         chains,
         options: {
           qrcode: false,
-          version: "2",
-          projectId: "7b5f38a9d9b3a9b0deed77babb904301",
         },
       }),
     ];

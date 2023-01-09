@@ -22,6 +22,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import {
+  DownloadIcon,
   ExternalLinkIcon,
   Search2Icon,
   SearchIcon,
@@ -64,6 +65,7 @@ import {
   profileTypeToStylesMap,
 } from "./constants";
 import QRCode from "qrcode.react";
+import qrcode from "qrcode";
 import QrScanner from "@components/ui/qrScanner";
 import { ethers } from "ethers";
 
@@ -310,6 +312,17 @@ export const EventPage: React.FC = (): JSX.Element => {
     fetch(getIPFSUri(`ipfs://${queryEventId}`))
       .then((res) => res.json())
       .then((json) => setEventMetadata(json));
+
+  const shareTicketQr = (ticketQrData: string) => {
+    qrcode.toDataURL(ticketQrData).then((uri) => {
+      var link = document.createElement("a");
+      link.download = "Express Event - " + eventMetadata?.title;
+      link.href = uri;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  };
 
   const showTicket = () => {
     setActiveProcessingStageId(0);
@@ -784,7 +797,7 @@ export const EventPage: React.FC = (): JSX.Element => {
                       variants={{
                         qrView: {
                           top: "1rem",
-                          left: "1rem",
+                          left: ".75rem",
                           y: "0",
                           width: "20rem",
                           height: "20rem",
@@ -837,13 +850,23 @@ export const EventPage: React.FC = (): JSX.Element => {
                               fgColor="#222"
                               value={ticketQrData}
                             />
+                            <DownloadIcon
+                              color={"text"}
+                              pos={"fixed"}
+                              right={0}
+                              top={"-4rem"}
+                              fontSize={"2rem"}
+                              transform={"translateX(-50%)"}
+                              cursor={"pointer"}
+                              onClick={() => shareTicketQr(ticketQrData)}
+                            />
                             <CloseButton
                               onClick={() =>
                                 setActiveProcessingStageId(undefined)
                               }
                               color={"text"}
                               pos={"fixed"}
-                              left={"50%"}
+                              left={"calc(50%)"}
                               top={"22rem"}
                               fontSize={"2rem"}
                               transform={"translateX(-50%)"}
