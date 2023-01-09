@@ -501,18 +501,7 @@ export const EventPage: React.FC = (): JSX.Element => {
               flexDir={"column"}
               gap={".5rem"}
             >
-              <Flex
-                flexDir={"column"}
-                gap={"1rem"}
-                mt=".5rem"
-                mb={
-                  !!eventMetadata?.profiles.filter(
-                    ({ type }) => type !== ProfileType.CC
-                  ).length
-                    ? ".5rem"
-                    : ".15rem"
-                }
-              >
+              <Flex flexDir={"column"} gap={"1rem"} mt=".5rem" mb={".5rem"}>
                 <Flex flexDir={"column"} ml={"4.5rem"}>
                   <Text fontWeight={"bold"} fontSize={"2xl"}>
                     Basic
@@ -521,7 +510,8 @@ export const EventPage: React.FC = (): JSX.Element => {
                     fontWeight={"bold"}
                     opacity={0.7}
                     lineHeight={"1em"}
-                    fontSize={"sm"}
+                    fontSize={["xs", "xs", "sm"]}
+                    whiteSpace="nowrap"
                   >
                     FOLLOW ANY PROFILE
                   </Text>
@@ -575,43 +565,37 @@ export const EventPage: React.FC = (): JSX.Element => {
                 </motion.div>
               </Flex>
             </Container>
-            {(eventMetadata
-              ? !!eventMetadata?.profiles.filter(
-                  ({ type }) => type !== ProfileType.CC
-                ).length
-              : true) && <Divider />}
-
-            {(eventMetadata
-              ? !!eventMetadata?.profiles.filter(
-                  ({ type }) => type !== ProfileType.CC
-                ).length
-              : true) && (
-              <Container
-                as={motion.div}
-                initial={"idle"}
-                whileHover={"hover"}
-                display={"flex"}
-                pos={"relative"}
-                flexDir={"column"}
-                gap={".5rem"}
-              >
-                <Flex flexDir={"column"} gap={"1rem"}>
-                  <Flex flexDir={"column"} ml={"4.5rem"}>
-                    <Text fontWeight={"bold"} fontSize={"2xl"}>
-                      VIP
-                    </Text>
-                    <Text
-                      fontWeight={"bold"}
-                      opacity={0.7}
-                      lineHeight={"1em"}
-                      fontSize={"sm"}
-                    >
-                      REPOST AND COLLECT ANY POST
-                    </Text>
-                  </Flex>
-                  {eventMetadata?.profiles?.length ? (
-                    <Flex gap=".5rem" ml={"4.5rem"} w={"fit-content"}>
-                      {eventMetadata?.profiles
+            <Divider />
+            <Container
+              as={motion.div}
+              initial={"idle"}
+              whileHover={"hover"}
+              display={"flex"}
+              pos={"relative"}
+              flexDir={"column"}
+              gap={".5rem"}
+            >
+              <Flex flexDir={"column"} gap={"1rem"}>
+                <Flex flexDir={"column"} ml={"4.5rem"}>
+                  <Text fontWeight={"bold"} fontSize={"2xl"}>
+                    VIP
+                  </Text>
+                  <Text
+                    fontWeight={"bold"}
+                    opacity={0.7}
+                    lineHeight={"1em"}
+                    fontSize={["xs", "xs", "sm"]}
+                    whiteSpace="nowrap"
+                  >
+                    REPOST AND COLLECT ANY POST
+                  </Text>
+                </Flex>
+                {eventMetadata?.profiles?.length ? (
+                  <Flex gap=".5rem" ml={"4.5rem"} w={"fit-content"}>
+                    {eventMetadata?.profiles.filter(
+                      ({ type }) => type !== ProfileType.CC
+                    ).length ? (
+                      eventMetadata?.profiles
                         .filter(({ type }) => type !== ProfileType.CC)
                         .map((profile) => (
                           <Link
@@ -641,28 +625,38 @@ export const EventPage: React.FC = (): JSX.Element => {
                               />
                             </Container>
                           </Link>
-                        ))}
-                    </Flex>
-                  ) : (
-                    <Skeleton h={"2.25rem"} ml={"4.5rem"} />
-                  )}
-                  <motion.div
-                    style={{
-                      position: "absolute",
-                      left: "-3.5rem",
-                      top: "0rem",
-                    }}
-                    variants={{ idle: { scale: 1 }, hover: { scale: 1.05 } }}
-                  >
-                    <BrandTicket
-                      width="7rem"
-                      height="7rem"
-                      filter={"hue-rotate(270deg)"}
-                    />
-                  </motion.div>
-                </Flex>
-              </Container>
-            )}
+                        ))
+                    ) : (
+                      <Container p={".5rem 0"} borderRadius={"sm"}>
+                        <Text
+                          fontWeight={"semibold"}
+                          color="text"
+                          opacity={0.3}
+                        >
+                          CyberConnect only event
+                        </Text>
+                      </Container>
+                    )}
+                  </Flex>
+                ) : (
+                  <Skeleton h={"2.25rem"} ml={"4.5rem"} />
+                )}
+                <motion.div
+                  style={{
+                    position: "absolute",
+                    left: "-3.5rem",
+                    top: "0rem",
+                  }}
+                  variants={{ idle: { scale: 1 }, hover: { scale: 1.05 } }}
+                >
+                  <BrandTicket
+                    width="7rem"
+                    height="7rem"
+                    filter={"hue-rotate(270deg)"}
+                  />
+                </motion.div>
+              </Flex>
+            </Container>
           </Flex>
         </Flex>
         <Button
@@ -743,6 +737,7 @@ export const EventPage: React.FC = (): JSX.Element => {
                     left: "50%",
                     height: "11rem",
                     width: "22.5rem",
+                    maxWidth: "calc(100vw - 2rem)",
                     padding: ".5rem 2rem",
                     color:
                       activeProcessingStages[activeProcessingStageId].color,

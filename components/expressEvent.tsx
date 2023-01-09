@@ -683,6 +683,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                         left: "50%",
                         height: "10rem",
                         width: "22.5rem",
+                        maxWidth: "calc(100vw - 2rem)",
                         padding: ".5rem 2rem",
                         color:
                           eventProcessingStages[eventProcessingStageId].color,
