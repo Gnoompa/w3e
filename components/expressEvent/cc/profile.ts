@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { chain } from "wagmi";
+import * as chain from "@wagmi/core/chains";
 import { IProfile, ProfilesHook, ProfileType } from "../types";
 import { client } from "./client";
 import { getProfiles as getProfilesQuery } from "./queries";

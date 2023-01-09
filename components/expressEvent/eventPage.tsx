@@ -337,9 +337,10 @@ export const EventPage: React.FC = (): JSX.Element => {
       flexDir={"column"}
       gap={"3rem"}
       mt={[0, 0, "1rem"]}
-      px={["2rem", "2rem", 0]}
       w={["27rem"]}
-      maxW={"100%"}
+      px={["1rem", "1rem", 0]}
+      maxW={"calc(100vw)"}
+      margin={"0 auto"}
     >
       <Flex flexDir={"column"} gap={"1rem"}>
         <Flex flexDir={"column"}>
@@ -407,22 +408,28 @@ export const EventPage: React.FC = (): JSX.Element => {
             onClick={showTicket}
           >
             <Flex flexDir={"column"}>
-              <Text fontWeight={"bold"} fontSize={"2xl"} lineHeight="1.15em">
+              <Text fontWeight={"bold"} fontSize={["2xl"]} lineHeight="1.15em">
                 Show
               </Text>
-              <Text fontWeight={"bold"} fontSize={"2xl"} lineHeight="1.15em">
+              <Text
+                fontWeight={"bold"}
+                fontSize={["lg", "xl"]}
+                lineHeight="1.15em"
+              >
                 ticket
               </Text>
             </Flex>
             <motion.div
               style={{
                 position: "absolute",
-                bottom: "-1rem",
+                bottom: "-1.5rem",
                 right: "-1rem",
               }}
               variants={{ idle: { scale: 1 }, hover: { scale: 1.1 } }}
             >
-              <BrandTicket width="5.5rem" height="5.5rem" />
+              <Icon width={["4.5rem", "5.5rem"]} height={["4.5rem", "5.5rem"]}>
+                <BrandTicket width={"100%"} height={"100%"} />
+              </Icon>
             </motion.div>
           </Container>
           <Container
@@ -442,22 +449,30 @@ export const EventPage: React.FC = (): JSX.Element => {
             onClick={() => setIsValidatingTicket(true)}
           >
             <Flex flexDir={"column"}>
-              <Text fontWeight={"bold"} fontSize={"2xl"} lineHeight="1.15em">
+              <Text fontWeight={"bold"} fontSize={["2xl"]} lineHeight="1.15em">
                 Validate
               </Text>
-              <Text fontWeight={"bold"} fontSize={"2xl"} lineHeight="1.15em">
+              <Text
+                fontWeight={"bold"}
+                fontSize={["lg", "xl"]}
+                lineHeight="1.15em"
+              >
                 tickets
               </Text>
             </Flex>
             <motion.div
               style={{
                 position: "absolute",
-                bottom: "-1rem",
+                bottom: "-1.5rem",
                 right: "-1rem",
               }}
               variants={{ idle: { scale: 1 }, hover: { scale: 1.1 } }}
             >
-              <Image src="/icons/qr.png" width="5.5rem" height="5.5rem" />
+              <Image
+                src="/icons/qr.png"
+                width={["4.5rem", "5.5rem"]}
+                height={["4.5rem", "5.5rem"]}
+              />
             </motion.div>
           </Container>
         </Flex>
@@ -864,9 +879,11 @@ export const EventPage: React.FC = (): JSX.Element => {
             left={0}
             zIndex={9999}
             overflow="hidden"
+            maxWidth={"100vw"}
           >
             <Box
               w="22rem"
+              maxW={"calc(100% - 2rem)"}
               pos={"fixed"}
               left={"50%"}
               top={"50%"}

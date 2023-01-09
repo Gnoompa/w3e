@@ -54,7 +54,6 @@ const EventTicket = (props: PropsType) => {
     ticketTierBenefitsContainerRef
   );
 
-  console.log(ticketTierBenefitsContainerRef.current);
   const {
     isOpen: isTicketImagePreviewModalOpen,
     onOpen: onOpenTicketImagePreviewModal,

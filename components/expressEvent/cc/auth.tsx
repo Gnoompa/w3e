@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { chain, useSignMessage } from "wagmi";
+import { useSignMessage } from "wagmi";
+import * as chain from "@wagmi/core/chains";
 import { IProfile } from "../types";
 import { client } from "./client";
 import { loginGetMessage, loginVerify } from "./queries";

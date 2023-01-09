@@ -202,6 +202,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
   const publishingProfileTypes = [
     {
       type: ProfileType.LENS,
+      requiresWalletConnection: true,
       externalLink: "https://www.lens.xyz/",
       label: "Lens",
       icon: LensIcon,
@@ -214,6 +215,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
     },
     {
       type: ProfileType.CC,
+      requiresWalletConnection: true,
       externalLink: "https://cyberconnect.me/",
       label: "CyberConnect",
       subtitle: "for followers only",
@@ -268,8 +270,19 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    defaultProfiles && setEventProfiles(defaultProfiles);
-  }, [defaultProfiles]);
+    lensDefaultProfile &&
+      isLensAuthed &&
+      setEventProfiles(
+        [...(eventProfiles || []), lensDefaultProfile].filter(Boolean)
+      );
+  }, [isLensAuthed, lensDefaultProfile]);
+
+  useEffect(() => {
+    isCCAuthed &&
+      setEventProfiles(
+        [...(eventProfiles || []), CCDefaultProfile].filter(Boolean)
+      );
+  }, [isCCAuthed]);
 
   useEffect(() => {
     eventProcessingStages &&
@@ -330,9 +343,10 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
             flexDir={"column"}
             gap={"3rem"}
             mt={[0, 0, "1rem"]}
-            px={["2rem", "2rem", 0]}
+            px={["1rem", "1rem", 0]}
+            maxW={"calc(100vw)"}
             w={["27rem"]}
-            maxW={"100%"}
+            margin={"0 auto"}
           >
             <Flex flexDir={"column"} gap={"1rem"}>
               <Flex flexDir={"column"}>
@@ -430,10 +444,14 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                           />
                           <Flex flexDir={"column"} gap={".25rem"}>
                             <Text
-                              lineHeight={"1rem"}
+                              lineHeight={"1.1rem"}
                               color={publishingProfileType.color}
                               fontWeight="bold"
-                              fontSize={"md"}
+                              fontSize={["sm", "md"]}
+                              maxW={["7rem", "10rem"]}
+                              overflow="hidden"
+                              textOverflow={"ellipsis"}
+                              whiteSpace={"nowrap"}
                             >
                               {publishingProfileType.profiles
                                 ? publishingProfileType.defaultProfile
@@ -444,7 +462,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                             {publishingProfileType.subtitle && (
                               <Text
                                 opacity={0.7}
-                                fontSize={"sm"}
+                                fontSize={["xs", "sm"]}
                                 color={publishingProfileType.color}
                                 lineHeight={".75rem"}
                               >
@@ -504,7 +522,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                               </Link>
                             )
                           ) : (
-                            <Spinner color="bg" />
+                            <Spinner color="#222" />
                           )
                         ) : (
                           <Button

@@ -2,7 +2,7 @@ import { ProfileType } from "./types";
 import LensIcon from "public/icons/lens";
 import CyberConnectIcon from "public/icons/cyberConnect";
 import React from "react";
-import { chain } from "wagmi";
+import * as chain from "@wagmi/core/chains";
 
 export const stables = {
   [chain.polygon.id]: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
