@@ -1,7 +1,7 @@
 import { useProfiles as lensUseProfiles } from "@memester-xyz/lens-use";
 import { useMemo } from "react";
 import { IProfile, ProfilesHook, ProfileType } from "../types";
-import { chain } from "wagmi";
+import * as chain from "@wagmi/core/chains";
 import client from "./client";
 import { gql } from "@apollo/client";
 import { defaultChainId } from "helpers/contract";

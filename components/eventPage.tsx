@@ -1,14 +1,8 @@
-import React, {
+import {
   useRef,
-  useState,
-  useMemo,
-  useEffect,
-  useContext,
-  ReactElement,
-  RefObject,
+  useState, useEffect, RefObject
 } from "react";
 import { Global, css } from "@emotion/react";
-import pluralize from "pluralize";
 import QRCode from "qrcode.react";
 import { google as googleCalendarLink } from "calendar-link";
 import {
@@ -18,36 +12,26 @@ import {
   Button,
   Text,
   Container,
-  Spinner,
-  useTheme,
-  Heading,
+  Spinner, Heading,
   IconButton,
   useClipboard,
   useToast,
   Modal,
   ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
+  ModalContent, ModalCloseButton, useDisclosure,
   AlertDialog,
   AlertDialogOverlay,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
-  Highlight,
-  Icon,
-  AlertIcon,
-  Link,
+  Highlight, Link,
   useBreakpointValue,
   Popover,
   PopoverTrigger,
   PopoverContent,
   PopoverCloseButton,
-  PopoverBody,
+  PopoverBody
 } from "@chakra-ui/react";
 import {
   getIPFSUri,
@@ -59,15 +43,10 @@ import {
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { BigNumber, BigNumberish, ethers } from "ethers";
-import MainContractABI from "../abi/MainV2.sol/MainV2.json";
 import {
-  chain,
-  useAccount,
-  useContractRead,
-  useContractReads,
-  useProvider,
+  useAccount, useProvider,
   useSignMessage,
-  useWaitForTransaction,
+  useWaitForTransaction
 } from "wagmi";
 import {
   buyEventTicket,
@@ -78,22 +57,16 @@ import {
   getEventManagers,
   getEvents,
   getEventTickets,
-  getEventTicketTiers,
-  getNativeCurrencyToUsdPrice,
-  getOwnerOfToken,
-  getTokenMetadataUris,
+  getEventTicketTiers, getTokenMetadataUris,
   prepareBuyEventTicket,
   useMainContractEvents,
-  useTokenMetadataFetch,
+  useTokenMetadataFetch
 } from "helpers/contract";
 import {
   ArrowForwardIcon,
   CalendarIcon,
-  CheckIcon,
-  ExternalLinkIcon,
-  LinkIcon,
-  SettingsIcon,
-  WarningIcon,
+  CheckIcon, LinkIcon,
+  SettingsIcon
 } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
 import { fadeRightSlideAnimation, fadeTopSlideAnimation } from "styles/theme";
@@ -245,7 +218,7 @@ const EventPage = () => {
     },
   ]);
   const { data: eventTicketTiers, refetch: refetchEventTicketTiers } =
-    getEventTicketTiers([{ args: eventId }]);
+    getEventTicketTiers([{ args: [eventId] }]);
 
   const eventTicketTiersRef = useRef([]);
   const [verifyingTicket, setVerifyingTicket] = useState<{

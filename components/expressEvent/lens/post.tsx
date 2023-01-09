@@ -1,4 +1,5 @@
-import { useContractWrite, chain, useSignTypedData } from "wagmi";
+import { useContractWrite, useSignTypedData } from "wagmi";
+import * as chain from "@wagmi/core/chains";
 import { hub as hubABI } from "./abi";
 import { useLensHubAddress } from "@memester-xyz/lens-use/dist/context/LensContext";
 import { PostHook } from "../types";
@@ -94,7 +95,7 @@ export const usePost: PostHook = ({
   priceToCollect,
   eventMetadataId,
 }) => {
-  const addressOrName = useLensHubAddress();
+  const address = useLensHubAddress();
   const collectModule = ethers.constants.AddressZero;
   // const collectModule = "0x11C45Cbc6fDa2dbe435C0079a2ccF9c4c7051595";
   const collectModuleInitData = ethers.constants.HashZero;
@@ -141,8 +142,8 @@ export const usePost: PostHook = ({
     error: writeError,
     status: writeStatus,
   } = useContractWrite({
-    addressOrName,
-    contractInterface: hubABI,
+    address,
+    abi: hubABI,
     chainId: chain.polygonMumbai.id,
     mode: "recklesslyUnprepared",
     functionName: "postWithSig",

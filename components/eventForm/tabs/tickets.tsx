@@ -117,7 +117,7 @@ const TicketsTab = () => {
 
   useEffect(() => {
     nativeCurrencyToUsdPriceResponse?.length &&
-      setNativeCurrencyToUsdPrice(nativeCurrencyToUsdPriceResponse[0].answer);
+      setNativeCurrencyToUsdPrice(nativeCurrencyToUsdPriceResponse[0]?.answer);
   }, [nativeCurrencyToUsdPriceResponse]);
 
   useEffect(() => {

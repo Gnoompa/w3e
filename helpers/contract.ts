@@ -1,5 +1,4 @@
 import {
-  chain,
   Chain,
   useContractRead,
   useContractWrite,
@@ -7,6 +6,7 @@ import {
   usePrepareContractWrite,
   useProvider,
 } from "wagmi";
+import * as chain from "@wagmi/core/chains";
 import { Provider } from "@wagmi/core";
 import { Main as MainContractTypechain } from "types/typechain/Main";
 import { ERC1155MixedFungibleMintableUpgradeable as TokenContractTypechain } from "types/typechain/ERC1155MixedFungibleMintableUpgradeable";
@@ -178,8 +178,8 @@ export const getEvents = (
 ) =>
   useContractReads({
     contracts: chainIds.map((chainId, i) => ({
-      addressOrName: chainIdToMainContractAddressMap[chainId],
-      contractInterface: MainContractABI.abi,
+      address: chainIdToMainContractAddressMap[chainId],
+      abi: MainContractABI.abi,
       functionName: "getEvents",
       chainId,
       ...configs[i],
@@ -200,10 +200,11 @@ export const getEventTicketTiers = (
 ) =>
   useContractReads({
     contracts: chainIds.map((chainId, i) => ({
-      addressOrName: chainIdToMainContractAddressMap[chainId],
-      contractInterface: MainContractABI.abi,
+      address: chainIdToMainContractAddressMap[chainId],
+      abi: MainContractABI.abi,
       functionName: "getEventTicketTiers",
       chainId,
+
       ...configs[i],
     })),
   }) as ReturnType<typeof useContractReads> & {
@@ -222,10 +223,11 @@ export const getEventTickets = (
 ) =>
   useContractReads({
     contracts: chainIds.map((chainId, i) => ({
-      addressOrName: chainIdToMainContractAddressMap[chainId],
-      contractInterface: MainContractABI.abi,
+      address: chainIdToMainContractAddressMap[chainId],
+      abi: MainContractABI.abi,
       functionName: "getEventTickets",
       chainId,
+
       ...configs[i],
     })),
   }) as ReturnType<typeof useContractReads> & {
@@ -243,8 +245,8 @@ export const prepareCreateEvent = ({
     | undefined;
 }) =>
   usePrepareContractWrite({
-    addressOrName: chainIdToMainContractAddressMap[chainId],
-    contractInterface: MainContractABI.abi,
+    address: chainIdToMainContractAddressMap[chainId],
+    abi: MainContractABI.abi,
     functionName: "createEvent",
     chainId,
     ...config,
@@ -268,8 +270,8 @@ export const prepareBuyEventTicket = ({
     | undefined;
 }) =>
   usePrepareContractWrite({
-    addressOrName: chainIdToMainContractAddressMap[chainId],
-    contractInterface: MainContractABI.abi,
+    address: chainIdToMainContractAddressMap[chainId],
+    abi: MainContractABI.abi,
     functionName: "buyTickets",
     chainId,
     ...config,
@@ -293,8 +295,8 @@ export const prepareSpendEventTicket = ({
     | undefined;
 }) =>
   usePrepareContractWrite({
-    addressOrName: chainIdToMainContractAddressMap[chainId],
-    contractInterface: MainContractABI.abi,
+    address: chainIdToMainContractAddressMap[chainId],
+    abi: MainContractABI.abi,
     functionName: "spendTickets",
     chainId,
     ...config,
@@ -319,10 +321,11 @@ export const getEventManagers = (
 ) =>
   useContractReads({
     contracts: chainIds.map((chainId, i) => ({
-      addressOrName: chainIdToMainContractAddressMap[chainId],
-      contractInterface: MainContractABI.abi,
+      address: chainIdToMainContractAddressMap[chainId],
+      abi: MainContractABI.abi,
       chainId,
       functionName: "getEventManagers",
+
       ...configs[i],
     })),
   }) as ReturnType<typeof useContractReads> & {
@@ -341,10 +344,11 @@ export const getTokenMetadataUris = (
 ) =>
   useContractReads({
     contracts: chainIds.map((chainId, i) => ({
-      addressOrName: chainIdToTokenContractAddressMap[chainId],
-      contractInterface: TokenContractABI.abi,
+      address: chainIdToTokenContractAddressMap[chainId],
+      abi: TokenContractABI.abi,
       functionName: "uriOfBatch",
       chainId,
+
       ...configs[i],
     })),
   }) as ReturnType<typeof useContractReads> & {
@@ -364,10 +368,11 @@ export const getOwnerOfToken = (
 ) =>
   useContractReads({
     contracts: chainIds.map((chainId, i) => ({
-      addressOrName: chainIdToTokenContractAddressMap[chainId],
-      contractInterface: TokenContractABI.abi,
+      address: chainIdToTokenContractAddressMap[chainId],
+      abi: TokenContractABI.abi,
       functionName: "ownerOf",
       chainId,
+
       ...configs[i],
     })),
   }) as ReturnType<typeof useContractReads> & {
@@ -386,10 +391,11 @@ export const getBalanceOfToken = <T>(
 ) =>
   useContractReads({
     contracts: chainIds.map((chainId, i) => ({
-      addressOrName: chainIdToTokenContractAddressMap[chainId],
-      contractInterface: TokenContractABI.abi,
+      address: chainIdToTokenContractAddressMap[chainId],
+      abi: TokenContractABI.abi,
       functionName: "balanceOf",
       chainId,
+
       ...configs[i],
     })),
   }) as ReturnType<typeof useContractReads> & {
@@ -404,8 +410,8 @@ export const getNativeCurrencyToUsdPrice = (
   useContractReads({
     allowFailure: true,
     contracts: chainIds.map((chainId) => ({
-      addressOrName: chainIdToChainlinkPriceOracleContractAddressMap[chainId],
-      contractInterface: JSON.parse(chainlinkPriceOracleABI),
+      address: chainIdToChainlinkPriceOracleContractAddressMap[chainId],
+      abi: JSON.parse(chainlinkPriceOracleABI),
       functionName: "latestRoundData",
       chainId,
     })),

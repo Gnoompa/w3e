@@ -145,7 +145,7 @@ const EventForm = () => {
   const [
     createEventWritePayloadToPrepare,
     setCreateEventWritePayloadToPrepare,
-  ] = useState<Parameters<typeof prepareCreateEvent>[0]["args"]>();
+  ] = useState<Parameters<typeof prepareCreateEvent>[0]["args"][]>();
 
   // todo handle write request errors
   const {
@@ -606,18 +606,20 @@ const EventForm = () => {
       ticketMetadataUrls
     );
 
-    setCreateEventWritePayloadToPrepare({
-      ticketSupply: ticketsData.map(({ ticketSupply }) => ticketSupply),
-      ticketPrice: ticketsData.map(({ ticketPrice }) => ticketPrice),
-      ticketParams: ticketsData.map(({ params }) => params),
-      beneficiary: eventPersistedFormData.beneficiary,
-      managers: [
-        eventPersistedFormData.beneficiary,
-        ...eventPersistedFormData.eventManagers,
-      ],
-      eventMetadataUri: eventMetadataUrl,
-      ticketMetadataUri: ticketMetadataUrls,
-    });
+    setCreateEventWritePayloadToPrepare([
+      {
+        ticketSupply: ticketsData.map(({ ticketSupply }) => ticketSupply),
+        ticketPrice: ticketsData.map(({ ticketPrice }) => ticketPrice),
+        ticketParams: ticketsData.map(({ params }) => params),
+        beneficiary: eventPersistedFormData.beneficiary,
+        managers: [
+          eventPersistedFormData.beneficiary,
+          ...eventPersistedFormData.eventManagers,
+        ],
+        eventMetadataUri: eventMetadataUrl,
+        ticketMetadataUri: ticketMetadataUrls,
+      },
+    ]);
   };
 
   const onNextFormTabButtonClick = () => {

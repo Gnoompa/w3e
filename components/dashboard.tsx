@@ -56,12 +56,12 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { BigNumber, BigNumberish, ethers } from "ethers";
 import {
-  chain,
   useAccount,
   useProvider,
   useSignMessage,
   useWaitForTransaction,
 } from "wagmi";
+import * as chain from "@wagmi/core/chains";
 import {
   buyEventTicket,
   getBalanceOfToken,

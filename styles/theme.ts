@@ -148,7 +148,7 @@ const theme = extendTheme({
           height: "2.5rem",
           fontSize: "sm",
           py: 0,
-          px: [".5rem", "1rem"],
+          px: [".75rem", "1rem"],
         }),
         icon: {
           py: "1.25rem",
