@@ -55,6 +55,7 @@ import { useRouter } from "next/router";
 import { Routes } from "helpers/routes";
 import dynamic from "next/dynamic";
 import { polygon } from "wagmi/chains";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 const EventPage = dynamic(() => import("./expressEvent/eventPage"), {
   ssr: false,
@@ -68,7 +69,9 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
   const queryEventId = useRouterQuery(router).id;
   const [eventId, setEventId] = useState<string>(queryEventId);
   const { address: connectedAddress } = useAccount();
-  const { setOpen: setOpenWalletConnectModal } = useModal();
+  // const { setOpen: setOpenWalletConnectModal } = useModal();
+  const { openConnectModal: setOpenWalletConnectModal,  } = useConnectModal();
+
   const [eventProfiles, setEventProfiles] = useState<IProfile[]>();
   const [eventTitle, setEventTitle] = useState<string>();
   const [eventDetails, setEventDetails] = useState<string>();
@@ -601,7 +604,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                           <Button
                             variant={"secondary"}
                             bg={"transparentOverlay"}
-                            onClick={() => setOpenWalletConnectModal(true)}
+                            onClick={setOpenWalletConnectModal}
                           >
                             Connect Wallet
                           </Button>
@@ -615,7 +618,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                 <Text
                   fontWeight={"bold"}
                   color={"textContrastSecondary"}
-                  fontSize={"lg"}
+                  fontSize={"lg"}                  
                 >
                   Ticket types
                 </Text>

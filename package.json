@@ -23,6 +23,7 @@
     "@mdx-js/react": "1.6.22",
     "@memester-xyz/lens-use": "^0.1.1",
     "@openzeppelin/contracts": "4.6.0",
+    "@rainbow-me/rainbowkit": "^0.8.1",
     "@reduxjs/toolkit": "1.8.5",
     "calendar-link": "^2.2.0",
     "canvas": "^2.10.1",

@@ -1,3 +1,5 @@
+import "@rainbow-me/rainbowkit/styles.css";
+
 import normalizeCss from "../node_modules/normalize.css/normalize.css";
 import resetCss from "../styles/reset.css";
 import globalCss from "../styles/index.css";
@@ -21,6 +23,7 @@ import isMobile from "is-mobile";
 import { defaultChainId } from "helpers/contract";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 import { LensProvider } from "@memester-xyz/lens-use/dist/context/LensContext";
+import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const { chains, provider } = configureChains(
@@ -28,24 +31,28 @@ function MyApp({ Component, pageProps }: AppProps) {
     [alchemyProvider({ apiKey: process.env.alchemyId })]
   );
 
-  const connectors = () => {
-    return [
-      new InjectedConnector({
-        chains,
-        options: { shimDisconnect: true },
-      }),
-      !isMobile() &&
-        new MetaMaskConnector({
-          chains,
-        }),
-      new WalletConnectConnector({
-        chains,
-        options: {
-          qrcode: false,
-        },
-      }),
-    ];
-  };
+  // const connectors = () => {
+  //   return [
+  //     new InjectedConnector({
+  //       chains,
+  //       options: { shimDisconnect: true },
+  //     }),
+  //     !isMobile() &&
+  //       new MetaMaskConnector({
+  //         chains,
+  //       }),
+  //     new WalletConnectConnector({
+  //       chains,
+  //       options: {
+  //         qrcode: false,
+  //       },
+  //     }),
+  //   ];
+  // };
+  const { connectors } = getDefaultWallets({
+    appName: "My RainbowKit App",
+    chains,
+  });
 
   const client = createClient(
     getDefaultClient({
@@ -327,11 +334,12 @@ function MyApp({ Component, pageProps }: AppProps) {
             <WagmiConfig client={client}>
               <ApolloProvider client={apolloClient}>
                 {/* <LensProvider lensHubAddress="0x7582177F9E536aB0b6c721e11f383C326F2Ad1D5"> */}
-                <ConnectKitProvider
-                  options={{ walletConnectName: "Zerion & Wallet Connect" }}
+                <RainbowKitProvider
+                  chains={chains}
+                  // options={{ walletConnectName: "Zerion & Wallet Connect" }}
                 >
                   <Component {...pageProps} />
-                </ConnectKitProvider>
+                </RainbowKitProvider>
                 {/* </LensProvider> */}
               </ApolloProvider>
             </WagmiConfig>
