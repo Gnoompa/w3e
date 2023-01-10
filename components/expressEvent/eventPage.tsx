@@ -74,11 +74,12 @@ import QRCode from "qrcode.react";
 import qrcode from "qrcode";
 import QrScanner from "@components/ui/qrScanner";
 import { ethers } from "ethers";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 export const EventPage: React.FC = (): JSX.Element => {
   const { setColorMode } = useColorMode();
   const { address: connectedAddress } = useAccount();
-  const { setOpen: setOpenWalletConnectModal } = useModal();
+  const { openConnectModal: setOpenWalletConnectModal } = useConnectModal();
   const router = useRouter();
   const queryEventId = useRouterQuery(router).id;
   const [eventMetadata, setEventMetadata] = useState<ExpressEventMetadata>();

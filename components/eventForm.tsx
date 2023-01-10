@@ -84,6 +84,7 @@ import {
 } from "./helpers/events";
 import { resolveObjectURL } from "buffer";
 import useMediaPlaceholderGenerator from "helpers/hooks/mediaPlaceholderGenerator";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 // const EventTicketImage = dynamic(() => import("./eventTicket"), {
 //   ssr: false,
@@ -105,7 +106,7 @@ const EventForm = () => {
 
   const context = useContext(appContext);
   const dispatch = useAppDispatch();
-  const { setOpen: setWalletConnectModalOpen } = useModal();
+  const { openConnectModal: setWalletConnectModalOpen } = useConnectModal();
   const router = useRouter();
   const { address: connectedWalletAddress, isConnected: isWalletConnected } =
     useAccount();

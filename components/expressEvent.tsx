@@ -69,8 +69,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
   const queryEventId = useRouterQuery(router).id;
   const [eventId, setEventId] = useState<string>(queryEventId);
   const { address: connectedAddress } = useAccount();
-  // const { setOpen: setOpenWalletConnectModal } = useModal();
-  const { openConnectModal: setOpenWalletConnectModal  } = useConnectModal();
+  const { openConnectModal: setOpenWalletConnectModal } = useConnectModal();
 
   const [eventProfiles, setEventProfiles] = useState<IProfile[]>();
   const [eventTitle, setEventTitle] = useState<string>();
@@ -293,6 +292,10 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
         [...(eventProfiles || []), CCDefaultProfile].filter(Boolean)
       );
   }, [isCCAuthed]);
+
+  useEffect(() => {
+    !connectedAddress && setEventProfiles(undefined);
+  }, [connectedAddress]);
 
   useEffect(() => {
     eventProcessingStages &&
@@ -618,7 +621,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                 <Text
                   fontWeight={"bold"}
                   color={"textContrastSecondary"}
-                  fontSize={"lg"}                  
+                  fontSize={"lg"}
                 >
                   Ticket types
                 </Text>
