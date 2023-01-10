@@ -1,7 +1,4 @@
-import {
-  useRef,
-  useState, useEffect, RefObject
-} from "react";
+import { useRef, useState, useEffect, RefObject } from "react";
 import { Global, css } from "@emotion/react";
 import QRCode from "qrcode.react";
 import { google as googleCalendarLink } from "calendar-link";
@@ -12,26 +9,30 @@ import {
   Button,
   Text,
   Container,
-  Spinner, Heading,
+  Spinner,
+  Heading,
   IconButton,
   useClipboard,
   useToast,
   Modal,
   ModalOverlay,
-  ModalContent, ModalCloseButton, useDisclosure,
+  ModalContent,
+  ModalCloseButton,
+  useDisclosure,
   AlertDialog,
   AlertDialogOverlay,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
-  Highlight, Link,
+  Highlight,
+  Link,
   useBreakpointValue,
   Popover,
   PopoverTrigger,
   PopoverContent,
   PopoverCloseButton,
-  PopoverBody
+  PopoverBody,
 } from "@chakra-ui/react";
 import {
   getIPFSUri,
@@ -44,9 +45,10 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { BigNumber, BigNumberish, ethers } from "ethers";
 import {
-  useAccount, useProvider,
+  useAccount,
+  useProvider,
   useSignMessage,
-  useWaitForTransaction
+  useWaitForTransaction,
 } from "wagmi";
 import {
   buyEventTicket,
@@ -57,16 +59,18 @@ import {
   getEventManagers,
   getEvents,
   getEventTickets,
-  getEventTicketTiers, getTokenMetadataUris,
+  getEventTicketTiers,
+  getTokenMetadataUris,
   prepareBuyEventTicket,
   useMainContractEvents,
-  useTokenMetadataFetch
+  useTokenMetadataFetch,
 } from "helpers/contract";
 import {
   ArrowForwardIcon,
   CalendarIcon,
-  CheckIcon, LinkIcon,
-  SettingsIcon
+  CheckIcon,
+  LinkIcon,
+  SettingsIcon,
 } from "@chakra-ui/icons";
 import { motion } from "framer-motion";
 import { fadeRightSlideAnimation, fadeTopSlideAnimation } from "styles/theme";
@@ -86,6 +90,7 @@ import {
 } from "./helpers/events";
 import EventManagerModal from "./eventManagerModal";
 import CheckoutModal from "./checkoutModal";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 const QrScanner = dynamic(() => import("./ui/qrScanner"), {
   ssr: false,
@@ -103,7 +108,9 @@ const EventPage = () => {
   const router = useRouter();
   const routerQuery = useRouterQuery(router);
   const toast = useToast();
-  const { setOpen: setOpenWalletConnectModal } = useModal();
+
+  const { openConnectModal: setOpenWalletConnectModal } = useConnectModal();
+
   const [copiedValue, setCopiedValue] = useState<string>("");
   const { hasCopied, onCopy } = useClipboard(copiedValue);
   const {

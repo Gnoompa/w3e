@@ -32,6 +32,7 @@ import { upsertEvent } from "features/eventForm/eventPersistedFormSlice";
 import { default as useEventFormValidationHook } from "../validationHook";
 import { useAccount } from "wagmi";
 import { useModal } from "connectkit";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 const PaymentTab = () => {
   const dispatch = useAppDispatch();
@@ -45,7 +46,8 @@ const PaymentTab = () => {
 
   const { address: connectedWalletAddress, isConnected: isWalletConnected } =
     useAccount();
-  const { setOpen: setWalletConnectModalOpen } = useModal();
+
+  const { openConnectModal: setOpenWalletConnectModal } = useConnectModal();
 
   useEffect(() => {
     dispatch(
