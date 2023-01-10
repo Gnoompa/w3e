@@ -25,14 +25,20 @@ const Component = forwardRef((props, ref) => {
           <Flex
             direction={["column", "column", "row"]}
             mt="2rem"
-            gap="2rem"
+            gap="3rem"
             alignItems={"center"}
             justifyContent={"center"}
           >
             <Link target={"_blank"} href="https://www.eth-vietnam.com/">
               <Flex direction={"column"} gap="1rem" alignItems={"center"}>
-                <Image src="/logo/ethvietnam.png" width={"10rem"} />
-                <Text color="textContrastAccent">ETHVietnam conference</Text>
+                <Image src="/logo/ethvietnam.png" height={"4rem"} />
+                <Text color="textContrastAccent">ETHVietnam</Text>
+              </Flex>
+            </Link>
+            <Link target={"_blank"} href="https://www.lens.xyz/">
+              <Flex direction={"column"} gap="1rem" alignItems={"center"}>
+                <Image src="/icons/lens.svg" height={"4rem"} bg={"bg"} p="1rem" borderRadius={"sm"} />
+                <Text color="textContrastAccent">Lens</Text>
               </Flex>
             </Link>
           </Flex>
