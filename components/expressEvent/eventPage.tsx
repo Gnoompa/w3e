@@ -20,10 +20,16 @@ import {
   ModalContent,
   CloseButton,
   useDisclosure,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverCloseButton,
 } from "@chakra-ui/react";
+import { polygon } from "wagmi/chains";
 import {
   DownloadIcon,
   ExternalLinkIcon,
+  InfoIcon,
   Search2Icon,
   SearchIcon,
   WarningTwoIcon,
@@ -43,7 +49,7 @@ import {
 import TicketIcon from "public/icons/brandTicket";
 import { useAuth as useLensAuth } from "./lens/auth";
 import { useAuth as useCCAuth } from "./cc/auth";
-import { useModal } from "connectkit";
+import { ChainIcon, useModal } from "connectkit";
 import {
   ExpressEventMetadata,
   IProfile,
@@ -357,9 +363,64 @@ export const EventPage: React.FC = (): JSX.Element => {
     >
       <Flex flexDir={"column"} gap={"1rem"}>
         <Flex flexDir={"column"}>
-          <Heading as={"h2"} textTransform={"uppercase"} fontSize={"4xl"}>
-            express
-          </Heading>
+          <Flex alignItems={"center"} justify={"space-between"}>
+            <Heading as={"h2"} textTransform={"uppercase"} fontSize={"4xl"}>
+              express
+            </Heading>
+            <Popover>
+              <PopoverTrigger>
+                <InfoIcon
+                  color={"accent"}
+                  fontSize={"2rem"}
+                  cursor={"pointer"}
+                  _hover={{ opacity: 0.8 }}
+                />
+              </PopoverTrigger>
+              <PopoverContent
+                bg="bg"
+                as={Flex}
+                p={"1rem 1.5rem"}
+                mx="1rem"
+                flexDir={"column"}
+                gap="1rem"
+              >
+                <PopoverCloseButton color={"text"} />
+                <Flex flexDir={"column"} gap=".25rem">
+                  <Text fontWeight={"bold"}>What is it about?</Text>
+                  <Text>
+                    Simplest way to have a ticketed event for your party,
+                    hackathon or a conference
+                  </Text>
+                </Flex>
+                <Divider />
+                <Text color="accent" fontWeight={"bold"}>
+                  Promote, engage and ticket with a single post!
+                </Text>
+                <Divider />
+                <Flex gap=".5rem" align="center">
+                  <Text fontWeight={"bold"}>👀 Video guide</Text>
+                  <ExternalLinkIcon />
+                </Flex>
+
+                <Link
+                  href="https://roadmap.web3events.ai/b/j0x38r0q/feature-ideas"
+                  target={"_blank"}
+                >
+                  <Flex gap=".5rem" align="center">
+                    <Text fontWeight={"bold"} color="text">
+                      ⭐️ Suggest features
+                    </Text>
+                    <ExternalLinkIcon color={"text"} />
+                  </Flex>
+                </Link>
+                <Divider />
+                <Flex align={"center"} gap=".5rem" w="100%" justify={"center"}>
+                  <ChainIcon id={polygon.id} />
+                  <Text fontWeight={"semibold"}>Polygon only for now</Text>
+                </Flex>
+              </PopoverContent>
+            </Popover>
+          </Flex>
           <Heading
             as={"h2"}
             textTransform={"uppercase"}
