@@ -65,7 +65,11 @@ const App: React.FC = (props) => {
       refetchNativeCurrencyToUsdPriceInterval
     );
 
-    appPersistedVersion != appState.ver && persistorStore.purge();
+    appPersistedVersion != appState.ver &&
+      (persistorStore.purge(),
+      localStorage.removeItem("lensAccessToken"),
+      localStorage.removeItem("lensRefreshToken"),
+      localStorage.removeItem("cyberConnectAccessToken"));
   }, []);
 
   useEffect(() => {

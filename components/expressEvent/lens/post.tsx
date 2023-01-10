@@ -151,13 +151,11 @@ export const usePost: PostHook = ({
 
   const [status, setStatus] = useState<string>("idle");
   const [postData, setPostData] = useState<object>();
-  const [getPostTypedData, { data: postTypedData }] = useMutation(
-    CREATE_POST_TYPED_DATA,
-    {
+  const [getPostTypedData, { data: postTypedData, error: postTypedDataError }] =
+    useMutation(CREATE_POST_TYPED_DATA, {
       variables: { request: postData },
       client: client,
-    }
-  );
+    });
 
   const { signTypedDataAsync } = useSignTypedData();
 
@@ -169,6 +167,10 @@ export const usePost: PostHook = ({
     writeStatus == "error" && setStatus("error");
     writeStatus == "success" && setStatus("success");
   }, [writeStatus]);
+
+  useEffect(() => {
+    postTypedDataError && setStatus("error");
+  }, [postTypedDataError]);
 
   useEffect(() => {
     postData && getPostTypedData();
