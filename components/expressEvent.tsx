@@ -70,7 +70,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
   const [eventId, setEventId] = useState<string>(queryEventId);
   const { address: connectedAddress } = useAccount();
   // const { setOpen: setOpenWalletConnectModal } = useModal();
-  const { openConnectModal: setOpenWalletConnectModal,  } = useConnectModal();
+  const { openConnectModal: setOpenWalletConnectModal  } = useConnectModal();
 
   const [eventProfiles, setEventProfiles] = useState<IProfile[]>();
   const [eventTitle, setEventTitle] = useState<string>();

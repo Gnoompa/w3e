@@ -23,7 +23,7 @@
     "@mdx-js/react": "1.6.22",
     "@memester-xyz/lens-use": "^0.1.1",
     "@openzeppelin/contracts": "4.6.0",
-    "@rainbow-me/rainbowkit": "^0.8.1",
+    "@rainbow-me/rainbowkit": "0.8.1",
     "@reduxjs/toolkit": "1.8.5",
     "calendar-link": "^2.2.0",
     "canvas": "^2.10.1",
@@ -61,7 +61,7 @@
     "styled-components": "5.3.5",
     "use-click-outside": "2.0.0",
     "use-image": "1.0.12",
-    "wagmi": "0.10.6",
+    "wagmi": "0.9.0",
     "webrtc-adapter": "8.1.1",
     "yup": "^0.32.11"
   },
