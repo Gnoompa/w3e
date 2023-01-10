@@ -1,22 +1,11 @@
-import { CheckCircleIcon } from "@chakra-ui/icons";
 import {
-  Flex,
-  Box,
-  Container,
+  Flex, Container,
   Heading,
   Image,
   Text,
-  Highlight,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
-  Link,
+  Highlight, Link
 } from "@chakra-ui/react";
-import { motion } from "framer-motion";
-import { forwardRef, useState } from "react";
-import { fadeTopSlideAnimation } from "styles/theme";
+import { forwardRef } from "react";
 
 const Component = forwardRef((props, ref) => {
   return (
