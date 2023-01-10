@@ -96,11 +96,6 @@ export const usePost: PostHook = ({
   eventMetadataId,
 }) => {
   const address = useLensHubAddress();
-  const collectModule = ethers.constants.AddressZero;
-  // const collectModule = "0x11C45Cbc6fDa2dbe435C0079a2ccF9c4c7051595";
-  const collectModuleInitData = ethers.constants.HashZero;
-  const referenceModule = ethers.constants.AddressZero;
-  const referenceModuleInitData = "0x";
 
   const { data: fetchedPost } = useQuery(GET_PUBLICATIONS, {
     variables: {
@@ -144,7 +139,7 @@ export const usePost: PostHook = ({
   } = useContractWrite({
     address,
     abi: hubABI,
-    chainId: chain.polygonMumbai.id,
+    chainId: defaultChainId,
     mode: "recklesslyUnprepared",
     functionName: "postWithSig",
   });
