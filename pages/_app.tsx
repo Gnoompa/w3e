@@ -68,8 +68,8 @@ function MyApp({ Component, pageProps }: AppProps) {
     })
   );
 
-  const APIURL = "https://api.lens.dev/";
-  // const APIURL = "https://api-sandbox-mumbai.lens.dev";
+  // const APIURL = "https://api.lens.dev/";
+  const APIURL = "https://api-sandbox-mumbai.lens.dev";
 
   const apolloClient = new ApolloClient({
     uri: APIURL,
@@ -333,13 +333,13 @@ function MyApp({ Component, pageProps }: AppProps) {
           <ColorModeProvider>
             <WagmiConfig client={client}>
               <ApolloProvider client={apolloClient}>
-                {/* <LensProvider lensHubAddress="0x7582177F9E536aB0b6c721e11f383C326F2Ad1D5"> */}
+                <LensProvider lensHubAddress="0x7582177F9E536aB0b6c721e11f383C326F2Ad1D5">
                 {/* <ConnectKitProvider> */}
                 <RainbowKitProvider chains={chains}>
                   <Component {...pageProps} />
                 </RainbowKitProvider>
                 {/* </ConnectKitProvider> */}
-                {/* </LensProvider> */}
+                </LensProvider>
               </ApolloProvider>
             </WagmiConfig>
           </ColorModeProvider>

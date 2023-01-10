@@ -425,7 +425,7 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                         justify={"center"}
                       >
                         <ChainIcon id={polygon.id} />
-                        <Text fontWeight={"semibold"}>
+                        <Text fontWeight={"semibold"} opacity={0.8}>
                           Polygon only for now
                         </Text>
                       </Flex>
@@ -495,13 +495,19 @@ export const ExpressEvent: React.FC = (): JSX.Element => {
                 </Container>
               </Flex>
               <Flex flexDir={"column"} gap=".5rem">
-                <Text
-                  fontWeight={"bold"}
-                  color={"textContrastSecondary"}
-                  fontSize={"lg"}
-                >
-                  Publish from
-                </Text>
+                <Flex gap={".5rem"} alignItems={"center"} justify={"space-between"}>
+                  <Text
+                    fontWeight={"bold"}
+                    color={"textContrastSecondary"}
+                    fontSize={"lg"}
+                    flexDir={"row"}
+                  >
+                    Publish from
+                  </Text>
+                  <Text color={"textContrastSecondary"} fontWeight={"light"} fontSize={"sm"}>
+                    default profiles only
+                  </Text>
+                </Flex>
                 <Flex flexDir={"column"} borderRadius="sm" overflow={"hidden"}>
                   {publishingProfileTypes.map((publishingProfileType) => (
                     <Container

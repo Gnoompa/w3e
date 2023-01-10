@@ -244,9 +244,9 @@ export const usePost: PostHook = ({
           //   "https://ipfs.io/ipfs/QmY9dUwYu67puaWBMxRKW98LPbXCznPwHUbhX5NeWnCJbX",
           // imageMimeType: "image/svg+xml",
           // imageMimeType: "image/jpeg",
-          content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost and collect\n\nEvent Page - ${getEventLink(
+          content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost and collect\n\n[Event Page](${getEventLink(
             eventMetadataId
-          )}`,
+          )})`,
           external_url: getEventLink(eventMetadataId),
           tags: [eventMetadataId],
         })),

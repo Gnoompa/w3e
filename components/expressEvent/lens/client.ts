@@ -10,8 +10,8 @@ import {
 import { RetryLink } from "@apollo/client/link/retry";
 import axios from "axios";
 
-const API_URL = "https://api.lens.dev/";
-// const API_URL = "https://api-sandbox-mumbai.lens.dev";
+// const API_URL = "https://api.lens.dev/";
+const API_URL = "https://api-sandbox-mumbai.lens.dev";
 
 const parseJwt = (
   token: string
