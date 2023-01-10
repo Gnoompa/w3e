@@ -50,7 +50,7 @@ export default () => (
               </NextLink>
             </MenuItem>
             <MenuDivider />
-            <MenuItem onClick={openAccountModal}>
+            <MenuItem onClick={account ? openAccountModal : openConnectModal}>
               <Flex align={"center"} justify={"space-between"} flex={1}>
                 <Text fontSize={"sm"} color="textContrastSecondary">
                   Connected wallet
@@ -66,7 +66,7 @@ export default () => (
           flex={1}
           maxW={"fit-content"}
           justifySelf={"flex-end"}
-          onClick={openAccountModal}
+          onClick={account ? openAccountModal : openConnectModal}
         >
           Connect Wallet
         </Button>
