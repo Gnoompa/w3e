@@ -230,26 +230,24 @@ export const usePost: PostHook = ({
 
     const config = {
       profileId: profile!.id,
-      contentURI:
-        "https://api.web3events.ai/media/" +
-        (
-          await uploadMetadata({
-            ...postMetadata,
-            name: `Express Event by ${profile!.handle}`,
-            // metadata_id: `${profile!.id}-${+Date.now()}`,
-            metadata_id: eventMetadataId,
-            // image: postNftImage,
-            // image:
-            //   "https://ipfs.io/ipfs/QmY9dUwYu67puaWBMxRKW98LPbXCznPwHUbhX5NeWnCJbX",
-            // imageMimeType: "image/svg+xml",
-            // imageMimeType: "image/jpeg",
-            content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost and collect\n\n[Event Page](${getEventLink(
-              eventMetadataId
-            )})`,
-            external_url: getEventLink(eventMetadataId),
-            tags: [eventMetadataId],
-          })
-        ).data.ipfs,
+      contentURI: (
+        await uploadMetadata({
+          ...postMetadata,
+          name: `Express Event by ${profile!.handle}`,
+          // metadata_id: `${profile!.id}-${+Date.now()}`,
+          metadata_id: eventMetadataId,
+          // image: postNftImage,
+          // image:
+          //   "https://ipfs.io/ipfs/QmY9dUwYu67puaWBMxRKW98LPbXCznPwHUbhX5NeWnCJbX",
+          // imageMimeType: "image/svg+xml",
+          // imageMimeType: "image/jpeg",
+          content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost and collect\n\n[Event Page](${getEventLink(
+            eventMetadataId
+          )})`,
+          external_url: getEventLink(eventMetadataId),
+          tags: [eventMetadataId],
+        })
+      ).replace("ipfs://", "https://api.web3events.ai/media/"),
       collectModule: {
         ...(priceToCollect
           ? {
