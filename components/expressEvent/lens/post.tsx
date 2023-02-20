@@ -123,6 +123,7 @@ export const usePost: PostHook = ({
       "events",
       "expressevent",
     ],
+    attributes: [],
     mainContentFocus: "TEXT_ONLY",
     locale: "en-US",
     appId: "Express_Event",

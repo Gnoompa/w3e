@@ -1,4 +1,9 @@
 import {
+  ExternalLinkIcon,
+  InfoIcon,
+  WarningTwoIcon
+} from "@chakra-ui/icons";
+import {
   Box,
   Button,
   Container,
@@ -12,50 +17,40 @@ import {
   PopoverCloseButton,
   PopoverContent,
   PopoverTrigger,
-  Select,
   Spinner,
   Switch,
   Text,
   Textarea,
-  Tooltip,
-  useColorMode,
+  useColorMode
 } from "@chakra-ui/react";
-import {
-  ExternalLinkIcon,
-  InfoIcon,
-  WarningIcon,
-  WarningTwoIcon,
-} from "@chakra-ui/icons";
-import React, { useEffect, useMemo, useState } from "react";
-import LensIcon from "public/icons/lens";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { ChainIcon } from "connectkit";
+import { AnimatePresence, motion } from "framer-motion";
+import { getRouterQuery, uploadMetadata, useRouterQuery } from "helpers/hooks";
+import { Routes } from "helpers/routes";
+import { xor } from "lodash";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
+import TicketIcon from "public/icons/brandTicket";
 import CyberConnectIcon from "public/icons/cyberConnect";
+import LensIcon from "public/icons/lens";
 import PublishIcon from "public/icons/publish";
+import TwitterIcon from "public/icons/twitter";
+import UsdcIcon from "public/icons/usdc";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
-import { useProfiles as useCCProfiles } from "./expressEvent/cc/profile";
-import { useProfiles as useLensProfiles } from "./expressEvent/lens/profile";
-import { useAuth as useLensAuth } from "./expressEvent/lens/auth";
+import { polygon } from "wagmi/chains";
 import { useAuth as useCCAuth } from "./expressEvent/cc/auth";
+import { useProfiles as useCCProfiles } from "./expressEvent/cc/profile";
+import { useAuth as useLensAuth } from "./expressEvent/lens/auth";
 import { usePost as useLensPost } from "./expressEvent/lens/post";
-import Snowfall from "react-snowfall";
-import { ChainIcon, useModal } from "connectkit";
+import { useProfiles as useLensProfiles } from "./expressEvent/lens/profile";
 import {
-  ExpressEventConfig,
   ExpressEventMetadata,
   IProfile,
   PostHook,
-  ProfileType,
+  ProfileType
 } from "./expressEvent/types";
-import { xor } from "lodash";
-import TwitterIcon from "public/icons/twitter";
-import TicketIcon from "public/icons/brandTicket";
-import UsdcIcon from "public/icons/usdc";
-import { motion, AnimatePresence } from "framer-motion";
-import { getRouterQuery, uploadMetadata, useRouterQuery } from "helpers/hooks";
-import { useRouter } from "next/router";
-import { Routes } from "helpers/routes";
-import dynamic from "next/dynamic";
-import { polygon } from "wagmi/chains";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 const EventPage = dynamic(() => import("./expressEvent/eventPage"), {
   ssr: false,
