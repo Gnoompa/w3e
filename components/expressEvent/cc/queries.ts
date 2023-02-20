@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const getProfiles = gql`
-  query getProfilesbyOwner($address: AddressEVM!, $chainID: ChainID!) {
-    address(address: $address, chainID: $chainID) {
+  query getProfilesbyOwner($address: AddressEVM!) {
+    address(address: $address) {
       wallet {
         profiles {
           edges {
@@ -28,14 +28,8 @@ export const getProfiles = gql`
 `;
 
 export const loginGetMessage = gql`
-  mutation loginGetMessage(
-    $domain: String!
-    $address: AddressEVM!
-    $chainID: ChainID!
-  ) {
-    loginGetMessage(
-      input: { domain: $domain, address: $address, chainID: $chainID }
-    ) {
+  mutation loginGetMessage($domain: String!, $address: AddressEVM!) {
+    loginGetMessage(input: { domain: $domain, address: $address }) {
       message
     }
   }
@@ -45,16 +39,10 @@ export const loginVerify = gql`
   mutation loginVerify(
     $domain: String!
     $address: AddressEVM!
-    $chainID: ChainID!
     $signature: String!
   ) {
     loginVerify(
-      input: {
-        domain: $domain
-        address: $address
-        chainID: $chainID
-        signature: $signature
-      }
+      input: { domain: $domain, address: $address, signature: $signature }
     ) {
       accessToken
     }

@@ -1,20 +1,18 @@
-import { useContractWrite, useSignTypedData } from "wagmi";
-import * as chain from "@wagmi/core/chains";
-import { hub as hubABI } from "./abi";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import { useLensHubAddress } from "@memester-xyz/lens-use/dist/context/LensContext";
-import { PostHook } from "../types";
 import { ethers } from "ethers";
-import { useEffect, useState } from "react";
-import { Routes } from "helpers/routes";
-import { useMutation } from "@apollo/client";
-import { CREATE_POST_TYPED_DATA, GET_PUBLICATIONS } from "./queries";
-import client from "./client";
-import { omit } from "lodash";
-import { uploadToArweave } from "../uploadToArweave";
-import { gql, useQuery } from "@apollo/client";
-import { stables } from "../constants";
 import { defaultChainId } from "helpers/contract";
+import { uploadMetadata } from "helpers/hooks";
+import { Routes } from "helpers/routes";
+import { omit } from "lodash";
+import { useEffect, useState } from "react";
+import { useContractWrite, useSignTypedData } from "wagmi";
+import { stables } from "../constants";
+import { PostHook } from "../types";
+import { hub as hubABI } from "./abi";
+import client from "./client";
 import { getDefaultProfile } from "./profile";
+import { CREATE_POST_TYPED_DATA, GET_PUBLICATIONS } from "./queries";
 
 export const hasCollectedPost = async (
   postCollectNftAddress: string,
@@ -234,7 +232,7 @@ export const usePost: PostHook = ({
       profileId: profile!.id,
       contentURI:
         "https://arweave.net/" +
-        (await uploadToArweave({
+        (await uploadMetadata({
           ...postMetadata,
           name: `Express Event by ${profile!.handle}`,
           // metadata_id: `${profile!.id}-${+Date.now()}`,
