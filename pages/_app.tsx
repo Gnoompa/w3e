@@ -1,29 +1,24 @@
 import "@rainbow-me/rainbowkit/styles.css";
 
-import normalizeCss from "../node_modules/normalize.css/normalize.css";
-import resetCss from "../styles/reset.css";
-import globalCss from "../styles/index.css";
-import theme from "../styles/theme";
 import { ChakraProvider, ColorModeProvider } from "@chakra-ui/react";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import Script from "next/script";
+import normalizeCss from "../node_modules/normalize.css/normalize.css";
+import globalCss from "../styles/index.css";
+import resetCss from "../styles/reset.css";
+import theme from "../styles/theme";
 // import { StyledEngineProvider } from "@mui/material/styles";
-import { store } from "../app/store";
-import { Provider } from "react-redux";
-import process from "process";
-import { WagmiConfig, createClient, configureChains } from "wagmi";
-import { InjectedConnector } from "wagmi/connectors/injected";
-import { MetaMaskConnector } from "wagmi/connectors/metaMask";
-import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
-import { alchemyProvider } from "wagmi/providers/alchemy";
+import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
+import { RainbowKitProvider, getDefaultWallets } from "@rainbow-me/rainbowkit";
 import * as chain from "@wagmi/core/chains";
-import { ConnectKitProvider, getDefaultClient } from "connectkit";
-import isMobile from "is-mobile";
+import { getDefaultClient } from "connectkit";
 import { defaultChainId } from "helpers/contract";
-import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
-import { LensProvider } from "@memester-xyz/lens-use/dist/context/LensContext";
-import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import process from "process";
+import { Provider } from "react-redux";
+import { WagmiConfig, configureChains, createClient } from "wagmi";
+import { alchemyProvider } from "wagmi/providers/alchemy";
+import { store } from "../app/store";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const { chains, provider } = configureChains(

@@ -1,14 +1,14 @@
-import { NextRouter, Router } from "next/router";
-import { MouseEventHandler, Ref, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { TypedUseSelectorHook } from "react-redux";
-import type { RootState, AppDispatch } from "../app/store";
 import axios from "axios";
-import TwitterIcon from "../public/icons/twitter";
+import { NextRouter } from "next/router";
+import { useEffect, useState } from "react";
+import type { TypedUseSelectorHook } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../app/store";
 import FacebookIcon from "../public/icons/facebook";
 import InstagramIcon from "../public/icons/insta";
-import TelegramIcon from "../public/icons/tg";
 import SiteIcon from "../public/icons/site";
+import TelegramIcon from "../public/icons/tg";
+import TwitterIcon from "../public/icons/twitter";
 import { generateMediaPlaceholder } from "./hooks/mediaPlaceholderGenerator";
 import { Routes } from "./routes";
 
@@ -124,9 +124,11 @@ export const uploadMetadata = async (metadata: object) => {
     ? "https://api.test.web3events.ai/upload"
     : "https://api.web3events.ai/upload";
 
+  // const uploadUrl = "https://api.test.web3events.ai/upload";
+
   let imageUploadResponse = undefined;
 
-  if (typeof metadata.image == "object") {
+  if (metadata.image && typeof metadata.image == "object") {
     let metadataImageFormData = new FormData();
 
     metadataImageFormData.append(
@@ -137,10 +139,7 @@ export const uploadMetadata = async (metadata: object) => {
       }`.replace(/svg\+xml/, "xml")
     );
 
-    imageUploadResponse = await axios.post(
-      uploadUrl,
-      metadataImageFormData
-    );
+    imageUploadResponse = await axios.post(uploadUrl, metadataImageFormData);
   }
 
   let metadataFormData = new FormData();

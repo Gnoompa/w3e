@@ -1,18 +1,27 @@
-import { gql, useMutation, useQuery } from "@apollo/client";
+import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client";
+import { WebBundlr } from "@bundlr-network/client";
 import { useLensHubAddress } from "@memester-xyz/lens-use/dist/context/LensContext";
 import { ethers } from "ethers";
 import { defaultChainId } from "helpers/contract";
-import { uploadMetadata } from "helpers/hooks";
 import { Routes } from "helpers/routes";
 import { omit } from "lodash";
 import { useEffect, useState } from "react";
-import { useContractWrite, useSignTypedData } from "wagmi";
+import {
+  useContractWrite,
+  useProvider,
+  useSignTypedData,
+  useSigner,
+} from "wagmi";
 import { stables } from "../constants";
 import { PostHook } from "../types";
 import { hub as hubABI } from "./abi";
 import client from "./client";
 import { getDefaultProfile } from "./profile";
-import { CREATE_POST_TYPED_DATA, GET_PUBLICATIONS } from "./queries";
+import {
+  CREATE_POST_TYPED_DATA,
+  GET_PUBLICATIONS,
+  VALIDATE_POST_METADATA,
+} from "./queries";
 
 export const hasCollectedPost = async (
   postCollectNftAddress: string,
@@ -94,6 +103,8 @@ export const usePost: PostHook = ({
   eventMetadataId,
 }) => {
   const address = useLensHubAddress();
+  const { data: signer } = useSigner();
+  const provider = useProvider();
 
   const { data: fetchedPost } = useQuery(GET_PUBLICATIONS, {
     variables: {
@@ -150,6 +161,10 @@ export const usePost: PostHook = ({
       variables: { request: postData },
       client: client,
     });
+
+  const [validatePostMetadata] = useLazyQuery(VALIDATE_POST_METADATA, {
+    client: client,
+  });
 
   const { signTypedDataAsync } = useSignTypedData();
 
@@ -226,29 +241,100 @@ export const usePost: PostHook = ({
     `${location.origin}${Routes.ExpressEvent}?id=${eventMetadataId}`;
 
   const sendPost = async (eventMetadataId: string) => {
+    provider.getSigner = () => signer;
+
+    const bundlr = new WebBundlr(
+      "https://node2.bundlr.network",
+      "matic",
+      provider
+      // {
+      //   providerUrl: "https://matic-mumbai.chainstacklabs.com",
+      // }
+    );
+
+    await bundlr.ready();
+
+    const tx = await bundlr.upload(
+      JSON.stringify({
+        ...postMetadata,
+        name: `Express Event by ${profile!.handle}`,
+        // metadata_id: `${profile!.id}-${+Date.now()}`,
+        metadata_id: eventMetadataId,
+        image: null,
+        // image:
+        //   "https://ipfs.io/ipfs/QmY9dUwYu67puaWBMxRKW98LPbXCznPwHUbhX5NeWnCJbX",
+        // imageMimeType: "image/svg+xml",
+        // imageMimeType: "image/jpeg",
+        content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost and collect\n\n[Event Page](${getEventLink(
+          eventMetadataId
+        )})`,
+        external_url: getEventLink(eventMetadataId),
+        tags: [eventMetadataId],
+      }),
+      {
+        tags: [{ name: "Content-Type", value: "application/json" }],
+      }
+    );
+
     // const postNftImage =
     //   "https://arweave.net/" + (await getPlaceholderNftUrl("test title", true));
 
+    // await validatePostMetadata({
+    //   variables: {
+    //     metadata: {
+    //       ...postMetadata,
+    //       name: `Express Event by ${profile!.handle}`,
+    //       // metadata_id: `${profile!.id}-${+Date.now()}`,
+    //       metadata_id: eventMetadataId,
+    //       // image: postNftImage,
+    //       // image:
+    //       //   "https://ipfs.io/ipfs/QmY9dUwYu67puaWBMxRKW98LPbXCznPwHUbhX5NeWnCJbX",
+    //       // imageMimeType: "image/svg+xml",
+    //       // imageMimeType: "image/jpeg",
+    //       content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost and collect\n\n[Event Page](${getEventLink(
+    //         eventMetadataId
+    //       )})`,
+    //       external_url: getEventLink(eventMetadataId),
+    //       tags: [eventMetadataId],
+    //     },
+    //   },
+    // });
+
     const config = {
       profileId: profile!.id,
-      contentURI: (
-        await uploadMetadata({
-          ...postMetadata,
-          name: `Express Event by ${profile!.handle}`,
-          // metadata_id: `${profile!.id}-${+Date.now()}`,
-          metadata_id: eventMetadataId,
-          // image: postNftImage,
-          // image:
-          //   "https://ipfs.io/ipfs/QmY9dUwYu67puaWBMxRKW98LPbXCznPwHUbhX5NeWnCJbX",
-          // imageMimeType: "image/svg+xml",
-          // imageMimeType: "image/jpeg",
-          content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost and collect\n\n[Event Page](${getEventLink(
-            eventMetadataId
-          )})`,
-          external_url: getEventLink(eventMetadataId),
-          tags: [eventMetadataId],
-        })
-      ).replace("ipfs://", "https://api.web3events.ai/media/"),
+      contentURI: "https://arweave.net/" + tx.id,
+      // (await uploadMetadata({
+      //   version: "1.0.0",
+      //   metadata_id: "5b43874c-9819-467e-9f8e-8a32f1e405fc",
+      //   description: "gm 2 (🌿, 🌿)",
+      //   content: "gm 2 (🌿, 🌿)",
+      //   external_url: null,
+      //   image: null,
+      //   imageMimeType: null,
+      //   name: "Post by @donosonaumczuk",
+      //   attributes: [{ traitType: "type", value: "post" }],
+      //   media: [],
+      //   appId: "Lenster",
+      // })).replace("ipfs://", "https://api.web3events.ai/media/"),
+      // "https://ipfs.io/ipfs/Qmby8QocUU2sPZL46rZeMctAuF5nrCc7eR1PPkooCztWPz",
+      // (
+      //   await uploadMetadata({
+      //     ...postMetadata,
+      //     name: `Express Event by ${profile!.handle}`,
+      //     // metadata_id: `${profile!.id}-${+Date.now()}`,
+      //     metadata_id: eventMetadataId,
+      //     image: null,
+      //     // image:
+      //     //   "https://ipfs.io/ipfs/QmY9dUwYu67puaWBMxRKW98LPbXCznPwHUbhX5NeWnCJbX",
+      //     // imageMimeType: "image/svg+xml",
+      //     // imageMimeType: "image/jpeg",
+      //     content: `${content}\n\n🎫 Basic pass for followers\n🎟 VIP pass for repost and collect\n\n[Event Page](${getEventLink(
+      //       eventMetadataId
+      //     )})`,
+      //     external_url: getEventLink(eventMetadataId),
+      //     tags: [eventMetadataId],
+      //   })
+      // ).replace("ipfs://", "https://api.web3events.ai/media/"),
       collectModule: {
         ...(priceToCollect
           ? {

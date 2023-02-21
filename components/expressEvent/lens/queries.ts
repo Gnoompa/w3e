@@ -345,6 +345,15 @@ export const CREATE_POST_TYPED_DATA = gql`
   }
 `;
 
+export const VALIDATE_POST_METADATA = gql`
+  query ValidatePublicationMetadata($metadata: PublicationMetadataV2Input!) {
+    validatePublicationMetadata(request: { metadatav2: $metadata }) {
+      valid
+      reason
+    }
+  }
+`;
+
 export const RelayerResultFieldsFragmentDoc = gql`
   fragment RelayerResultFields on RelayResult {
     ... on RelayerResult {
